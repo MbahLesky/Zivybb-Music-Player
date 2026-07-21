@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Local audio library scanning: Android 13+ uses the granular media
+         permission, older versions fall back to READ_EXTERNAL_STORAGE. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
     <application
         android:label="zivybb"
         android:name="${applicationName}"

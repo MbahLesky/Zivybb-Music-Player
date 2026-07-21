@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'features/library/presentation/library_screen.dart';
+import 'routes/app_routes.dart';
+
 /// Root widget for the Zivybb application.
 ///
 /// Owns app-wide concerns (theme, routing) that don't belong to any single
-/// feature. Feature screens are wired in as the corresponding routes land.
+/// feature.
 class ZivybbApp extends StatelessWidget {
   const ZivybbApp({super.key});
 
@@ -15,16 +18,8 @@ class ZivybbApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const _PlaceholderHome(),
+      initialRoute: AppRoutes.library,
+      routes: {AppRoutes.library: (_) => const LibraryScreen()},
     );
-  }
-}
-
-class _PlaceholderHome extends StatelessWidget {
-  const _PlaceholderHome();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Zivybb')));
   }
 }
