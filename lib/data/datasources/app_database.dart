@@ -79,6 +79,14 @@ class Settings extends Table {
   BoolColumn get adaptiveDarkModeEnabled =>
       boolean().withDefault(const Constant(true))();
   TextColumn get manualThemeOverride => text().nullable()();
+  TextColumn get themeSeedColorHex =>
+      text().withDefault(const Constant('#673AB7'))();
+  TextColumn get visualizerColorHex =>
+      text().withDefault(const Constant('#673AB7'))();
+  BoolColumn get crossfadeEnabled =>
+      boolean().withDefault(const Constant(false))();
+  IntColumn get crossfadeDurationMs =>
+      integer().withDefault(const Constant(3000))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -92,7 +100,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -103,6 +111,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(playlists);
         await m.createTable(playlistSongs);
         await m.createTable(settings);
+      }
+      if (from < 3) {
+        await m.addColumn(settings, settings.themeSeedColorHex);
+        await m.addColumn(settings, settings.visualizerColorHex);
+        await m.addColumn(settings, settings.crossfadeEnabled);
+        await m.addColumn(settings, settings.crossfadeDurationMs);
       }
     },
   );

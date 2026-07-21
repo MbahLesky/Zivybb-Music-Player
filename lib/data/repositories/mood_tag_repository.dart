@@ -47,6 +47,13 @@ class MoodTagRepository {
         .watch()
         .map((rows) => rows.map(MoodTag.fromRow).toList(growable: false));
   }
+
+  /// One-off (non-reactive) fetch used to regenerate auto-generated mood
+  /// playlists (SRS F-4.2).
+  Future<List<MoodTag>> allMoodTags() async {
+    final rows = await _database.select(_database.moodTags).get();
+    return rows.map(MoodTag.fromRow).toList(growable: false);
+  }
 }
 
 final moodTagRepositoryProvider = Provider<MoodTagRepository>(

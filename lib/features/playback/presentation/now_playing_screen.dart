@@ -5,12 +5,11 @@ import '../../../data/models/mood_tag.dart';
 import '../../../data/repositories/song_repository.dart';
 import '../../mood_tagging/application/mood_tagging_controller.dart';
 import '../../mood_tagging/presentation/mood_tagging_screen.dart';
+import '../../settings/application/settings_controller.dart';
+import '../../visualizer/presentation/wave_visualizer.dart';
 import '../application/playback_controller.dart';
 
 /// Full playback experience for the current track.
-///
-/// Basic transport controls only for now — the beat-reactive visualizer
-/// lands in Week 3 per the Development Plan.
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
 
@@ -28,6 +27,20 @@ class NowPlayingScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Now Playing'),
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.timelapse,
+              color: playback.previewModeEnabled
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            tooltip: playback.previewModeEnabled
+                ? 'Preview mode on (30s clips)'
+                : 'Preview mode off',
+            onPressed: () => ref
+                .read(playbackControllerProvider.notifier)
+                .togglePreviewMode(),
+          ),
           if (song != null)
             IconButton(
               icon: const Icon(Icons.mood),
@@ -58,7 +71,10 @@ class NowPlayingScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     _MoodTagLabel(moodTagId: liveSong!.moodTagId!),
                   ],
-                  const SizedBox(height: 32),
+                  const _CrossfadeIndicator(),
+                  const SizedBox(height: 16),
+                  WaveVisualizer(color: ref.watch(visualizerColorProvider)),
+                  const SizedBox(height: 24),
                   Slider(
                     min: 0,
                     max: playback.duration.inMilliseconds > 0
@@ -150,5 +166,35 @@ class _MoodTagLabel extends ConsumerWidget {
     }
     if (match == null) return const SizedBox.shrink();
     return Chip(label: Text(match.label), visualDensity: VisualDensity.compact);
+  }
+}
+
+class _CrossfadeIndicator extends ConsumerWidget {
+  const _CrossfadeIndicator();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsStreamProvider).value;
+    if (settings == null || !settings.crossfadeEnabled) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.compare_arrows,
+            size: 16,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Crossfade ${settings.crossfadeDuration.inSeconds}s',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
   }
 }

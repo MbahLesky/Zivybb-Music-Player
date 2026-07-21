@@ -7,6 +7,7 @@ import '../../../routes/app_routes.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
+import '../../playlists/application/mood_playlist_generator.dart';
 import '../../playlists/presentation/playlist_list_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../application/library_controller.dart';
@@ -25,9 +26,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(libraryControllerProvider.notifier).refresh();
-      ref.read(moodTagRepositoryProvider).ensureSeeded();
+      await ref.read(moodTagRepositoryProvider).ensureSeeded();
+      await ref.read(moodPlaylistGeneratorProvider).regenerateAll();
     });
   }
 

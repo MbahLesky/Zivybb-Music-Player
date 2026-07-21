@@ -1517,11 +1517,66 @@ class $SettingsTable extends Settings
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _themeSeedColorHexMeta = const VerificationMeta(
+    'themeSeedColorHex',
+  );
+  @override
+  late final GeneratedColumn<String> themeSeedColorHex =
+      GeneratedColumn<String>(
+        'theme_seed_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#673AB7'),
+      );
+  static const VerificationMeta _visualizerColorHexMeta =
+      const VerificationMeta('visualizerColorHex');
+  @override
+  late final GeneratedColumn<String> visualizerColorHex =
+      GeneratedColumn<String>(
+        'visualizer_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#673AB7'),
+      );
+  static const VerificationMeta _crossfadeEnabledMeta = const VerificationMeta(
+    'crossfadeEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> crossfadeEnabled = GeneratedColumn<bool>(
+    'crossfade_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("crossfade_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _crossfadeDurationMsMeta =
+      const VerificationMeta('crossfadeDurationMs');
+  @override
+  late final GeneratedColumn<int> crossfadeDurationMs = GeneratedColumn<int>(
+    'crossfade_duration_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(3000),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     adaptiveDarkModeEnabled,
     manualThemeOverride,
+    themeSeedColorHex,
+    visualizerColorHex,
+    crossfadeEnabled,
+    crossfadeDurationMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1558,6 +1613,42 @@ class $SettingsTable extends Settings
         ),
       );
     }
+    if (data.containsKey('theme_seed_color_hex')) {
+      context.handle(
+        _themeSeedColorHexMeta,
+        themeSeedColorHex.isAcceptableOrUnknown(
+          data['theme_seed_color_hex']!,
+          _themeSeedColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_color_hex')) {
+      context.handle(
+        _visualizerColorHexMeta,
+        visualizerColorHex.isAcceptableOrUnknown(
+          data['visualizer_color_hex']!,
+          _visualizerColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('crossfade_enabled')) {
+      context.handle(
+        _crossfadeEnabledMeta,
+        crossfadeEnabled.isAcceptableOrUnknown(
+          data['crossfade_enabled']!,
+          _crossfadeEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('crossfade_duration_ms')) {
+      context.handle(
+        _crossfadeDurationMsMeta,
+        crossfadeDurationMs.isAcceptableOrUnknown(
+          data['crossfade_duration_ms']!,
+          _crossfadeDurationMsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1579,6 +1670,22 @@ class $SettingsTable extends Settings
         DriftSqlType.string,
         data['${effectivePrefix}manual_theme_override'],
       ),
+      themeSeedColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_seed_color_hex'],
+      )!,
+      visualizerColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visualizer_color_hex'],
+      )!,
+      crossfadeEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}crossfade_enabled'],
+      )!,
+      crossfadeDurationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}crossfade_duration_ms'],
+      )!,
     );
   }
 
@@ -1592,10 +1699,18 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   final String id;
   final bool adaptiveDarkModeEnabled;
   final String? manualThemeOverride;
+  final String themeSeedColorHex;
+  final String visualizerColorHex;
+  final bool crossfadeEnabled;
+  final int crossfadeDurationMs;
   const SettingsRow({
     required this.id,
     required this.adaptiveDarkModeEnabled,
     this.manualThemeOverride,
+    required this.themeSeedColorHex,
+    required this.visualizerColorHex,
+    required this.crossfadeEnabled,
+    required this.crossfadeDurationMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1605,6 +1720,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     if (!nullToAbsent || manualThemeOverride != null) {
       map['manual_theme_override'] = Variable<String>(manualThemeOverride);
     }
+    map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex);
+    map['visualizer_color_hex'] = Variable<String>(visualizerColorHex);
+    map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled);
+    map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs);
     return map;
   }
 
@@ -1615,6 +1734,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       manualThemeOverride: manualThemeOverride == null && nullToAbsent
           ? const Value.absent()
           : Value(manualThemeOverride),
+      themeSeedColorHex: Value(themeSeedColorHex),
+      visualizerColorHex: Value(visualizerColorHex),
+      crossfadeEnabled: Value(crossfadeEnabled),
+      crossfadeDurationMs: Value(crossfadeDurationMs),
     );
   }
 
@@ -1631,6 +1754,14 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       manualThemeOverride: serializer.fromJson<String?>(
         json['manualThemeOverride'],
       ),
+      themeSeedColorHex: serializer.fromJson<String>(json['themeSeedColorHex']),
+      visualizerColorHex: serializer.fromJson<String>(
+        json['visualizerColorHex'],
+      ),
+      crossfadeEnabled: serializer.fromJson<bool>(json['crossfadeEnabled']),
+      crossfadeDurationMs: serializer.fromJson<int>(
+        json['crossfadeDurationMs'],
+      ),
     );
   }
   @override
@@ -1642,6 +1773,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
         adaptiveDarkModeEnabled,
       ),
       'manualThemeOverride': serializer.toJson<String?>(manualThemeOverride),
+      'themeSeedColorHex': serializer.toJson<String>(themeSeedColorHex),
+      'visualizerColorHex': serializer.toJson<String>(visualizerColorHex),
+      'crossfadeEnabled': serializer.toJson<bool>(crossfadeEnabled),
+      'crossfadeDurationMs': serializer.toJson<int>(crossfadeDurationMs),
     };
   }
 
@@ -1649,6 +1784,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     String? id,
     bool? adaptiveDarkModeEnabled,
     Value<String?> manualThemeOverride = const Value.absent(),
+    String? themeSeedColorHex,
+    String? visualizerColorHex,
+    bool? crossfadeEnabled,
+    int? crossfadeDurationMs,
   }) => SettingsRow(
     id: id ?? this.id,
     adaptiveDarkModeEnabled:
@@ -1656,6 +1795,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     manualThemeOverride: manualThemeOverride.present
         ? manualThemeOverride.value
         : this.manualThemeOverride,
+    themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
+    visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+    crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
+    crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
   );
   SettingsRow copyWithCompanion(SettingsCompanion data) {
     return SettingsRow(
@@ -1666,6 +1809,18 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       manualThemeOverride: data.manualThemeOverride.present
           ? data.manualThemeOverride.value
           : this.manualThemeOverride,
+      themeSeedColorHex: data.themeSeedColorHex.present
+          ? data.themeSeedColorHex.value
+          : this.themeSeedColorHex,
+      visualizerColorHex: data.visualizerColorHex.present
+          ? data.visualizerColorHex.value
+          : this.visualizerColorHex,
+      crossfadeEnabled: data.crossfadeEnabled.present
+          ? data.crossfadeEnabled.value
+          : this.crossfadeEnabled,
+      crossfadeDurationMs: data.crossfadeDurationMs.present
+          ? data.crossfadeDurationMs.value
+          : this.crossfadeDurationMs,
     );
   }
 
@@ -1674,44 +1829,75 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     return (StringBuffer('SettingsRow(')
           ..write('id: $id, ')
           ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
-          ..write('manualThemeOverride: $manualThemeOverride')
+          ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('themeSeedColorHex: $themeSeedColorHex, ')
+          ..write('visualizerColorHex: $visualizerColorHex, ')
+          ..write('crossfadeEnabled: $crossfadeEnabled, ')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, adaptiveDarkModeEnabled, manualThemeOverride);
+  int get hashCode => Object.hash(
+    id,
+    adaptiveDarkModeEnabled,
+    manualThemeOverride,
+    themeSeedColorHex,
+    visualizerColorHex,
+    crossfadeEnabled,
+    crossfadeDurationMs,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SettingsRow &&
           other.id == this.id &&
           other.adaptiveDarkModeEnabled == this.adaptiveDarkModeEnabled &&
-          other.manualThemeOverride == this.manualThemeOverride);
+          other.manualThemeOverride == this.manualThemeOverride &&
+          other.themeSeedColorHex == this.themeSeedColorHex &&
+          other.visualizerColorHex == this.visualizerColorHex &&
+          other.crossfadeEnabled == this.crossfadeEnabled &&
+          other.crossfadeDurationMs == this.crossfadeDurationMs);
 }
 
 class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   final Value<String> id;
   final Value<bool> adaptiveDarkModeEnabled;
   final Value<String?> manualThemeOverride;
+  final Value<String> themeSeedColorHex;
+  final Value<String> visualizerColorHex;
+  final Value<bool> crossfadeEnabled;
+  final Value<int> crossfadeDurationMs;
   final Value<int> rowid;
   const SettingsCompanion({
     this.id = const Value.absent(),
     this.adaptiveDarkModeEnabled = const Value.absent(),
     this.manualThemeOverride = const Value.absent(),
+    this.themeSeedColorHex = const Value.absent(),
+    this.visualizerColorHex = const Value.absent(),
+    this.crossfadeEnabled = const Value.absent(),
+    this.crossfadeDurationMs = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsCompanion.insert({
     required String id,
     this.adaptiveDarkModeEnabled = const Value.absent(),
     this.manualThemeOverride = const Value.absent(),
+    this.themeSeedColorHex = const Value.absent(),
+    this.visualizerColorHex = const Value.absent(),
+    this.crossfadeEnabled = const Value.absent(),
+    this.crossfadeDurationMs = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<SettingsRow> custom({
     Expression<String>? id,
     Expression<bool>? adaptiveDarkModeEnabled,
     Expression<String>? manualThemeOverride,
+    Expression<String>? themeSeedColorHex,
+    Expression<String>? visualizerColorHex,
+    Expression<bool>? crossfadeEnabled,
+    Expression<int>? crossfadeDurationMs,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1720,6 +1906,12 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         'adaptive_dark_mode_enabled': adaptiveDarkModeEnabled,
       if (manualThemeOverride != null)
         'manual_theme_override': manualThemeOverride,
+      if (themeSeedColorHex != null) 'theme_seed_color_hex': themeSeedColorHex,
+      if (visualizerColorHex != null)
+        'visualizer_color_hex': visualizerColorHex,
+      if (crossfadeEnabled != null) 'crossfade_enabled': crossfadeEnabled,
+      if (crossfadeDurationMs != null)
+        'crossfade_duration_ms': crossfadeDurationMs,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1728,6 +1920,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Value<String>? id,
     Value<bool>? adaptiveDarkModeEnabled,
     Value<String?>? manualThemeOverride,
+    Value<String>? themeSeedColorHex,
+    Value<String>? visualizerColorHex,
+    Value<bool>? crossfadeEnabled,
+    Value<int>? crossfadeDurationMs,
     Value<int>? rowid,
   }) {
     return SettingsCompanion(
@@ -1735,6 +1931,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
       adaptiveDarkModeEnabled:
           adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
       manualThemeOverride: manualThemeOverride ?? this.manualThemeOverride,
+      themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
+      visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+      crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
+      crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1755,6 +1955,18 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         manualThemeOverride.value,
       );
     }
+    if (themeSeedColorHex.present) {
+      map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex.value);
+    }
+    if (visualizerColorHex.present) {
+      map['visualizer_color_hex'] = Variable<String>(visualizerColorHex.value);
+    }
+    if (crossfadeEnabled.present) {
+      map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled.value);
+    }
+    if (crossfadeDurationMs.present) {
+      map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1767,6 +1979,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           ..write('id: $id, ')
           ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
           ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('themeSeedColorHex: $themeSeedColorHex, ')
+          ..write('visualizerColorHex: $visualizerColorHex, ')
+          ..write('crossfadeEnabled: $crossfadeEnabled, ')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3447,6 +3663,10 @@ typedef $$SettingsTableCreateCompanionBuilder =
       required String id,
       Value<bool> adaptiveDarkModeEnabled,
       Value<String?> manualThemeOverride,
+      Value<String> themeSeedColorHex,
+      Value<String> visualizerColorHex,
+      Value<bool> crossfadeEnabled,
+      Value<int> crossfadeDurationMs,
       Value<int> rowid,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
@@ -3454,6 +3674,10 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<bool> adaptiveDarkModeEnabled,
       Value<String?> manualThemeOverride,
+      Value<String> themeSeedColorHex,
+      Value<String> visualizerColorHex,
+      Value<bool> crossfadeEnabled,
+      Value<int> crossfadeDurationMs,
       Value<int> rowid,
     });
 
@@ -3478,6 +3702,26 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<String> get manualThemeOverride => $composableBuilder(
     column: $table.manualThemeOverride,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get themeSeedColorHex => $composableBuilder(
+    column: $table.themeSeedColorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visualizerColorHex => $composableBuilder(
+    column: $table.visualizerColorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get crossfadeEnabled => $composableBuilder(
+    column: $table.crossfadeEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get crossfadeDurationMs => $composableBuilder(
+    column: $table.crossfadeDurationMs,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3505,6 +3749,26 @@ class $$SettingsTableOrderingComposer
     column: $table.manualThemeOverride,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get themeSeedColorHex => $composableBuilder(
+    column: $table.themeSeedColorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visualizerColorHex => $composableBuilder(
+    column: $table.visualizerColorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get crossfadeEnabled => $composableBuilder(
+    column: $table.crossfadeEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get crossfadeDurationMs => $composableBuilder(
+    column: $table.crossfadeDurationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -3526,6 +3790,26 @@ class $$SettingsTableAnnotationComposer
 
   GeneratedColumn<String> get manualThemeOverride => $composableBuilder(
     column: $table.manualThemeOverride,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get themeSeedColorHex => $composableBuilder(
+    column: $table.themeSeedColorHex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get visualizerColorHex => $composableBuilder(
+    column: $table.visualizerColorHex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get crossfadeEnabled => $composableBuilder(
+    column: $table.crossfadeEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get crossfadeDurationMs => $composableBuilder(
+    column: $table.crossfadeDurationMs,
     builder: (column) => column,
   );
 }
@@ -3564,11 +3848,19 @@ class $$SettingsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
                 Value<String?> manualThemeOverride = const Value.absent(),
+                Value<String> themeSeedColorHex = const Value.absent(),
+                Value<String> visualizerColorHex = const Value.absent(),
+                Value<bool> crossfadeEnabled = const Value.absent(),
+                Value<int> crossfadeDurationMs = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
                 adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
                 manualThemeOverride: manualThemeOverride,
+                themeSeedColorHex: themeSeedColorHex,
+                visualizerColorHex: visualizerColorHex,
+                crossfadeEnabled: crossfadeEnabled,
+                crossfadeDurationMs: crossfadeDurationMs,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3576,11 +3868,19 @@ class $$SettingsTableTableManager
                 required String id,
                 Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
                 Value<String?> manualThemeOverride = const Value.absent(),
+                Value<String> themeSeedColorHex = const Value.absent(),
+                Value<String> visualizerColorHex = const Value.absent(),
+                Value<bool> crossfadeEnabled = const Value.absent(),
+                Value<int> crossfadeDurationMs = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
                 adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
                 manualThemeOverride: manualThemeOverride,
+                themeSeedColorHex: themeSeedColorHex,
+                visualizerColorHex: visualizerColorHex,
+                crossfadeEnabled: crossfadeEnabled,
+                crossfadeDurationMs: crossfadeDurationMs,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

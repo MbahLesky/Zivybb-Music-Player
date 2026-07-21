@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/app_settings.dart';
 import '../application/settings_controller.dart';
+import 'theme_customization_screen.dart';
 
 /// Central hub for app configuration (Screens.md #11).
 ///
-/// Only the adaptive dark mode section is wired up so far — theme/visualizer
-/// color customization and backup & restore land in Weeks 3-4.
+/// Equalizer presets and backup & restore land in Week 4.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -50,6 +50,44 @@ class SettingsScreen extends ConsumerWidget {
                   value: ThemeOverride.dark,
                 ),
               ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.palette_outlined),
+            title: const Text('Theme Customization'),
+            subtitle: const Text('App color and visualizer color'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ThemeCustomizationScreen(),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text('Playback'),
+          ),
+          SwitchListTile(
+            title: const Text('Crossfade'),
+            subtitle: const Text('Fade out/in between tracks'),
+            value: settings.crossfadeEnabled,
+            onChanged: (enabled) => controller.setCrossfadeEnabled(enabled),
+          ),
+          ListTile(
+            title: const Text('Crossfade duration'),
+            subtitle: Slider(
+              min: 1,
+              max: 8,
+              divisions: 7,
+              label: '${settings.crossfadeDuration.inSeconds}s',
+              value: settings.crossfadeDuration.inSeconds
+                  .clamp(1, 8)
+                  .toDouble(),
+              onChanged: settings.crossfadeEnabled
+                  ? (value) => controller.setCrossfadeDuration(
+                      Duration(seconds: value.round()),
+                    )
+                  : null,
             ),
           ),
         ],

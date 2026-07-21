@@ -82,6 +82,15 @@ class SongRepository {
           ..where((t) => t.id.equals(songId)))
         .write(SongsCompanion(moodTagId: Value(moodTagId)));
   }
+
+  /// One-off (non-reactive) lookup used to regenerate auto-generated mood
+  /// playlists (SRS F-4.2).
+  Future<List<Song>> songsWithMoodTag(String moodTagId) async {
+    final query = _database.select(_database.songs)
+      ..where((t) => t.moodTagId.equals(moodTagId));
+    final rows = await query.get();
+    return rows.map(Song.fromRow).toList(growable: false);
+  }
 }
 
 final songRepositoryProvider = Provider<SongRepository>((ref) {

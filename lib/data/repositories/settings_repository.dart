@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../datasources/app_database.dart';
 import '../models/app_settings.dart';
 
-/// Single access point for app-wide settings (currently just the adaptive
-/// dark mode preference; theming/equalizer fields land in later weeks).
+/// Single access point for app-wide settings: adaptive dark mode, theme and
+/// visualizer color, and crossfade. Equalizer presets land in Week 4.
 class SettingsRepository {
   SettingsRepository({required this._database});
 
@@ -39,6 +39,48 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setThemeSeedColor(String colorHex) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        themeSeedColorHex: Value(colorHex),
+      ),
+      onConflict: (_) => SettingsCompanion(themeSeedColorHex: Value(colorHex)),
+    );
+  }
+
+  Future<void> setVisualizerColor(String colorHex) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        visualizerColorHex: Value(colorHex),
+      ),
+      onConflict: (_) => SettingsCompanion(visualizerColorHex: Value(colorHex)),
+    );
+  }
+
+  Future<void> setCrossfadeEnabled(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        crossfadeEnabled: Value(enabled),
+      ),
+      onConflict: (_) => SettingsCompanion(crossfadeEnabled: Value(enabled)),
+    );
+  }
+
+  Future<void> setCrossfadeDuration(Duration duration) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        crossfadeDurationMs: Value(duration.inMilliseconds),
+      ),
+      onConflict: (_) => SettingsCompanion(
+        crossfadeDurationMs: Value(duration.inMilliseconds),
+      ),
+    );
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -55,6 +97,10 @@ class SettingsRepository {
       manualThemeOverride: row.manualThemeOverride == null
           ? null
           : ThemeOverride.values.byName(row.manualThemeOverride!),
+      themeSeedColorHex: row.themeSeedColorHex,
+      visualizerColorHex: row.visualizerColorHex,
+      crossfadeEnabled: row.crossfadeEnabled,
+      crossfadeDuration: Duration(milliseconds: row.crossfadeDurationMs),
     );
   }
 }

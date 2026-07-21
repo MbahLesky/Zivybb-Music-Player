@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/audio_player_service.dart';
 import '../../../data/models/song.dart';
+import '../../settings/application/settings_controller.dart';
 
 final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
   final service = AudioPlayerService();
   ref.onDispose(service.dispose);
   return service;
 });
+
+/// How long a preview clip plays before auto-advancing (SRS F-4.1).
+const previewClipDuration = Duration(seconds: 30);
 
 /// Snapshot of the current playback queue and transport state.
 class PlaybackState {
@@ -20,6 +24,7 @@ class PlaybackState {
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.shuffleEnabled = false,
+    this.previewModeEnabled = false,
   });
 
   final List<Song> queue;
@@ -28,6 +33,7 @@ class PlaybackState {
   final Duration position;
   final Duration duration;
   final bool shuffleEnabled;
+  final bool previewModeEnabled;
 
   Song? get currentSong {
     final index = currentIndex;
@@ -44,6 +50,7 @@ class PlaybackState {
     Duration? position,
     Duration? duration,
     bool? shuffleEnabled,
+    bool? previewModeEnabled,
   }) {
     return PlaybackState(
       queue: queue ?? this.queue,
@@ -52,6 +59,7 @@ class PlaybackState {
       position: position ?? this.position,
       duration: duration ?? this.duration,
       shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
+      previewModeEnabled: previewModeEnabled ?? this.previewModeEnabled,
     );
   }
 }
@@ -60,14 +68,17 @@ class PlaybackState {
 class PlaybackController extends Notifier<PlaybackState> {
   late final AudioPlayerService _player;
 
+  /// Guards against repeatedly calling `seekToNext` while position keeps
+  /// reporting past [previewClipDuration] during the async gap before the
+  /// track actually changes.
+  bool _previewSkipPending = false;
+
   @override
   PlaybackState build() {
     _player = ref.read(audioPlayerServiceProvider);
 
     final subscriptions = <StreamSubscription<void>>[
-      _player.positionStream.listen(
-        (position) => state = state.copyWith(position: position),
-      ),
+      _player.positionStream.listen(_onPosition),
       _player.durationStream.listen(
         (duration) =>
             state = state.copyWith(duration: duration ?? Duration.zero),
@@ -77,6 +88,7 @@ class PlaybackController extends Notifier<PlaybackState> {
       ),
       _player.currentIndexStream.listen((index) {
         if (index != null) {
+          _previewSkipPending = false;
           state = state.copyWith(currentIndex: index);
         }
       }),
@@ -87,7 +99,28 @@ class PlaybackController extends Notifier<PlaybackState> {
       }
     });
 
+    // Keep the engine's crossfade config in sync with the persisted setting.
+    ref.listen(settingsStreamProvider, (previous, next) {
+      final settings = next.value;
+      if (settings != null) {
+        _player.setCrossfadeSettings(
+          enabled: settings.crossfadeEnabled,
+          duration: settings.crossfadeDuration,
+        );
+      }
+    }, fireImmediately: true);
+
     return const PlaybackState();
+  }
+
+  void _onPosition(Duration position) {
+    state = state.copyWith(position: position);
+    if (state.previewModeEnabled &&
+        !_previewSkipPending &&
+        position >= previewClipDuration) {
+      _previewSkipPending = true;
+      _player.seekToNext();
+    }
   }
 
   /// Loads [queue] into the engine and starts playback at [startIndex].
@@ -111,6 +144,10 @@ class PlaybackController extends Notifier<PlaybackState> {
     final enabled = !state.shuffleEnabled;
     await _player.setShuffleModeEnabled(enabled);
     state = state.copyWith(shuffleEnabled: enabled);
+  }
+
+  void togglePreviewMode() {
+    state = state.copyWith(previewModeEnabled: !state.previewModeEnabled);
   }
 }
 

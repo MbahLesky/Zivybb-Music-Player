@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/song.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../playlists/application/mood_playlist_generator.dart';
 import '../application/mood_tagging_controller.dart';
 
 /// Assigns or clears a song's mood/energy label (Screens.md #7).
@@ -51,9 +52,14 @@ class MoodTaggingSheet extends ConsumerWidget {
                     ChoiceChip(
                       label: Text(tag.label),
                       selected: currentMoodTagId == tag.id,
-                      onSelected: (selected) => ref
-                          .read(songRepositoryProvider)
-                          .setMoodTag(song.id, selected ? tag.id : null),
+                      onSelected: (selected) async {
+                        await ref
+                            .read(songRepositoryProvider)
+                            .setMoodTag(song.id, selected ? tag.id : null);
+                        await ref
+                            .read(moodPlaylistGeneratorProvider)
+                            .regenerateAll();
+                      },
                     ),
                 ],
               ),
