@@ -1,4 +1,7 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+
+import '../datasources/app_database.dart';
 
 /// A single local audio track in the user's library.
 @immutable
@@ -14,6 +17,20 @@ class Song {
     this.isLiked = false,
     this.isMissing = false,
   });
+
+  factory Song.fromRow(SongRow row) {
+    return Song(
+      id: row.id,
+      filePath: row.filePath,
+      title: row.title,
+      artist: row.artist,
+      album: row.album,
+      duration: Duration(milliseconds: row.durationMs),
+      moodTagId: row.moodTagId,
+      isLiked: row.isLiked,
+      isMissing: row.isMissing,
+    );
+  }
 
   final String id;
   final String filePath;
@@ -43,6 +60,20 @@ class Song {
       moodTagId: moodTagId ?? this.moodTagId,
       isLiked: isLiked ?? this.isLiked,
       isMissing: isMissing ?? this.isMissing,
+    );
+  }
+
+  SongsCompanion toCompanion() {
+    return SongsCompanion.insert(
+      id: id,
+      filePath: filePath,
+      title: title,
+      artist: artist,
+      album: album,
+      durationMs: duration.inMilliseconds,
+      moodTagId: Value(moodTagId),
+      isLiked: Value(isLiked),
+      isMissing: Value(isMissing),
     );
   }
 

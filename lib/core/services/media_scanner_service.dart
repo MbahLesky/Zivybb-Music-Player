@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:on_audio_query_pluse/on_audio_query.dart';
 
 import '../../data/models/song.dart';
@@ -54,3 +55,7 @@ class MediaScannerService {
     );
   }
 }
+
+final mediaScannerServiceProvider = Provider<MediaScannerService>(
+  (ref) => MediaScannerService(),
+);

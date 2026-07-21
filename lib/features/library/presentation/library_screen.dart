@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/song.dart';
-import '../../playback/application/playback_controller.dart';
+import '../../../data/repositories/mood_tag_repository.dart';
+import '../../../routes/app_routes.dart';
 import '../../../shared/widgets/mini_player.dart';
+import '../../../shared/widgets/song_list_tile.dart';
+import '../../playback/application/playback_controller.dart';
+import '../../playlists/presentation/playlist_list_screen.dart';
+import '../../settings/presentation/settings_screen.dart';
 import '../application/library_controller.dart';
+import 'folder_browser_tab.dart';
 
-/// Primary landing screen: entry point to the user's local music.
+/// Primary landing screen: entry point to the user's local music
+/// (Screens.md #2). Tabs cover All Songs, Playlists, Folders, and Liked.
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
@@ -18,37 +25,102 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => ref.read(libraryControllerProvider.notifier).refresh(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(libraryControllerProvider.notifier).refresh();
+      ref.read(moodTagRepositoryProvider).ensureSeeded();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final library = ref.watch(libraryStreamProvider);
-    final scanStatus = ref.watch(libraryControllerProvider);
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Zivybb')),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(libraryControllerProvider.notifier).refresh(),
-        child: library.when(
-          data: (songs) => _LibraryList(songs: songs, scanStatus: scanStatus),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) =>
-              Center(child: Text('Failed to load library: $error')),
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Zivybb'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  settings: const RouteSettings(name: AppRoutes.settings),
+                  builder: (_) => const SettingsScreen(),
+                ),
+              ),
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Songs'),
+              Tab(text: 'Playlists'),
+              Tab(text: 'Folders'),
+              Tab(text: 'Liked'),
+            ],
+          ),
         ),
+        body: const TabBarView(
+          children: [
+            _AllSongsTab(),
+            PlaylistListScreen(),
+            FolderBrowserTab(),
+            _LikedSongsTab(),
+          ],
+        ),
+        bottomNavigationBar: const MiniPlayer(),
       ),
-      bottomNavigationBar: const MiniPlayer(),
     );
   }
 }
 
-class _LibraryList extends ConsumerWidget {
-  const _LibraryList({required this.songs, required this.scanStatus});
+class _AllSongsTab extends ConsumerWidget {
+  const _AllSongsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final library = ref.watch(libraryStreamProvider);
+    final scanStatus = ref.watch(libraryControllerProvider);
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(libraryControllerProvider.notifier).refresh(),
+      child: library.when(
+        data: (songs) => _SongList(
+          songs: songs,
+          emptyMessage: scanStatus.isLoading
+              ? 'Scanning your device for music…'
+              : scanStatus.hasError
+              ? 'Could not access your music library.\n${scanStatus.error}'
+              : 'No songs found yet. Pull down to scan.',
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) =>
+            Center(child: Text('Failed to load library: $error')),
+      ),
+    );
+  }
+}
+
+class _LikedSongsTab extends ConsumerWidget {
+  const _LikedSongsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final liked = ref.watch(likedSongsStreamProvider);
+
+    return liked.when(
+      data: (songs) =>
+          _SongList(songs: songs, emptyMessage: 'No liked songs yet.'),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) =>
+          Center(child: Text('Failed to load liked songs: $error')),
+    );
+  }
+}
+
+class _SongList extends ConsumerWidget {
+  const _SongList({required this.songs, required this.emptyMessage});
 
   final List<Song> songs;
-  final AsyncValue<void> scanStatus;
+  final String emptyMessage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -58,14 +130,7 @@ class _LibraryList extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
-              child: Text(
-                scanStatus.isLoading
-                    ? 'Scanning your device for music…'
-                    : scanStatus.hasError
-                    ? 'Could not access your music library.\n${scanStatus.error}'
-                    : 'No songs found yet. Pull down to scan.',
-                textAlign: TextAlign.center,
-              ),
+              child: Text(emptyMessage, textAlign: TextAlign.center),
             ),
           ),
         ],
@@ -76,9 +141,8 @@ class _LibraryList extends ConsumerWidget {
       itemCount: songs.length,
       itemBuilder: (context, index) {
         final song = songs[index];
-        return ListTile(
-          title: Text(song.title),
-          subtitle: Text('${song.artist} — ${song.album}'),
+        return SongListTile(
+          song: song,
           onTap: () => ref
               .read(playbackControllerProvider.notifier)
               .playQueue(songs, startIndex: index),

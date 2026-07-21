@@ -3,6 +3,265 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
+class $MoodTagsTable extends MoodTags
+    with TableInfo<$MoodTagsTable, MoodTagRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoodTagsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorHexMeta = const VerificationMeta(
+    'colorHex',
+  );
+  @override
+  late final GeneratedColumn<String> colorHex = GeneratedColumn<String>(
+    'color_hex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, label, colorHex];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mood_tags';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MoodTagRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('color_hex')) {
+      context.handle(
+        _colorHexMeta,
+        colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorHexMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MoodTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoodTagRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      colorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_hex'],
+      )!,
+    );
+  }
+
+  @override
+  $MoodTagsTable createAlias(String alias) {
+    return $MoodTagsTable(attachedDatabase, alias);
+  }
+}
+
+class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
+  final String id;
+  final String label;
+  final String colorHex;
+  const MoodTagRow({
+    required this.id,
+    required this.label,
+    required this.colorHex,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['label'] = Variable<String>(label);
+    map['color_hex'] = Variable<String>(colorHex);
+    return map;
+  }
+
+  MoodTagsCompanion toCompanion(bool nullToAbsent) {
+    return MoodTagsCompanion(
+      id: Value(id),
+      label: Value(label),
+      colorHex: Value(colorHex),
+    );
+  }
+
+  factory MoodTagRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoodTagRow(
+      id: serializer.fromJson<String>(json['id']),
+      label: serializer.fromJson<String>(json['label']),
+      colorHex: serializer.fromJson<String>(json['colorHex']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'label': serializer.toJson<String>(label),
+      'colorHex': serializer.toJson<String>(colorHex),
+    };
+  }
+
+  MoodTagRow copyWith({String? id, String? label, String? colorHex}) =>
+      MoodTagRow(
+        id: id ?? this.id,
+        label: label ?? this.label,
+        colorHex: colorHex ?? this.colorHex,
+      );
+  MoodTagRow copyWithCompanion(MoodTagsCompanion data) {
+    return MoodTagRow(
+      id: data.id.present ? data.id.value : this.id,
+      label: data.label.present ? data.label.value : this.label,
+      colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoodTagRow(')
+          ..write('id: $id, ')
+          ..write('label: $label, ')
+          ..write('colorHex: $colorHex')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, label, colorHex);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoodTagRow &&
+          other.id == this.id &&
+          other.label == this.label &&
+          other.colorHex == this.colorHex);
+}
+
+class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
+  final Value<String> id;
+  final Value<String> label;
+  final Value<String> colorHex;
+  final Value<int> rowid;
+  const MoodTagsCompanion({
+    this.id = const Value.absent(),
+    this.label = const Value.absent(),
+    this.colorHex = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MoodTagsCompanion.insert({
+    required String id,
+    required String label,
+    required String colorHex,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       label = Value(label),
+       colorHex = Value(colorHex);
+  static Insertable<MoodTagRow> custom({
+    Expression<String>? id,
+    Expression<String>? label,
+    Expression<String>? colorHex,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (label != null) 'label': label,
+      if (colorHex != null) 'color_hex': colorHex,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MoodTagsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? label,
+    Value<String>? colorHex,
+    Value<int>? rowid,
+  }) {
+    return MoodTagsCompanion(
+      id: id ?? this.id,
+      label: label ?? this.label,
+      colorHex: colorHex ?? this.colorHex,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (colorHex.present) {
+      map['color_hex'] = Variable<String>(colorHex.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoodTagsCompanion(')
+          ..write('id: $id, ')
+          ..write('label: $label, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -76,6 +335,9 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES mood_tags (id) ON DELETE SET NULL',
+    ),
   );
   static const VerificationMeta _isLikedMeta = const VerificationMeta(
     'isLiked',
@@ -561,17 +823,1358 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
   }
 }
 
+class $PlaylistsTable extends Playlists
+    with TableInfo<$PlaylistsTable, PlaylistRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaylistsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isAutoGeneratedMeta = const VerificationMeta(
+    'isAutoGenerated',
+  );
+  @override
+  late final GeneratedColumn<bool> isAutoGenerated = GeneratedColumn<bool>(
+    'is_auto_generated',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_auto_generated" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sourceMoodTagIdMeta = const VerificationMeta(
+    'sourceMoodTagId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceMoodTagId = GeneratedColumn<String>(
+    'source_mood_tag_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES mood_tags (id) ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    isAutoGenerated,
+    sourceMoodTagId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'playlists';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaylistRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('is_auto_generated')) {
+      context.handle(
+        _isAutoGeneratedMeta,
+        isAutoGenerated.isAcceptableOrUnknown(
+          data['is_auto_generated']!,
+          _isAutoGeneratedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_mood_tag_id')) {
+      context.handle(
+        _sourceMoodTagIdMeta,
+        sourceMoodTagId.isAcceptableOrUnknown(
+          data['source_mood_tag_id']!,
+          _sourceMoodTagIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlaylistRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaylistRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      isAutoGenerated: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_auto_generated'],
+      )!,
+      sourceMoodTagId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_mood_tag_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PlaylistsTable createAlias(String alias) {
+    return $PlaylistsTable(attachedDatabase, alias);
+  }
+}
+
+class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
+  final String id;
+  final String name;
+  final bool isAutoGenerated;
+  final String? sourceMoodTagId;
+  final DateTime createdAt;
+  const PlaylistRow({
+    required this.id,
+    required this.name,
+    required this.isAutoGenerated,
+    this.sourceMoodTagId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['is_auto_generated'] = Variable<bool>(isAutoGenerated);
+    if (!nullToAbsent || sourceMoodTagId != null) {
+      map['source_mood_tag_id'] = Variable<String>(sourceMoodTagId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PlaylistsCompanion toCompanion(bool nullToAbsent) {
+    return PlaylistsCompanion(
+      id: Value(id),
+      name: Value(name),
+      isAutoGenerated: Value(isAutoGenerated),
+      sourceMoodTagId: sourceMoodTagId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceMoodTagId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PlaylistRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaylistRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      isAutoGenerated: serializer.fromJson<bool>(json['isAutoGenerated']),
+      sourceMoodTagId: serializer.fromJson<String?>(json['sourceMoodTagId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'isAutoGenerated': serializer.toJson<bool>(isAutoGenerated),
+      'sourceMoodTagId': serializer.toJson<String?>(sourceMoodTagId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PlaylistRow copyWith({
+    String? id,
+    String? name,
+    bool? isAutoGenerated,
+    Value<String?> sourceMoodTagId = const Value.absent(),
+    DateTime? createdAt,
+  }) => PlaylistRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
+    sourceMoodTagId: sourceMoodTagId.present
+        ? sourceMoodTagId.value
+        : this.sourceMoodTagId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PlaylistRow copyWithCompanion(PlaylistsCompanion data) {
+    return PlaylistRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      isAutoGenerated: data.isAutoGenerated.present
+          ? data.isAutoGenerated.value
+          : this.isAutoGenerated,
+      sourceMoodTagId: data.sourceMoodTagId.present
+          ? data.sourceMoodTagId.value
+          : this.sourceMoodTagId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaylistRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('isAutoGenerated: $isAutoGenerated, ')
+          ..write('sourceMoodTagId: $sourceMoodTagId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, isAutoGenerated, sourceMoodTagId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaylistRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.isAutoGenerated == this.isAutoGenerated &&
+          other.sourceMoodTagId == this.sourceMoodTagId &&
+          other.createdAt == this.createdAt);
+}
+
+class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<bool> isAutoGenerated;
+  final Value<String?> sourceMoodTagId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const PlaylistsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.isAutoGenerated = const Value.absent(),
+    this.sourceMoodTagId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlaylistsCompanion.insert({
+    required String id,
+    required String name,
+    this.isAutoGenerated = const Value.absent(),
+    this.sourceMoodTagId = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       createdAt = Value(createdAt);
+  static Insertable<PlaylistRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<bool>? isAutoGenerated,
+    Expression<String>? sourceMoodTagId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (isAutoGenerated != null) 'is_auto_generated': isAutoGenerated,
+      if (sourceMoodTagId != null) 'source_mood_tag_id': sourceMoodTagId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlaylistsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<bool>? isAutoGenerated,
+    Value<String?>? sourceMoodTagId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return PlaylistsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
+      sourceMoodTagId: sourceMoodTagId ?? this.sourceMoodTagId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (isAutoGenerated.present) {
+      map['is_auto_generated'] = Variable<bool>(isAutoGenerated.value);
+    }
+    if (sourceMoodTagId.present) {
+      map['source_mood_tag_id'] = Variable<String>(sourceMoodTagId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaylistsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('isAutoGenerated: $isAutoGenerated, ')
+          ..write('sourceMoodTagId: $sourceMoodTagId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlaylistSongsTable extends PlaylistSongs
+    with TableInfo<$PlaylistSongsTable, PlaylistSongRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaylistSongsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playlistIdMeta = const VerificationMeta(
+    'playlistId',
+  );
+  @override
+  late final GeneratedColumn<String> playlistId = GeneratedColumn<String>(
+    'playlist_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES playlists (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _songIdMeta = const VerificationMeta('songId');
+  @override
+  late final GeneratedColumn<String> songId = GeneratedColumn<String>(
+    'song_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES songs (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [playlistId, songId, position];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'playlist_songs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaylistSongRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('playlist_id')) {
+      context.handle(
+        _playlistIdMeta,
+        playlistId.isAcceptableOrUnknown(data['playlist_id']!, _playlistIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playlistIdMeta);
+    }
+    if (data.containsKey('song_id')) {
+      context.handle(
+        _songIdMeta,
+        songId.isAcceptableOrUnknown(data['song_id']!, _songIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_songIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playlistId, songId};
+  @override
+  PlaylistSongRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaylistSongRow(
+      playlistId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}playlist_id'],
+      )!,
+      songId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}song_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $PlaylistSongsTable createAlias(String alias) {
+    return $PlaylistSongsTable(attachedDatabase, alias);
+  }
+}
+
+class PlaylistSongRow extends DataClass implements Insertable<PlaylistSongRow> {
+  final String playlistId;
+  final String songId;
+  final int position;
+  const PlaylistSongRow({
+    required this.playlistId,
+    required this.songId,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['playlist_id'] = Variable<String>(playlistId);
+    map['song_id'] = Variable<String>(songId);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  PlaylistSongsCompanion toCompanion(bool nullToAbsent) {
+    return PlaylistSongsCompanion(
+      playlistId: Value(playlistId),
+      songId: Value(songId),
+      position: Value(position),
+    );
+  }
+
+  factory PlaylistSongRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaylistSongRow(
+      playlistId: serializer.fromJson<String>(json['playlistId']),
+      songId: serializer.fromJson<String>(json['songId']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playlistId': serializer.toJson<String>(playlistId),
+      'songId': serializer.toJson<String>(songId),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  PlaylistSongRow copyWith({
+    String? playlistId,
+    String? songId,
+    int? position,
+  }) => PlaylistSongRow(
+    playlistId: playlistId ?? this.playlistId,
+    songId: songId ?? this.songId,
+    position: position ?? this.position,
+  );
+  PlaylistSongRow copyWithCompanion(PlaylistSongsCompanion data) {
+    return PlaylistSongRow(
+      playlistId: data.playlistId.present
+          ? data.playlistId.value
+          : this.playlistId,
+      songId: data.songId.present ? data.songId.value : this.songId,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaylistSongRow(')
+          ..write('playlistId: $playlistId, ')
+          ..write('songId: $songId, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playlistId, songId, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaylistSongRow &&
+          other.playlistId == this.playlistId &&
+          other.songId == this.songId &&
+          other.position == this.position);
+}
+
+class PlaylistSongsCompanion extends UpdateCompanion<PlaylistSongRow> {
+  final Value<String> playlistId;
+  final Value<String> songId;
+  final Value<int> position;
+  final Value<int> rowid;
+  const PlaylistSongsCompanion({
+    this.playlistId = const Value.absent(),
+    this.songId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlaylistSongsCompanion.insert({
+    required String playlistId,
+    required String songId,
+    required int position,
+    this.rowid = const Value.absent(),
+  }) : playlistId = Value(playlistId),
+       songId = Value(songId),
+       position = Value(position);
+  static Insertable<PlaylistSongRow> custom({
+    Expression<String>? playlistId,
+    Expression<String>? songId,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playlistId != null) 'playlist_id': playlistId,
+      if (songId != null) 'song_id': songId,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlaylistSongsCompanion copyWith({
+    Value<String>? playlistId,
+    Value<String>? songId,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return PlaylistSongsCompanion(
+      playlistId: playlistId ?? this.playlistId,
+      songId: songId ?? this.songId,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playlistId.present) {
+      map['playlist_id'] = Variable<String>(playlistId.value);
+    }
+    if (songId.present) {
+      map['song_id'] = Variable<String>(songId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaylistSongsCompanion(')
+          ..write('playlistId: $playlistId, ')
+          ..write('songId: $songId, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SettingsTable extends Settings
+    with TableInfo<$SettingsTable, SettingsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _adaptiveDarkModeEnabledMeta =
+      const VerificationMeta('adaptiveDarkModeEnabled');
+  @override
+  late final GeneratedColumn<bool> adaptiveDarkModeEnabled =
+      GeneratedColumn<bool>(
+        'adaptive_dark_mode_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("adaptive_dark_mode_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _manualThemeOverrideMeta =
+      const VerificationMeta('manualThemeOverride');
+  @override
+  late final GeneratedColumn<String> manualThemeOverride =
+      GeneratedColumn<String>(
+        'manual_theme_override',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    adaptiveDarkModeEnabled,
+    manualThemeOverride,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SettingsRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('adaptive_dark_mode_enabled')) {
+      context.handle(
+        _adaptiveDarkModeEnabledMeta,
+        adaptiveDarkModeEnabled.isAcceptableOrUnknown(
+          data['adaptive_dark_mode_enabled']!,
+          _adaptiveDarkModeEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('manual_theme_override')) {
+      context.handle(
+        _manualThemeOverrideMeta,
+        manualThemeOverride.isAcceptableOrUnknown(
+          data['manual_theme_override']!,
+          _manualThemeOverrideMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SettingsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SettingsRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      adaptiveDarkModeEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}adaptive_dark_mode_enabled'],
+      )!,
+      manualThemeOverride: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}manual_theme_override'],
+      ),
+    );
+  }
+
+  @override
+  $SettingsTable createAlias(String alias) {
+    return $SettingsTable(attachedDatabase, alias);
+  }
+}
+
+class SettingsRow extends DataClass implements Insertable<SettingsRow> {
+  final String id;
+  final bool adaptiveDarkModeEnabled;
+  final String? manualThemeOverride;
+  const SettingsRow({
+    required this.id,
+    required this.adaptiveDarkModeEnabled,
+    this.manualThemeOverride,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['adaptive_dark_mode_enabled'] = Variable<bool>(adaptiveDarkModeEnabled);
+    if (!nullToAbsent || manualThemeOverride != null) {
+      map['manual_theme_override'] = Variable<String>(manualThemeOverride);
+    }
+    return map;
+  }
+
+  SettingsCompanion toCompanion(bool nullToAbsent) {
+    return SettingsCompanion(
+      id: Value(id),
+      adaptiveDarkModeEnabled: Value(adaptiveDarkModeEnabled),
+      manualThemeOverride: manualThemeOverride == null && nullToAbsent
+          ? const Value.absent()
+          : Value(manualThemeOverride),
+    );
+  }
+
+  factory SettingsRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SettingsRow(
+      id: serializer.fromJson<String>(json['id']),
+      adaptiveDarkModeEnabled: serializer.fromJson<bool>(
+        json['adaptiveDarkModeEnabled'],
+      ),
+      manualThemeOverride: serializer.fromJson<String?>(
+        json['manualThemeOverride'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'adaptiveDarkModeEnabled': serializer.toJson<bool>(
+        adaptiveDarkModeEnabled,
+      ),
+      'manualThemeOverride': serializer.toJson<String?>(manualThemeOverride),
+    };
+  }
+
+  SettingsRow copyWith({
+    String? id,
+    bool? adaptiveDarkModeEnabled,
+    Value<String?> manualThemeOverride = const Value.absent(),
+  }) => SettingsRow(
+    id: id ?? this.id,
+    adaptiveDarkModeEnabled:
+        adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
+    manualThemeOverride: manualThemeOverride.present
+        ? manualThemeOverride.value
+        : this.manualThemeOverride,
+  );
+  SettingsRow copyWithCompanion(SettingsCompanion data) {
+    return SettingsRow(
+      id: data.id.present ? data.id.value : this.id,
+      adaptiveDarkModeEnabled: data.adaptiveDarkModeEnabled.present
+          ? data.adaptiveDarkModeEnabled.value
+          : this.adaptiveDarkModeEnabled,
+      manualThemeOverride: data.manualThemeOverride.present
+          ? data.manualThemeOverride.value
+          : this.manualThemeOverride,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsRow(')
+          ..write('id: $id, ')
+          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
+          ..write('manualThemeOverride: $manualThemeOverride')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, adaptiveDarkModeEnabled, manualThemeOverride);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SettingsRow &&
+          other.id == this.id &&
+          other.adaptiveDarkModeEnabled == this.adaptiveDarkModeEnabled &&
+          other.manualThemeOverride == this.manualThemeOverride);
+}
+
+class SettingsCompanion extends UpdateCompanion<SettingsRow> {
+  final Value<String> id;
+  final Value<bool> adaptiveDarkModeEnabled;
+  final Value<String?> manualThemeOverride;
+  final Value<int> rowid;
+  const SettingsCompanion({
+    this.id = const Value.absent(),
+    this.adaptiveDarkModeEnabled = const Value.absent(),
+    this.manualThemeOverride = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SettingsCompanion.insert({
+    required String id,
+    this.adaptiveDarkModeEnabled = const Value.absent(),
+    this.manualThemeOverride = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<SettingsRow> custom({
+    Expression<String>? id,
+    Expression<bool>? adaptiveDarkModeEnabled,
+    Expression<String>? manualThemeOverride,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (adaptiveDarkModeEnabled != null)
+        'adaptive_dark_mode_enabled': adaptiveDarkModeEnabled,
+      if (manualThemeOverride != null)
+        'manual_theme_override': manualThemeOverride,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SettingsCompanion copyWith({
+    Value<String>? id,
+    Value<bool>? adaptiveDarkModeEnabled,
+    Value<String?>? manualThemeOverride,
+    Value<int>? rowid,
+  }) {
+    return SettingsCompanion(
+      id: id ?? this.id,
+      adaptiveDarkModeEnabled:
+          adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
+      manualThemeOverride: manualThemeOverride ?? this.manualThemeOverride,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (adaptiveDarkModeEnabled.present) {
+      map['adaptive_dark_mode_enabled'] = Variable<bool>(
+        adaptiveDarkModeEnabled.value,
+      );
+    }
+    if (manualThemeOverride.present) {
+      map['manual_theme_override'] = Variable<String>(
+        manualThemeOverride.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
+          ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $MoodTagsTable moodTags = $MoodTagsTable(this);
   late final $SongsTable songs = $SongsTable(this);
+  late final $PlaylistsTable playlists = $PlaylistsTable(this);
+  late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
+  late final $SettingsTable settings = $SettingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [songs];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    moodTags,
+    songs,
+    playlists,
+    playlistSongs,
+    settings,
+  ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'mood_tags',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('songs', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'mood_tags',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('playlists', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'playlists',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('playlist_songs', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'songs',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('playlist_songs', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
+typedef $$MoodTagsTableCreateCompanionBuilder =
+    MoodTagsCompanion Function({
+      required String id,
+      required String label,
+      required String colorHex,
+      Value<int> rowid,
+    });
+typedef $$MoodTagsTableUpdateCompanionBuilder =
+    MoodTagsCompanion Function({
+      Value<String> id,
+      Value<String> label,
+      Value<String> colorHex,
+      Value<int> rowid,
+    });
+
+final class $$MoodTagsTableReferences
+    extends BaseReferences<_$AppDatabase, $MoodTagsTable, MoodTagRow> {
+  $$MoodTagsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$SongsTable, List<SongRow>> _songsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.songs,
+    aliasName: 'mood_tags__id__songs__mood_tag_id',
+  );
+
+  $$SongsTableProcessedTableManager get songsRefs {
+    final manager = $$SongsTableTableManager(
+      $_db,
+      $_db.songs,
+    ).filter((f) => f.moodTagId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_songsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PlaylistsTable, List<PlaylistRow>>
+  _playlistsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.playlists,
+    aliasName: 'mood_tags__id__playlists__source_mood_tag_id',
+  );
+
+  $$PlaylistsTableProcessedTableManager get playlistsRefs {
+    final manager = $$PlaylistsTableTableManager($_db, $_db.playlists).filter(
+      (f) => f.sourceMoodTagId.id.sqlEquals($_itemColumn<String>('id')!),
+    );
+
+    final cache = $_typedResult.readTableOrNull(_playlistsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$MoodTagsTableFilterComposer
+    extends Composer<_$AppDatabase, $MoodTagsTable> {
+  $$MoodTagsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> songsRefs(
+    Expression<bool> Function($$SongsTableFilterComposer f) f,
+  ) {
+    final $$SongsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.songs,
+      getReferencedColumn: (t) => t.moodTagId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SongsTableFilterComposer(
+            $db: $db,
+            $table: $db.songs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> playlistsRefs(
+    Expression<bool> Function($$PlaylistsTableFilterComposer f) f,
+  ) {
+    final $$PlaylistsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playlists,
+      getReferencedColumn: (t) => t.sourceMoodTagId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistsTableFilterComposer(
+            $db: $db,
+            $table: $db.playlists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$MoodTagsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MoodTagsTable> {
+  $$MoodTagsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MoodTagsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MoodTagsTable> {
+  $$MoodTagsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get colorHex =>
+      $composableBuilder(column: $table.colorHex, builder: (column) => column);
+
+  Expression<T> songsRefs<T extends Object>(
+    Expression<T> Function($$SongsTableAnnotationComposer a) f,
+  ) {
+    final $$SongsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.songs,
+      getReferencedColumn: (t) => t.moodTagId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SongsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.songs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> playlistsRefs<T extends Object>(
+    Expression<T> Function($$PlaylistsTableAnnotationComposer a) f,
+  ) {
+    final $$PlaylistsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playlists,
+      getReferencedColumn: (t) => t.sourceMoodTagId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.playlists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$MoodTagsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MoodTagsTable,
+          MoodTagRow,
+          $$MoodTagsTableFilterComposer,
+          $$MoodTagsTableOrderingComposer,
+          $$MoodTagsTableAnnotationComposer,
+          $$MoodTagsTableCreateCompanionBuilder,
+          $$MoodTagsTableUpdateCompanionBuilder,
+          (MoodTagRow, $$MoodTagsTableReferences),
+          MoodTagRow,
+          PrefetchHooks Function({bool songsRefs, bool playlistsRefs})
+        > {
+  $$MoodTagsTableTableManager(_$AppDatabase db, $MoodTagsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoodTagsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MoodTagsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MoodTagsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> colorHex = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoodTagsCompanion(
+                id: id,
+                label: label,
+                colorHex: colorHex,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String label,
+                required String colorHex,
+                Value<int> rowid = const Value.absent(),
+              }) => MoodTagsCompanion.insert(
+                id: id,
+                label: label,
+                colorHex: colorHex,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MoodTagsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({songsRefs = false, playlistsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (songsRefs) db.songs,
+                if (playlistsRefs) db.playlists,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (songsRefs)
+                    await $_getPrefetchedData<
+                      MoodTagRow,
+                      $MoodTagsTable,
+                      SongRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$MoodTagsTableReferences
+                          ._songsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$MoodTagsTableReferences(db, table, p0).songsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.moodTagId == item.id),
+                      typedResults: items,
+                    ),
+                  if (playlistsRefs)
+                    await $_getPrefetchedData<
+                      MoodTagRow,
+                      $MoodTagsTable,
+                      PlaylistRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$MoodTagsTableReferences
+                          ._playlistsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$MoodTagsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).playlistsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.sourceMoodTagId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$MoodTagsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MoodTagsTable,
+      MoodTagRow,
+      $$MoodTagsTableFilterComposer,
+      $$MoodTagsTableOrderingComposer,
+      $$MoodTagsTableAnnotationComposer,
+      $$MoodTagsTableCreateCompanionBuilder,
+      $$MoodTagsTableUpdateCompanionBuilder,
+      (MoodTagRow, $$MoodTagsTableReferences),
+      MoodTagRow,
+      PrefetchHooks Function({bool songsRefs, bool playlistsRefs})
+    >;
 typedef $$SongsTableCreateCompanionBuilder =
     SongsCompanion Function({
       required String id,
@@ -598,6 +2201,46 @@ typedef $$SongsTableUpdateCompanionBuilder =
       Value<bool> isMissing,
       Value<int> rowid,
     });
+
+final class $$SongsTableReferences
+    extends BaseReferences<_$AppDatabase, $SongsTable, SongRow> {
+  $$SongsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $MoodTagsTable _moodTagIdTable(_$AppDatabase db) =>
+      db.moodTags.createAlias('songs__mood_tag_id__mood_tags__id');
+
+  $$MoodTagsTableProcessedTableManager? get moodTagId {
+    final $_column = $_itemColumn<String>('mood_tag_id');
+    if ($_column == null) return null;
+    final manager = $$MoodTagsTableTableManager(
+      $_db,
+      $_db.moodTags,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_moodTagIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PlaylistSongsTable, List<PlaylistSongRow>>
+  _playlistSongsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.playlistSongs,
+    aliasName: 'songs__id__playlist_songs__song_id',
+  );
+
+  $$PlaylistSongsTableProcessedTableManager get playlistSongsRefs {
+    final manager = $$PlaylistSongsTableTableManager(
+      $_db,
+      $_db.playlistSongs,
+    ).filter((f) => f.songId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_playlistSongsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
   $$SongsTableFilterComposer({
@@ -637,11 +2280,6 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get moodTagId => $composableBuilder(
-    column: $table.moodTagId,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<bool> get isLiked => $composableBuilder(
     column: $table.isLiked,
     builder: (column) => ColumnFilters(column),
@@ -651,6 +2289,54 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
     column: $table.isMissing,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$MoodTagsTableFilterComposer get moodTagId {
+    final $$MoodTagsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.moodTagId,
+      referencedTable: $db.moodTags,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoodTagsTableFilterComposer(
+            $db: $db,
+            $table: $db.moodTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> playlistSongsRefs(
+    Expression<bool> Function($$PlaylistSongsTableFilterComposer f) f,
+  ) {
+    final $$PlaylistSongsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playlistSongs,
+      getReferencedColumn: (t) => t.songId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistSongsTableFilterComposer(
+            $db: $db,
+            $table: $db.playlistSongs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SongsTableOrderingComposer
@@ -692,11 +2378,6 @@ class $$SongsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get moodTagId => $composableBuilder(
-    column: $table.moodTagId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<bool> get isLiked => $composableBuilder(
     column: $table.isLiked,
     builder: (column) => ColumnOrderings(column),
@@ -706,6 +2387,29 @@ class $$SongsTableOrderingComposer
     column: $table.isMissing,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$MoodTagsTableOrderingComposer get moodTagId {
+    final $$MoodTagsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.moodTagId,
+      referencedTable: $db.moodTags,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoodTagsTableOrderingComposer(
+            $db: $db,
+            $table: $db.moodTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$SongsTableAnnotationComposer
@@ -737,14 +2441,59 @@ class $$SongsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get moodTagId =>
-      $composableBuilder(column: $table.moodTagId, builder: (column) => column);
-
   GeneratedColumn<bool> get isLiked =>
       $composableBuilder(column: $table.isLiked, builder: (column) => column);
 
   GeneratedColumn<bool> get isMissing =>
       $composableBuilder(column: $table.isMissing, builder: (column) => column);
+
+  $$MoodTagsTableAnnotationComposer get moodTagId {
+    final $$MoodTagsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.moodTagId,
+      referencedTable: $db.moodTags,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoodTagsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.moodTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> playlistSongsRefs<T extends Object>(
+    Expression<T> Function($$PlaylistSongsTableAnnotationComposer a) f,
+  ) {
+    final $$PlaylistSongsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playlistSongs,
+      getReferencedColumn: (t) => t.songId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistSongsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.playlistSongs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SongsTableTableManager
@@ -758,9 +2507,9 @@ class $$SongsTableTableManager
           $$SongsTableAnnotationComposer,
           $$SongsTableCreateCompanionBuilder,
           $$SongsTableUpdateCompanionBuilder,
-          (SongRow, BaseReferences<_$AppDatabase, $SongsTable, SongRow>),
+          (SongRow, $$SongsTableReferences),
           SongRow,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool moodTagId, bool playlistSongsRefs})
         > {
   $$SongsTableTableManager(_$AppDatabase db, $SongsTable table)
     : super(
@@ -822,9 +2571,77 @@ class $$SongsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$SongsTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback:
+              ({moodTagId = false, playlistSongsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (playlistSongsRefs) db.playlistSongs,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (moodTagId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.moodTagId,
+                                    referencedTable: $$SongsTableReferences
+                                        ._moodTagIdTable(db),
+                                    referencedColumn: $$SongsTableReferences
+                                        ._moodTagIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (playlistSongsRefs)
+                        await $_getPrefetchedData<
+                          SongRow,
+                          $SongsTable,
+                          PlaylistSongRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SongsTableReferences
+                              ._playlistSongsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SongsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).playlistSongsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.songId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
         ),
       );
 }
@@ -839,14 +2656,967 @@ typedef $$SongsTableProcessedTableManager =
       $$SongsTableAnnotationComposer,
       $$SongsTableCreateCompanionBuilder,
       $$SongsTableUpdateCompanionBuilder,
-      (SongRow, BaseReferences<_$AppDatabase, $SongsTable, SongRow>),
+      (SongRow, $$SongsTableReferences),
       SongRow,
+      PrefetchHooks Function({bool moodTagId, bool playlistSongsRefs})
+    >;
+typedef $$PlaylistsTableCreateCompanionBuilder =
+    PlaylistsCompanion Function({
+      required String id,
+      required String name,
+      Value<bool> isAutoGenerated,
+      Value<String?> sourceMoodTagId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$PlaylistsTableUpdateCompanionBuilder =
+    PlaylistsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<bool> isAutoGenerated,
+      Value<String?> sourceMoodTagId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$PlaylistsTableReferences
+    extends BaseReferences<_$AppDatabase, $PlaylistsTable, PlaylistRow> {
+  $$PlaylistsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $MoodTagsTable _sourceMoodTagIdTable(_$AppDatabase db) =>
+      db.moodTags.createAlias('playlists__source_mood_tag_id__mood_tags__id');
+
+  $$MoodTagsTableProcessedTableManager? get sourceMoodTagId {
+    final $_column = $_itemColumn<String>('source_mood_tag_id');
+    if ($_column == null) return null;
+    final manager = $$MoodTagsTableTableManager(
+      $_db,
+      $_db.moodTags,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sourceMoodTagIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PlaylistSongsTable, List<PlaylistSongRow>>
+  _playlistSongsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.playlistSongs,
+    aliasName: 'playlists__id__playlist_songs__playlist_id',
+  );
+
+  $$PlaylistSongsTableProcessedTableManager get playlistSongsRefs {
+    final manager = $$PlaylistSongsTableTableManager(
+      $_db,
+      $_db.playlistSongs,
+    ).filter((f) => f.playlistId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_playlistSongsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$PlaylistsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaylistsTable> {
+  $$PlaylistsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAutoGenerated => $composableBuilder(
+    column: $table.isAutoGenerated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MoodTagsTableFilterComposer get sourceMoodTagId {
+    final $$MoodTagsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceMoodTagId,
+      referencedTable: $db.moodTags,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoodTagsTableFilterComposer(
+            $db: $db,
+            $table: $db.moodTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> playlistSongsRefs(
+    Expression<bool> Function($$PlaylistSongsTableFilterComposer f) f,
+  ) {
+    final $$PlaylistSongsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playlistSongs,
+      getReferencedColumn: (t) => t.playlistId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistSongsTableFilterComposer(
+            $db: $db,
+            $table: $db.playlistSongs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PlaylistsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaylistsTable> {
+  $$PlaylistsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isAutoGenerated => $composableBuilder(
+    column: $table.isAutoGenerated,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MoodTagsTableOrderingComposer get sourceMoodTagId {
+    final $$MoodTagsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceMoodTagId,
+      referencedTable: $db.moodTags,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoodTagsTableOrderingComposer(
+            $db: $db,
+            $table: $db.moodTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaylistsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaylistsTable> {
+  $$PlaylistsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAutoGenerated => $composableBuilder(
+    column: $table.isAutoGenerated,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$MoodTagsTableAnnotationComposer get sourceMoodTagId {
+    final $$MoodTagsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceMoodTagId,
+      referencedTable: $db.moodTags,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoodTagsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.moodTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> playlistSongsRefs<T extends Object>(
+    Expression<T> Function($$PlaylistSongsTableAnnotationComposer a) f,
+  ) {
+    final $$PlaylistSongsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playlistSongs,
+      getReferencedColumn: (t) => t.playlistId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistSongsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.playlistSongs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PlaylistsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaylistsTable,
+          PlaylistRow,
+          $$PlaylistsTableFilterComposer,
+          $$PlaylistsTableOrderingComposer,
+          $$PlaylistsTableAnnotationComposer,
+          $$PlaylistsTableCreateCompanionBuilder,
+          $$PlaylistsTableUpdateCompanionBuilder,
+          (PlaylistRow, $$PlaylistsTableReferences),
+          PlaylistRow,
+          PrefetchHooks Function({bool sourceMoodTagId, bool playlistSongsRefs})
+        > {
+  $$PlaylistsTableTableManager(_$AppDatabase db, $PlaylistsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaylistsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaylistsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaylistsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<bool> isAutoGenerated = const Value.absent(),
+                Value<String?> sourceMoodTagId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaylistsCompanion(
+                id: id,
+                name: name,
+                isAutoGenerated: isAutoGenerated,
+                sourceMoodTagId: sourceMoodTagId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<bool> isAutoGenerated = const Value.absent(),
+                Value<String?> sourceMoodTagId = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PlaylistsCompanion.insert(
+                id: id,
+                name: name,
+                isAutoGenerated: isAutoGenerated,
+                sourceMoodTagId: sourceMoodTagId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PlaylistsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({sourceMoodTagId = false, playlistSongsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (playlistSongsRefs) db.playlistSongs,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (sourceMoodTagId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.sourceMoodTagId,
+                                    referencedTable: $$PlaylistsTableReferences
+                                        ._sourceMoodTagIdTable(db),
+                                    referencedColumn: $$PlaylistsTableReferences
+                                        ._sourceMoodTagIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (playlistSongsRefs)
+                        await $_getPrefetchedData<
+                          PlaylistRow,
+                          $PlaylistsTable,
+                          PlaylistSongRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PlaylistsTableReferences
+                              ._playlistSongsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PlaylistsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).playlistSongsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.playlistId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$PlaylistsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaylistsTable,
+      PlaylistRow,
+      $$PlaylistsTableFilterComposer,
+      $$PlaylistsTableOrderingComposer,
+      $$PlaylistsTableAnnotationComposer,
+      $$PlaylistsTableCreateCompanionBuilder,
+      $$PlaylistsTableUpdateCompanionBuilder,
+      (PlaylistRow, $$PlaylistsTableReferences),
+      PlaylistRow,
+      PrefetchHooks Function({bool sourceMoodTagId, bool playlistSongsRefs})
+    >;
+typedef $$PlaylistSongsTableCreateCompanionBuilder =
+    PlaylistSongsCompanion Function({
+      required String playlistId,
+      required String songId,
+      required int position,
+      Value<int> rowid,
+    });
+typedef $$PlaylistSongsTableUpdateCompanionBuilder =
+    PlaylistSongsCompanion Function({
+      Value<String> playlistId,
+      Value<String> songId,
+      Value<int> position,
+      Value<int> rowid,
+    });
+
+final class $$PlaylistSongsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $PlaylistSongsTable, PlaylistSongRow> {
+  $$PlaylistSongsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PlaylistsTable _playlistIdTable(_$AppDatabase db) =>
+      db.playlists.createAlias('playlist_songs__playlist_id__playlists__id');
+
+  $$PlaylistsTableProcessedTableManager get playlistId {
+    final $_column = $_itemColumn<String>('playlist_id')!;
+
+    final manager = $$PlaylistsTableTableManager(
+      $_db,
+      $_db.playlists,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playlistIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SongsTable _songIdTable(_$AppDatabase db) =>
+      db.songs.createAlias('playlist_songs__song_id__songs__id');
+
+  $$SongsTableProcessedTableManager get songId {
+    final $_column = $_itemColumn<String>('song_id')!;
+
+    final manager = $$SongsTableTableManager(
+      $_db,
+      $_db.songs,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_songIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PlaylistSongsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaylistSongsTable> {
+  $$PlaylistSongsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlaylistsTableFilterComposer get playlistId {
+    final $$PlaylistsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playlistId,
+      referencedTable: $db.playlists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistsTableFilterComposer(
+            $db: $db,
+            $table: $db.playlists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SongsTableFilterComposer get songId {
+    final $$SongsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.songId,
+      referencedTable: $db.songs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SongsTableFilterComposer(
+            $db: $db,
+            $table: $db.songs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaylistSongsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaylistSongsTable> {
+  $$PlaylistSongsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlaylistsTableOrderingComposer get playlistId {
+    final $$PlaylistsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playlistId,
+      referencedTable: $db.playlists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistsTableOrderingComposer(
+            $db: $db,
+            $table: $db.playlists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SongsTableOrderingComposer get songId {
+    final $$SongsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.songId,
+      referencedTable: $db.songs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SongsTableOrderingComposer(
+            $db: $db,
+            $table: $db.songs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaylistSongsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaylistSongsTable> {
+  $$PlaylistSongsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  $$PlaylistsTableAnnotationComposer get playlistId {
+    final $$PlaylistsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playlistId,
+      referencedTable: $db.playlists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaylistsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.playlists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SongsTableAnnotationComposer get songId {
+    final $$SongsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.songId,
+      referencedTable: $db.songs,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SongsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.songs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaylistSongsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaylistSongsTable,
+          PlaylistSongRow,
+          $$PlaylistSongsTableFilterComposer,
+          $$PlaylistSongsTableOrderingComposer,
+          $$PlaylistSongsTableAnnotationComposer,
+          $$PlaylistSongsTableCreateCompanionBuilder,
+          $$PlaylistSongsTableUpdateCompanionBuilder,
+          (PlaylistSongRow, $$PlaylistSongsTableReferences),
+          PlaylistSongRow,
+          PrefetchHooks Function({bool playlistId, bool songId})
+        > {
+  $$PlaylistSongsTableTableManager(_$AppDatabase db, $PlaylistSongsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaylistSongsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaylistSongsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaylistSongsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> playlistId = const Value.absent(),
+                Value<String> songId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaylistSongsCompanion(
+                playlistId: playlistId,
+                songId: songId,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String playlistId,
+                required String songId,
+                required int position,
+                Value<int> rowid = const Value.absent(),
+              }) => PlaylistSongsCompanion.insert(
+                playlistId: playlistId,
+                songId: songId,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PlaylistSongsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({playlistId = false, songId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (playlistId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.playlistId,
+                                referencedTable: $$PlaylistSongsTableReferences
+                                    ._playlistIdTable(db),
+                                referencedColumn: $$PlaylistSongsTableReferences
+                                    ._playlistIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (songId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.songId,
+                                referencedTable: $$PlaylistSongsTableReferences
+                                    ._songIdTable(db),
+                                referencedColumn: $$PlaylistSongsTableReferences
+                                    ._songIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PlaylistSongsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaylistSongsTable,
+      PlaylistSongRow,
+      $$PlaylistSongsTableFilterComposer,
+      $$PlaylistSongsTableOrderingComposer,
+      $$PlaylistSongsTableAnnotationComposer,
+      $$PlaylistSongsTableCreateCompanionBuilder,
+      $$PlaylistSongsTableUpdateCompanionBuilder,
+      (PlaylistSongRow, $$PlaylistSongsTableReferences),
+      PlaylistSongRow,
+      PrefetchHooks Function({bool playlistId, bool songId})
+    >;
+typedef $$SettingsTableCreateCompanionBuilder =
+    SettingsCompanion Function({
+      required String id,
+      Value<bool> adaptiveDarkModeEnabled,
+      Value<String?> manualThemeOverride,
+      Value<int> rowid,
+    });
+typedef $$SettingsTableUpdateCompanionBuilder =
+    SettingsCompanion Function({
+      Value<String> id,
+      Value<bool> adaptiveDarkModeEnabled,
+      Value<String?> manualThemeOverride,
+      Value<int> rowid,
+    });
+
+class $$SettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get adaptiveDarkModeEnabled => $composableBuilder(
+    column: $table.adaptiveDarkModeEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get manualThemeOverride => $composableBuilder(
+    column: $table.manualThemeOverride,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get adaptiveDarkModeEnabled => $composableBuilder(
+    column: $table.adaptiveDarkModeEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get manualThemeOverride => $composableBuilder(
+    column: $table.manualThemeOverride,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<bool> get adaptiveDarkModeEnabled => $composableBuilder(
+    column: $table.adaptiveDarkModeEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get manualThemeOverride => $composableBuilder(
+    column: $table.manualThemeOverride,
+    builder: (column) => column,
+  );
+}
+
+class $$SettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SettingsTable,
+          SettingsRow,
+          $$SettingsTableFilterComposer,
+          $$SettingsTableOrderingComposer,
+          $$SettingsTableAnnotationComposer,
+          $$SettingsTableCreateCompanionBuilder,
+          $$SettingsTableUpdateCompanionBuilder,
+          (
+            SettingsRow,
+            BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>,
+          ),
+          SettingsRow,
+          PrefetchHooks Function()
+        > {
+  $$SettingsTableTableManager(_$AppDatabase db, $SettingsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
+                Value<String?> manualThemeOverride = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SettingsCompanion(
+                id: id,
+                adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
+                manualThemeOverride: manualThemeOverride,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
+                Value<String?> manualThemeOverride = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SettingsCompanion.insert(
+                id: id,
+                adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
+                manualThemeOverride: manualThemeOverride,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SettingsTable,
+      SettingsRow,
+      $$SettingsTableFilterComposer,
+      $$SettingsTableOrderingComposer,
+      $$SettingsTableAnnotationComposer,
+      $$SettingsTableCreateCompanionBuilder,
+      $$SettingsTableUpdateCompanionBuilder,
+      (SettingsRow, BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>),
+      SettingsRow,
       PrefetchHooks Function()
     >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$MoodTagsTableTableManager get moodTags =>
+      $$MoodTagsTableTableManager(_db, _db.moodTags);
   $$SongsTableTableManager get songs =>
       $$SongsTableTableManager(_db, _db.songs);
+  $$PlaylistsTableTableManager get playlists =>
+      $$PlaylistsTableTableManager(_db, _db.playlists);
+  $$PlaylistSongsTableTableManager get playlistSongs =>
+      $$PlaylistSongsTableTableManager(_db, _db.playlistSongs);
+  $$SettingsTableTableManager get settings =>
+      $$SettingsTableTableManager(_db, _db.settings);
 }

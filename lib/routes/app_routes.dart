@@ -4,4 +4,5 @@
 abstract final class AppRoutes {
   static const library = '/library';
   static const nowPlaying = '/now-playing';
+  static const settings = '/settings';
 }

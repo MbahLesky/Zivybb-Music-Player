@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/services/media_scanner_service.dart';
 import '../datasources/app_database.dart';
@@ -20,43 +21,76 @@ class SongRepository {
     return _database
         .select(_database.songs)
         .watch()
-        .map((rows) => rows.map(_toSong).toList(growable: false));
+        .map((rows) => rows.map(Song.fromRow).toList(growable: false));
+  }
+
+  /// Emits songs the user has marked as liked/favorite.
+  Stream<List<Song>> watchLikedSongs() {
+    final query = _database.select(_database.songs)
+      ..where((t) => t.isLiked.equals(true));
+    return query.watch().map(
+      (rows) => rows.map(Song.fromRow).toList(growable: false),
+    );
+  }
+
+  /// Emits a single song's live state, e.g. so a screen holding a snapshot
+  /// (like the playback queue) can reflect like/mood-tag changes made
+  /// elsewhere. Emits `null` if the song is removed from the cache.
+  Stream<Song?> watchSong(String songId) {
+    final query = _database.select(_database.songs)
+      ..where((t) => t.id.equals(songId));
+    return query.watchSingleOrNull().map(
+      (row) => row == null ? null : Song.fromRow(row),
+    );
   }
 
   /// Re-scans the device library and upserts the results into the cache.
+  ///
+  /// Preserves user-assigned state (liked, mood tag) for songs that already
+  /// existed in the cache; only device-derived metadata is refreshed.
   Future<List<Song>> refreshFromDevice() async {
     final songs = await _scanner.scanLibrary();
     await _database.batch((batch) {
-      batch.insertAllOnConflictUpdate(_database.songs, songs.map(_toCompanion));
+      batch.insertAll(
+        _database.songs,
+        songs.map((song) => song.toCompanion()),
+        onConflict: DoUpdate<Songs, SongRow>.withExcluded(
+          (old, excluded) => SongsCompanion.custom(
+            filePath: excluded.filePath,
+            title: excluded.title,
+            artist: excluded.artist,
+            album: excluded.album,
+            durationMs: excluded.durationMs,
+            isMissing: const Constant(false),
+            isLiked: old.isLiked,
+            moodTagId: old.moodTagId,
+          ),
+        ),
+      );
     });
     return songs;
   }
 
-  Song _toSong(SongRow row) {
-    return Song(
-      id: row.id,
-      filePath: row.filePath,
-      title: row.title,
-      artist: row.artist,
-      album: row.album,
-      duration: Duration(milliseconds: row.durationMs),
-      moodTagId: row.moodTagId,
-      isLiked: row.isLiked,
-      isMissing: row.isMissing,
-    );
+  Future<void> setLiked(String songId, bool isLiked) {
+    return (_database.update(_database.songs)
+          ..where((t) => t.id.equals(songId)))
+        .write(SongsCompanion(isLiked: Value(isLiked)));
   }
 
-  SongsCompanion _toCompanion(Song song) {
-    return SongsCompanion.insert(
-      id: song.id,
-      filePath: song.filePath,
-      title: song.title,
-      artist: song.artist,
-      album: song.album,
-      durationMs: song.duration.inMilliseconds,
-      moodTagId: Value(song.moodTagId),
-      isLiked: Value(song.isLiked),
-      isMissing: Value(song.isMissing),
-    );
+  Future<void> setMoodTag(String songId, String? moodTagId) {
+    return (_database.update(_database.songs)
+          ..where((t) => t.id.equals(songId)))
+        .write(SongsCompanion(moodTagId: Value(moodTagId)));
   }
 }
+
+final songRepositoryProvider = Provider<SongRepository>((ref) {
+  return SongRepository(
+    database: ref.watch(appDatabaseProvider),
+    scanner: ref.watch(mediaScannerServiceProvider),
+  );
+});
+
+final songStreamProvider = StreamProvider.family<Song?, String>((ref, songId) {
+  return ref.watch(songRepositoryProvider).watchSong(songId);
+});

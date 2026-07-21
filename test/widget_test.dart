@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:zivybb/app.dart';
 import 'package:zivybb/data/datasources/app_database.dart';
-import 'package:zivybb/features/library/application/library_controller.dart';
 
 void main() {
   testWidgets('ZivybbApp builds without error', (WidgetTester tester) async {
