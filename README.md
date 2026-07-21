@@ -30,6 +30,14 @@ Project documentation lives in [`docs/`](docs):
 
 - [`docs/Project-Charter.md`](docs/Project-Charter.md) — project purpose, scope, stakeholders, timeline, and success criteria.
 - [`docs/SRS.md`](docs/SRS.md) — full software requirements specification (functional and non-functional requirements).
+- [`docs/Folder-Structure.md`](docs/Folder-Structure.md) — project folder and file organization.
+- [`docs/Screens.md`](docs/Screens.md) — inventory of every app screen and how they connect.
+- [`docs/Coding-Standards.md`](docs/Coding-Standards.md) — naming, formatting, state management, and testing conventions.
+- [`docs/Entity-Diagrams-UML.md`](docs/Entity-Diagrams-UML.md) — ER diagram, domain class diagram, and key sequence diagrams.
+- [`docs/Interface-Design-Brand-Guide.md`](docs/Interface-Design-Brand-Guide.md) — brand identity, color system, typography, and component guidelines.
+- [`docs/Architecture-Overview.md`](docs/Architecture-Overview.md) — layered architecture, data flow, and persistence strategy.
+- [`docs/Development-Plan.md`](docs/Development-Plan.md) — detailed week-by-week task breakdown and definition of done.
+- [`docs/Testing-Strategy.md`](docs/Testing-Strategy.md) — test types, priority coverage areas, and manual QA checklist.
 
 All project documents are maintained in Markdown in this repository for easy versioning and review.
 
