@@ -31,7 +31,7 @@ Screen widgets are suffixed `Screen` (e.g., `PlaylistDetailScreen`); reusable wi
 
 ## 4. State Management
 
-- Use a single, consistent state management approach across the app (e.g., Riverpod or Provider — to be finalized at project setup and documented here once chosen).
+- State management is `ChangeNotifier` controllers exposed through a single `InheritedWidget` (`lib/app_scope.dart`). The app has a small number of long-lived controllers, so a state management package would add a dependency without removing work. Revisit if that count grows or if controllers start needing to depend on each other.
 - Business logic belongs in controllers/notifiers, not inside widget `build()` methods.
 - Widgets should be as stateless as possible; lift state up to the feature's application layer.
 
