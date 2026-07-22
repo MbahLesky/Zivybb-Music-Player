@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/app_settings.dart';
 import '../application/settings_controller.dart';
+import 'backup_restore_screen.dart';
+import 'equalizer_screen.dart';
 import 'theme_customization_screen.dart';
 
 /// Central hub for app configuration (Screens.md #11).
-///
-/// Equalizer presets and backup & restore land in Week 4.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -88,6 +88,26 @@ class SettingsScreen extends ConsumerWidget {
                       Duration(seconds: value.round()),
                     )
                   : null,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.equalizer),
+            title: const Text('Equalizer'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text('Library'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.backup_outlined),
+            title: const Text('Backup & Restore'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
             ),
           ),
         ],

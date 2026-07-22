@@ -64,6 +64,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     .playQueue(value.songs, startIndex: index),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
+                  tooltip: 'Remove from playlist',
                   onPressed: () => ref
                       .read(playlistRepositoryProvider)
                       .removeSong(playlistId, song.id),

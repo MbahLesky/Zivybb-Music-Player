@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/song.dart';
+import '../../../data/repositories/equalizer_preset_repository.dart';
 import '../../../data/repositories/mood_tag_repository.dart';
+import '../../../data/repositories/song_repository.dart';
 import '../../../routes/app_routes.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/song_list_tile.dart';
@@ -12,6 +14,7 @@ import '../../playlists/presentation/playlist_list_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../application/library_controller.dart';
 import 'folder_browser_tab.dart';
+import 'missing_files_screen.dart';
 
 /// Primary landing screen: entry point to the user's local music
 /// (Screens.md #2). Tabs cover All Songs, Playlists, Folders, and Liked.
@@ -27,14 +30,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(libraryControllerProvider.notifier).refresh();
+      await ref.read(libraryControllerProvider.notifier).refresh();
+      await ref.read(songRepositoryProvider).detectMissingFiles();
       await ref.read(moodTagRepositoryProvider).ensureSeeded();
+      await ref.read(equalizerPresetRepositoryProvider).ensureSeeded();
       await ref.read(moodPlaylistGeneratorProvider).regenerateAll();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final missingCount =
+        ref.watch(missingSongsStreamProvider).value?.length ?? 0;
+
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -42,7 +50,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           title: const Text('Zivybb'),
           actions: [
             IconButton(
+              icon: Badge(
+                label: Text('$missingCount'),
+                isLabelVisible: missingCount > 0,
+                child: const Icon(Icons.error_outline),
+              ),
+              tooltip: 'Missing files',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MissingFilesScreen()),
+              ),
+            ),
+            IconButton(
               icon: const Icon(Icons.settings),
+              tooltip: 'Settings',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   settings: const RouteSettings(name: AppRoutes.settings),

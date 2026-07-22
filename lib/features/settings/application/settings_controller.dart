@@ -99,6 +99,13 @@ class SettingsController extends Notifier<AsyncValue<void>> {
       () => ref.read(settingsRepositoryProvider).setCrossfadeDuration(duration),
     );
   }
+
+  Future<void> setEqualizerPreset(String? presetId) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setEqualizerPreset(presetId),
+    );
+  }
 }
 
 final settingsControllerProvider =

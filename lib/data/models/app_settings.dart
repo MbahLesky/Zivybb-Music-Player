@@ -14,6 +14,7 @@ class AppSettings {
     this.visualizerColorHex = '#673AB7',
     this.crossfadeEnabled = false,
     this.crossfadeDuration = const Duration(seconds: 3),
+    this.currentEqualizerPresetId,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -22,9 +23,10 @@ class AppSettings {
   final String visualizerColorHex;
   final bool crossfadeEnabled;
   final Duration crossfadeDuration;
+  final String? currentEqualizerPresetId;
 
-  /// Pass [manualThemeOverride] to change it, including to `null` (Auto).
-  /// Omit it to leave the current value untouched.
+  /// Pass [manualThemeOverride] or [currentEqualizerPresetId] to change
+  /// them, including to `null`. Omit either to leave it untouched.
   AppSettings copyWith({
     bool? adaptiveDarkModeEnabled,
     Object? manualThemeOverride = _unset,
@@ -32,6 +34,7 @@ class AppSettings {
     String? visualizerColorHex,
     bool? crossfadeEnabled,
     Duration? crossfadeDuration,
+    Object? currentEqualizerPresetId = _unset,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -43,6 +46,9 @@ class AppSettings {
       visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
       crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
       crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
+      currentEqualizerPresetId: identical(currentEqualizerPresetId, _unset)
+          ? this.currentEqualizerPresetId
+          : currentEqualizerPresetId as String?,
     );
   }
 }

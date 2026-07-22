@@ -1476,6 +1476,276 @@ class PlaylistSongsCompanion extends UpdateCompanion<PlaylistSongRow> {
   }
 }
 
+class $EqualizerPresetsTable extends EqualizerPresets
+    with TableInfo<$EqualizerPresetsTable, EqualizerPresetRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EqualizerPresetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bandLevelsJsonMeta = const VerificationMeta(
+    'bandLevelsJson',
+  );
+  @override
+  late final GeneratedColumn<String> bandLevelsJson = GeneratedColumn<String>(
+    'band_levels_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, bandLevelsJson];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'equalizer_presets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EqualizerPresetRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('band_levels_json')) {
+      context.handle(
+        _bandLevelsJsonMeta,
+        bandLevelsJson.isAcceptableOrUnknown(
+          data['band_levels_json']!,
+          _bandLevelsJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bandLevelsJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EqualizerPresetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EqualizerPresetRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      bandLevelsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}band_levels_json'],
+      )!,
+    );
+  }
+
+  @override
+  $EqualizerPresetsTable createAlias(String alias) {
+    return $EqualizerPresetsTable(attachedDatabase, alias);
+  }
+}
+
+class EqualizerPresetRow extends DataClass
+    implements Insertable<EqualizerPresetRow> {
+  final String id;
+  final String name;
+
+  /// JSON-encoded `List<double>` of gains in decibels, one per band.
+  final String bandLevelsJson;
+  const EqualizerPresetRow({
+    required this.id,
+    required this.name,
+    required this.bandLevelsJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['band_levels_json'] = Variable<String>(bandLevelsJson);
+    return map;
+  }
+
+  EqualizerPresetsCompanion toCompanion(bool nullToAbsent) {
+    return EqualizerPresetsCompanion(
+      id: Value(id),
+      name: Value(name),
+      bandLevelsJson: Value(bandLevelsJson),
+    );
+  }
+
+  factory EqualizerPresetRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EqualizerPresetRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      bandLevelsJson: serializer.fromJson<String>(json['bandLevelsJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'bandLevelsJson': serializer.toJson<String>(bandLevelsJson),
+    };
+  }
+
+  EqualizerPresetRow copyWith({
+    String? id,
+    String? name,
+    String? bandLevelsJson,
+  }) => EqualizerPresetRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    bandLevelsJson: bandLevelsJson ?? this.bandLevelsJson,
+  );
+  EqualizerPresetRow copyWithCompanion(EqualizerPresetsCompanion data) {
+    return EqualizerPresetRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      bandLevelsJson: data.bandLevelsJson.present
+          ? data.bandLevelsJson.value
+          : this.bandLevelsJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EqualizerPresetRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('bandLevelsJson: $bandLevelsJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, bandLevelsJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EqualizerPresetRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.bandLevelsJson == this.bandLevelsJson);
+}
+
+class EqualizerPresetsCompanion extends UpdateCompanion<EqualizerPresetRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> bandLevelsJson;
+  final Value<int> rowid;
+  const EqualizerPresetsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.bandLevelsJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EqualizerPresetsCompanion.insert({
+    required String id,
+    required String name,
+    required String bandLevelsJson,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       bandLevelsJson = Value(bandLevelsJson);
+  static Insertable<EqualizerPresetRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? bandLevelsJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (bandLevelsJson != null) 'band_levels_json': bandLevelsJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EqualizerPresetsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? bandLevelsJson,
+    Value<int>? rowid,
+  }) {
+    return EqualizerPresetsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      bandLevelsJson: bandLevelsJson ?? this.bandLevelsJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (bandLevelsJson.present) {
+      map['band_levels_json'] = Variable<String>(bandLevelsJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EqualizerPresetsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('bandLevelsJson: $bandLevelsJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SettingsTable extends Settings
     with TableInfo<$SettingsTable, SettingsRow> {
   @override
@@ -1568,6 +1838,20 @@ class $SettingsTable extends Settings
     requiredDuringInsert: false,
     defaultValue: const Constant(3000),
   );
+  static const VerificationMeta _currentEqualizerPresetIdMeta =
+      const VerificationMeta('currentEqualizerPresetId');
+  @override
+  late final GeneratedColumn<String> currentEqualizerPresetId =
+      GeneratedColumn<String>(
+        'current_equalizer_preset_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES equalizer_presets (id) ON DELETE SET NULL',
+        ),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1577,6 +1861,7 @@ class $SettingsTable extends Settings
     visualizerColorHex,
     crossfadeEnabled,
     crossfadeDurationMs,
+    currentEqualizerPresetId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1649,6 +1934,15 @@ class $SettingsTable extends Settings
         ),
       );
     }
+    if (data.containsKey('current_equalizer_preset_id')) {
+      context.handle(
+        _currentEqualizerPresetIdMeta,
+        currentEqualizerPresetId.isAcceptableOrUnknown(
+          data['current_equalizer_preset_id']!,
+          _currentEqualizerPresetIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1686,6 +1980,10 @@ class $SettingsTable extends Settings
         DriftSqlType.int,
         data['${effectivePrefix}crossfade_duration_ms'],
       )!,
+      currentEqualizerPresetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_equalizer_preset_id'],
+      ),
     );
   }
 
@@ -1703,6 +2001,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   final String visualizerColorHex;
   final bool crossfadeEnabled;
   final int crossfadeDurationMs;
+  final String? currentEqualizerPresetId;
   const SettingsRow({
     required this.id,
     required this.adaptiveDarkModeEnabled,
@@ -1711,6 +2010,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     required this.visualizerColorHex,
     required this.crossfadeEnabled,
     required this.crossfadeDurationMs,
+    this.currentEqualizerPresetId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1724,6 +2024,11 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     map['visualizer_color_hex'] = Variable<String>(visualizerColorHex);
     map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled);
     map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs);
+    if (!nullToAbsent || currentEqualizerPresetId != null) {
+      map['current_equalizer_preset_id'] = Variable<String>(
+        currentEqualizerPresetId,
+      );
+    }
     return map;
   }
 
@@ -1738,6 +2043,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       visualizerColorHex: Value(visualizerColorHex),
       crossfadeEnabled: Value(crossfadeEnabled),
       crossfadeDurationMs: Value(crossfadeDurationMs),
+      currentEqualizerPresetId: currentEqualizerPresetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentEqualizerPresetId),
     );
   }
 
@@ -1762,6 +2070,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       crossfadeDurationMs: serializer.fromJson<int>(
         json['crossfadeDurationMs'],
       ),
+      currentEqualizerPresetId: serializer.fromJson<String?>(
+        json['currentEqualizerPresetId'],
+      ),
     );
   }
   @override
@@ -1777,6 +2088,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       'visualizerColorHex': serializer.toJson<String>(visualizerColorHex),
       'crossfadeEnabled': serializer.toJson<bool>(crossfadeEnabled),
       'crossfadeDurationMs': serializer.toJson<int>(crossfadeDurationMs),
+      'currentEqualizerPresetId': serializer.toJson<String?>(
+        currentEqualizerPresetId,
+      ),
     };
   }
 
@@ -1788,6 +2102,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     String? visualizerColorHex,
     bool? crossfadeEnabled,
     int? crossfadeDurationMs,
+    Value<String?> currentEqualizerPresetId = const Value.absent(),
   }) => SettingsRow(
     id: id ?? this.id,
     adaptiveDarkModeEnabled:
@@ -1799,6 +2114,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
     crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
     crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
+    currentEqualizerPresetId: currentEqualizerPresetId.present
+        ? currentEqualizerPresetId.value
+        : this.currentEqualizerPresetId,
   );
   SettingsRow copyWithCompanion(SettingsCompanion data) {
     return SettingsRow(
@@ -1821,6 +2139,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       crossfadeDurationMs: data.crossfadeDurationMs.present
           ? data.crossfadeDurationMs.value
           : this.crossfadeDurationMs,
+      currentEqualizerPresetId: data.currentEqualizerPresetId.present
+          ? data.currentEqualizerPresetId.value
+          : this.currentEqualizerPresetId,
     );
   }
 
@@ -1833,7 +2154,8 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           ..write('themeSeedColorHex: $themeSeedColorHex, ')
           ..write('visualizerColorHex: $visualizerColorHex, ')
           ..write('crossfadeEnabled: $crossfadeEnabled, ')
-          ..write('crossfadeDurationMs: $crossfadeDurationMs')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
+          ..write('currentEqualizerPresetId: $currentEqualizerPresetId')
           ..write(')'))
         .toString();
   }
@@ -1847,6 +2169,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     visualizerColorHex,
     crossfadeEnabled,
     crossfadeDurationMs,
+    currentEqualizerPresetId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1858,7 +2181,8 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           other.themeSeedColorHex == this.themeSeedColorHex &&
           other.visualizerColorHex == this.visualizerColorHex &&
           other.crossfadeEnabled == this.crossfadeEnabled &&
-          other.crossfadeDurationMs == this.crossfadeDurationMs);
+          other.crossfadeDurationMs == this.crossfadeDurationMs &&
+          other.currentEqualizerPresetId == this.currentEqualizerPresetId);
 }
 
 class SettingsCompanion extends UpdateCompanion<SettingsRow> {
@@ -1869,6 +2193,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   final Value<String> visualizerColorHex;
   final Value<bool> crossfadeEnabled;
   final Value<int> crossfadeDurationMs;
+  final Value<String?> currentEqualizerPresetId;
   final Value<int> rowid;
   const SettingsCompanion({
     this.id = const Value.absent(),
@@ -1878,6 +2203,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.visualizerColorHex = const Value.absent(),
     this.crossfadeEnabled = const Value.absent(),
     this.crossfadeDurationMs = const Value.absent(),
+    this.currentEqualizerPresetId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsCompanion.insert({
@@ -1888,6 +2214,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.visualizerColorHex = const Value.absent(),
     this.crossfadeEnabled = const Value.absent(),
     this.crossfadeDurationMs = const Value.absent(),
+    this.currentEqualizerPresetId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<SettingsRow> custom({
@@ -1898,6 +2225,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Expression<String>? visualizerColorHex,
     Expression<bool>? crossfadeEnabled,
     Expression<int>? crossfadeDurationMs,
+    Expression<String>? currentEqualizerPresetId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1912,6 +2240,8 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
       if (crossfadeEnabled != null) 'crossfade_enabled': crossfadeEnabled,
       if (crossfadeDurationMs != null)
         'crossfade_duration_ms': crossfadeDurationMs,
+      if (currentEqualizerPresetId != null)
+        'current_equalizer_preset_id': currentEqualizerPresetId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1924,6 +2254,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Value<String>? visualizerColorHex,
     Value<bool>? crossfadeEnabled,
     Value<int>? crossfadeDurationMs,
+    Value<String?>? currentEqualizerPresetId,
     Value<int>? rowid,
   }) {
     return SettingsCompanion(
@@ -1935,6 +2266,8 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
       visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
       crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
       crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
+      currentEqualizerPresetId:
+          currentEqualizerPresetId ?? this.currentEqualizerPresetId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1967,6 +2300,11 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     if (crossfadeDurationMs.present) {
       map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs.value);
     }
+    if (currentEqualizerPresetId.present) {
+      map['current_equalizer_preset_id'] = Variable<String>(
+        currentEqualizerPresetId.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1983,6 +2321,267 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           ..write('visualizerColorHex: $visualizerColorHex, ')
           ..write('crossfadeEnabled: $crossfadeEnabled, ')
           ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
+          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BackupsTable extends Backups with TableInfo<$BackupsTable, BackupRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BackupsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, createdAt, filePath];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'backups';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BackupRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_filePathMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BackupRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BackupRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      )!,
+    );
+  }
+
+  @override
+  $BackupsTable createAlias(String alias) {
+    return $BackupsTable(attachedDatabase, alias);
+  }
+}
+
+class BackupRow extends DataClass implements Insertable<BackupRow> {
+  final String id;
+  final DateTime createdAt;
+  final String filePath;
+  const BackupRow({
+    required this.id,
+    required this.createdAt,
+    required this.filePath,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['file_path'] = Variable<String>(filePath);
+    return map;
+  }
+
+  BackupsCompanion toCompanion(bool nullToAbsent) {
+    return BackupsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      filePath: Value(filePath),
+    );
+  }
+
+  factory BackupRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BackupRow(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      filePath: serializer.fromJson<String>(json['filePath']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'filePath': serializer.toJson<String>(filePath),
+    };
+  }
+
+  BackupRow copyWith({String? id, DateTime? createdAt, String? filePath}) =>
+      BackupRow(
+        id: id ?? this.id,
+        createdAt: createdAt ?? this.createdAt,
+        filePath: filePath ?? this.filePath,
+      );
+  BackupRow copyWithCompanion(BackupsCompanion data) {
+    return BackupRow(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BackupRow(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('filePath: $filePath')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, createdAt, filePath);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BackupRow &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.filePath == this.filePath);
+}
+
+class BackupsCompanion extends UpdateCompanion<BackupRow> {
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<String> filePath;
+  final Value<int> rowid;
+  const BackupsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BackupsCompanion.insert({
+    required String id,
+    required DateTime createdAt,
+    required String filePath,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       filePath = Value(filePath);
+  static Insertable<BackupRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<String>? filePath,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (filePath != null) 'file_path': filePath,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BackupsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? createdAt,
+    Value<String>? filePath,
+    Value<int>? rowid,
+  }) {
+    return BackupsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      filePath: filePath ?? this.filePath,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BackupsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('filePath: $filePath, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1996,7 +2595,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SongsTable songs = $SongsTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
+  late final $EqualizerPresetsTable equalizerPresets = $EqualizerPresetsTable(
+    this,
+  );
   late final $SettingsTable settings = $SettingsTable(this);
+  late final $BackupsTable backups = $BackupsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2006,7 +2609,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     songs,
     playlists,
     playlistSongs,
+    equalizerPresets,
     settings,
+    backups,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2037,6 +2642,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('playlist_songs', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'equalizer_presets',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('settings', kind: UpdateKind.update)],
     ),
   ]);
 }
@@ -3658,6 +4270,284 @@ typedef $$PlaylistSongsTableProcessedTableManager =
       PlaylistSongRow,
       PrefetchHooks Function({bool playlistId, bool songId})
     >;
+typedef $$EqualizerPresetsTableCreateCompanionBuilder =
+    EqualizerPresetsCompanion Function({
+      required String id,
+      required String name,
+      required String bandLevelsJson,
+      Value<int> rowid,
+    });
+typedef $$EqualizerPresetsTableUpdateCompanionBuilder =
+    EqualizerPresetsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> bandLevelsJson,
+      Value<int> rowid,
+    });
+
+final class $$EqualizerPresetsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $EqualizerPresetsTable,
+          EqualizerPresetRow
+        > {
+  $$EqualizerPresetsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$SettingsTable, List<SettingsRow>>
+  _settingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.settings,
+    aliasName: 'equalizer_presets__id__settings__current_equalizer_preset_id',
+  );
+
+  $$SettingsTableProcessedTableManager get settingsRefs {
+    final manager = $$SettingsTableTableManager($_db, $_db.settings).filter(
+      (f) =>
+          f.currentEqualizerPresetId.id.sqlEquals($_itemColumn<String>('id')!),
+    );
+
+    final cache = $_typedResult.readTableOrNull(_settingsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EqualizerPresetsTableFilterComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> settingsRefs(
+    Expression<bool> Function($$SettingsTableFilterComposer f) f,
+  ) {
+    final $$SettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.settings,
+      getReferencedColumn: (t) => t.currentEqualizerPresetId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.settings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EqualizerPresetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EqualizerPresetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => column,
+  );
+
+  Expression<T> settingsRefs<T extends Object>(
+    Expression<T> Function($$SettingsTableAnnotationComposer a) f,
+  ) {
+    final $$SettingsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.settings,
+      getReferencedColumn: (t) => t.currentEqualizerPresetId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SettingsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.settings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EqualizerPresetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EqualizerPresetsTable,
+          EqualizerPresetRow,
+          $$EqualizerPresetsTableFilterComposer,
+          $$EqualizerPresetsTableOrderingComposer,
+          $$EqualizerPresetsTableAnnotationComposer,
+          $$EqualizerPresetsTableCreateCompanionBuilder,
+          $$EqualizerPresetsTableUpdateCompanionBuilder,
+          (EqualizerPresetRow, $$EqualizerPresetsTableReferences),
+          EqualizerPresetRow,
+          PrefetchHooks Function({bool settingsRefs})
+        > {
+  $$EqualizerPresetsTableTableManager(
+    _$AppDatabase db,
+    $EqualizerPresetsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EqualizerPresetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EqualizerPresetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EqualizerPresetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> bandLevelsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EqualizerPresetsCompanion(
+                id: id,
+                name: name,
+                bandLevelsJson: bandLevelsJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String bandLevelsJson,
+                Value<int> rowid = const Value.absent(),
+              }) => EqualizerPresetsCompanion.insert(
+                id: id,
+                name: name,
+                bandLevelsJson: bandLevelsJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$EqualizerPresetsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({settingsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (settingsRefs) db.settings],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (settingsRefs)
+                    await $_getPrefetchedData<
+                      EqualizerPresetRow,
+                      $EqualizerPresetsTable,
+                      SettingsRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$EqualizerPresetsTableReferences
+                          ._settingsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$EqualizerPresetsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).settingsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.currentEqualizerPresetId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EqualizerPresetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EqualizerPresetsTable,
+      EqualizerPresetRow,
+      $$EqualizerPresetsTableFilterComposer,
+      $$EqualizerPresetsTableOrderingComposer,
+      $$EqualizerPresetsTableAnnotationComposer,
+      $$EqualizerPresetsTableCreateCompanionBuilder,
+      $$EqualizerPresetsTableUpdateCompanionBuilder,
+      (EqualizerPresetRow, $$EqualizerPresetsTableReferences),
+      EqualizerPresetRow,
+      PrefetchHooks Function({bool settingsRefs})
+    >;
 typedef $$SettingsTableCreateCompanionBuilder =
     SettingsCompanion Function({
       required String id,
@@ -3667,6 +4557,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<String> visualizerColorHex,
       Value<bool> crossfadeEnabled,
       Value<int> crossfadeDurationMs,
+      Value<String?> currentEqualizerPresetId,
       Value<int> rowid,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
@@ -3678,8 +4569,36 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<String> visualizerColorHex,
       Value<bool> crossfadeEnabled,
       Value<int> crossfadeDurationMs,
+      Value<String?> currentEqualizerPresetId,
       Value<int> rowid,
     });
+
+final class $$SettingsTableReferences
+    extends BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow> {
+  $$SettingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $EqualizerPresetsTable _currentEqualizerPresetIdTable(
+    _$AppDatabase db,
+  ) => db.equalizerPresets.createAlias(
+    'settings__current_equalizer_preset_id__equalizer_presets__id',
+  );
+
+  $$EqualizerPresetsTableProcessedTableManager? get currentEqualizerPresetId {
+    final $_column = $_itemColumn<String>('current_equalizer_preset_id');
+    if ($_column == null) return null;
+    final manager = $$EqualizerPresetsTableTableManager(
+      $_db,
+      $_db.equalizerPresets,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(
+      _currentEqualizerPresetIdTable($_db),
+    );
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
 
 class $$SettingsTableFilterComposer
     extends Composer<_$AppDatabase, $SettingsTable> {
@@ -3724,6 +4643,29 @@ class $$SettingsTableFilterComposer
     column: $table.crossfadeDurationMs,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$EqualizerPresetsTableFilterComposer get currentEqualizerPresetId {
+    final $$EqualizerPresetsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.currentEqualizerPresetId,
+      referencedTable: $db.equalizerPresets,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EqualizerPresetsTableFilterComposer(
+            $db: $db,
+            $table: $db.equalizerPresets,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$SettingsTableOrderingComposer
@@ -3769,6 +4711,29 @@ class $$SettingsTableOrderingComposer
     column: $table.crossfadeDurationMs,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$EqualizerPresetsTableOrderingComposer get currentEqualizerPresetId {
+    final $$EqualizerPresetsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.currentEqualizerPresetId,
+      referencedTable: $db.equalizerPresets,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EqualizerPresetsTableOrderingComposer(
+            $db: $db,
+            $table: $db.equalizerPresets,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$SettingsTableAnnotationComposer
@@ -3812,6 +4777,29 @@ class $$SettingsTableAnnotationComposer
     column: $table.crossfadeDurationMs,
     builder: (column) => column,
   );
+
+  $$EqualizerPresetsTableAnnotationComposer get currentEqualizerPresetId {
+    final $$EqualizerPresetsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.currentEqualizerPresetId,
+      referencedTable: $db.equalizerPresets,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EqualizerPresetsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.equalizerPresets,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$SettingsTableTableManager
@@ -3825,12 +4813,9 @@ class $$SettingsTableTableManager
           $$SettingsTableAnnotationComposer,
           $$SettingsTableCreateCompanionBuilder,
           $$SettingsTableUpdateCompanionBuilder,
-          (
-            SettingsRow,
-            BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>,
-          ),
+          (SettingsRow, $$SettingsTableReferences),
           SettingsRow,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool currentEqualizerPresetId})
         > {
   $$SettingsTableTableManager(_$AppDatabase db, $SettingsTable table)
     : super(
@@ -3852,6 +4837,7 @@ class $$SettingsTableTableManager
                 Value<String> visualizerColorHex = const Value.absent(),
                 Value<bool> crossfadeEnabled = const Value.absent(),
                 Value<int> crossfadeDurationMs = const Value.absent(),
+                Value<String?> currentEqualizerPresetId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
@@ -3861,6 +4847,7 @@ class $$SettingsTableTableManager
                 visualizerColorHex: visualizerColorHex,
                 crossfadeEnabled: crossfadeEnabled,
                 crossfadeDurationMs: crossfadeDurationMs,
+                currentEqualizerPresetId: currentEqualizerPresetId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3872,6 +4859,7 @@ class $$SettingsTableTableManager
                 Value<String> visualizerColorHex = const Value.absent(),
                 Value<bool> crossfadeEnabled = const Value.absent(),
                 Value<int> crossfadeDurationMs = const Value.absent(),
+                Value<String?> currentEqualizerPresetId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
@@ -3881,12 +4869,58 @@ class $$SettingsTableTableManager
                 visualizerColorHex: visualizerColorHex,
                 crossfadeEnabled: crossfadeEnabled,
                 crossfadeDurationMs: crossfadeDurationMs,
+                currentEqualizerPresetId: currentEqualizerPresetId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SettingsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({currentEqualizerPresetId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (currentEqualizerPresetId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.currentEqualizerPresetId,
+                                referencedTable: $$SettingsTableReferences
+                                    ._currentEqualizerPresetIdTable(db),
+                                referencedColumn: $$SettingsTableReferences
+                                    ._currentEqualizerPresetIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ),
       );
 }
@@ -3901,8 +4935,164 @@ typedef $$SettingsTableProcessedTableManager =
       $$SettingsTableAnnotationComposer,
       $$SettingsTableCreateCompanionBuilder,
       $$SettingsTableUpdateCompanionBuilder,
-      (SettingsRow, BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>),
+      (SettingsRow, $$SettingsTableReferences),
       SettingsRow,
+      PrefetchHooks Function({bool currentEqualizerPresetId})
+    >;
+typedef $$BackupsTableCreateCompanionBuilder =
+    BackupsCompanion Function({
+      required String id,
+      required DateTime createdAt,
+      required String filePath,
+      Value<int> rowid,
+    });
+typedef $$BackupsTableUpdateCompanionBuilder =
+    BackupsCompanion Function({
+      Value<String> id,
+      Value<DateTime> createdAt,
+      Value<String> filePath,
+      Value<int> rowid,
+    });
+
+class $$BackupsTableFilterComposer
+    extends Composer<_$AppDatabase, $BackupsTable> {
+  $$BackupsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BackupsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BackupsTable> {
+  $$BackupsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BackupsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BackupsTable> {
+  $$BackupsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+}
+
+class $$BackupsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BackupsTable,
+          BackupRow,
+          $$BackupsTableFilterComposer,
+          $$BackupsTableOrderingComposer,
+          $$BackupsTableAnnotationComposer,
+          $$BackupsTableCreateCompanionBuilder,
+          $$BackupsTableUpdateCompanionBuilder,
+          (BackupRow, BaseReferences<_$AppDatabase, $BackupsTable, BackupRow>),
+          BackupRow,
+          PrefetchHooks Function()
+        > {
+  $$BackupsTableTableManager(_$AppDatabase db, $BackupsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BackupsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BackupsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BackupsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> filePath = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BackupsCompanion(
+                id: id,
+                createdAt: createdAt,
+                filePath: filePath,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime createdAt,
+                required String filePath,
+                Value<int> rowid = const Value.absent(),
+              }) => BackupsCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                filePath: filePath,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BackupsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BackupsTable,
+      BackupRow,
+      $$BackupsTableFilterComposer,
+      $$BackupsTableOrderingComposer,
+      $$BackupsTableAnnotationComposer,
+      $$BackupsTableCreateCompanionBuilder,
+      $$BackupsTableUpdateCompanionBuilder,
+      (BackupRow, BaseReferences<_$AppDatabase, $BackupsTable, BackupRow>),
+      BackupRow,
       PrefetchHooks Function()
     >;
 
@@ -3917,6 +5107,10 @@ class $AppDatabaseManager {
       $$PlaylistsTableTableManager(_db, _db.playlists);
   $$PlaylistSongsTableTableManager get playlistSongs =>
       $$PlaylistSongsTableTableManager(_db, _db.playlistSongs);
+  $$EqualizerPresetsTableTableManager get equalizerPresets =>
+      $$EqualizerPresetsTableTableManager(_db, _db.equalizerPresets);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
+  $$BackupsTableTableManager get backups =>
+      $$BackupsTableTableManager(_db, _db.backups);
 }

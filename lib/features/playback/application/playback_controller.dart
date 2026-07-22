@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/audio_player_service.dart';
 import '../../../data/models/song.dart';
+import '../../../data/repositories/song_repository.dart';
+import '../../settings/application/equalizer_controller.dart';
 import '../../settings/application/settings_controller.dart';
 
 final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
@@ -92,6 +94,7 @@ class PlaybackController extends Notifier<PlaybackState> {
           state = state.copyWith(currentIndex: index);
         }
       }),
+      _player.playbackErrorIndexStream.listen(_onPlaybackError),
     ];
     ref.onDispose(() {
       for (final subscription in subscriptions) {
@@ -110,6 +113,15 @@ class PlaybackController extends Notifier<PlaybackState> {
       }
     }, fireImmediately: true);
 
+    // Keep the device equalizer in sync with the selected preset.
+    ref.listen(effectiveEqualizerBandGainsProvider, (previous, next) {
+      if (next != null) {
+        _player.applyEqualizerBandGains(next);
+      } else {
+        _player.disableEqualizer();
+      }
+    }, fireImmediately: true);
+
     return const PlaybackState();
   }
 
@@ -120,6 +132,20 @@ class PlaybackController extends Notifier<PlaybackState> {
         position >= previewClipDuration) {
       _previewSkipPending = true;
       _player.seekToNext();
+    }
+  }
+
+  /// Marks the failed track missing and skips past it (SRS F-5.3): a
+  /// deleted or corrupt file should never crash playback.
+  Future<void> _onPlaybackError(int index) async {
+    if (index >= 0 && index < state.queue.length) {
+      final song = state.queue[index];
+      await ref.read(songRepositoryProvider).setMissing(song.id, true);
+    }
+    try {
+      await _player.seekToNext();
+    } catch (_) {
+      // Nothing left to skip to.
     }
   }
 

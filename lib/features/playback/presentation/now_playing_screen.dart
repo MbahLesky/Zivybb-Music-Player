@@ -6,6 +6,8 @@ import '../../../data/repositories/song_repository.dart';
 import '../../mood_tagging/application/mood_tagging_controller.dart';
 import '../../mood_tagging/presentation/mood_tagging_screen.dart';
 import '../../settings/application/settings_controller.dart';
+import '../../settings/presentation/equalizer_screen.dart';
+import '../../tag_editor/presentation/tag_editor_screen.dart';
 import '../../visualizer/presentation/wave_visualizer.dart';
 import '../application/playback_controller.dart';
 
@@ -41,12 +43,27 @@ class NowPlayingScreen extends ConsumerWidget {
                 .read(playbackControllerProvider.notifier)
                 .togglePreviewMode(),
           ),
-          if (song != null)
+          if (song != null) ...[
             IconButton(
               icon: const Icon(Icons.mood),
               tooltip: 'Tag mood',
               onPressed: () => MoodTaggingSheet.show(context, song),
             ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit tags',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => TagEditorScreen(song: song)),
+              ),
+            ),
+          ],
+          IconButton(
+            icon: const Icon(Icons.equalizer),
+            tooltip: 'Equalizer',
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+          ),
         ],
       ),
       body: song == null
@@ -105,6 +122,9 @@ class NowPlayingScreen extends ConsumerWidget {
                               ? Icons.shuffle_on_outlined
                               : Icons.shuffle,
                         ),
+                        tooltip: playback.shuffleEnabled
+                            ? 'Shuffle on'
+                            : 'Shuffle off',
                         onPressed: () => ref
                             .read(playbackControllerProvider.notifier)
                             .toggleShuffle(),
@@ -112,6 +132,7 @@ class NowPlayingScreen extends ConsumerWidget {
                       IconButton(
                         iconSize: 32,
                         icon: const Icon(Icons.skip_previous),
+                        tooltip: 'Previous',
                         onPressed: () => ref
                             .read(playbackControllerProvider.notifier)
                             .previous(),
@@ -123,6 +144,7 @@ class NowPlayingScreen extends ConsumerWidget {
                               ? Icons.pause_circle_filled
                               : Icons.play_circle_filled,
                         ),
+                        tooltip: playback.isPlaying ? 'Pause' : 'Play',
                         onPressed: () => ref
                             .read(playbackControllerProvider.notifier)
                             .togglePlayPause(),
@@ -130,6 +152,7 @@ class NowPlayingScreen extends ConsumerWidget {
                       IconButton(
                         iconSize: 32,
                         icon: const Icon(Icons.skip_next),
+                        tooltip: 'Next',
                         onPressed: () => ref
                             .read(playbackControllerProvider.notifier)
                             .next(),

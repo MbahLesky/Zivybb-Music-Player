@@ -35,6 +35,7 @@ class SongListTile extends ConsumerWidget {
           trailing ??
           IconButton(
             icon: Icon(song.isLiked ? Icons.favorite : Icons.favorite_border),
+            tooltip: song.isLiked ? 'Unlike' : 'Like',
             onPressed: () => ref
                 .read(songRepositoryProvider)
                 .setLiked(song.id, !song.isLiked),

@@ -70,6 +70,31 @@ class PlaylistSongs extends Table {
   Set<Column> get primaryKey => {playlistId, songId};
 }
 
+/// A named set of equalizer band gains the user can select (SRS F-1.6).
+@DataClassName('EqualizerPresetRow')
+class EqualizerPresets extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+
+  /// JSON-encoded `List<double>` of gains in decibels, one per band.
+  TextColumn get bandLevelsJson => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// A backup snapshot's metadata; the snapshot itself is a JSON file at
+/// [filePath] (Entity-Diagrams-UML.md BACKUP).
+@DataClassName('BackupRow')
+class Backups extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  TextColumn get filePath => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Single-row app configuration. [id] is always [Settings.singletonId].
 @DataClassName('SettingsRow')
 class Settings extends Table {
@@ -87,12 +112,27 @@ class Settings extends Table {
       boolean().withDefault(const Constant(false))();
   IntColumn get crossfadeDurationMs =>
       integer().withDefault(const Constant(3000))();
+  TextColumn get currentEqualizerPresetId => text().nullable().references(
+    EqualizerPresets,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [MoodTags, Songs, Playlists, PlaylistSongs, Settings])
+@DriftDatabase(
+  tables: [
+    MoodTags,
+    Songs,
+    Playlists,
+    PlaylistSongs,
+    Settings,
+    EqualizerPresets,
+    Backups,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -100,7 +140,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -117,6 +157,11 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(settings, settings.visualizerColorHex);
         await m.addColumn(settings, settings.crossfadeEnabled);
         await m.addColumn(settings, settings.crossfadeDurationMs);
+      }
+      if (from < 4) {
+        await m.createTable(equalizerPresets);
+        await m.createTable(backups);
+        await m.addColumn(settings, settings.currentEqualizerPresetId);
       }
     },
   );

@@ -5,7 +5,7 @@ import '../datasources/app_database.dart';
 import '../models/app_settings.dart';
 
 /// Single access point for app-wide settings: adaptive dark mode, theme and
-/// visualizer color, and crossfade. Equalizer presets land in Week 4.
+/// visualizer color, crossfade, and the selected equalizer preset.
 class SettingsRepository {
   SettingsRepository({required this._database});
 
@@ -15,6 +15,14 @@ class SettingsRepository {
     final query = _database.select(_database.settings)
       ..where((t) => t.id.equals(Settings.singletonId));
     return query.watchSingleOrNull().map(_toSettings);
+  }
+
+  /// One-off (non-reactive) fetch, used by `BackupRepository`.
+  Future<AppSettings> currentSettings() async {
+    final row = await (_database.select(
+      _database.settings,
+    )..where((t) => t.id.equals(Settings.singletonId))).getSingleOrNull();
+    return _toSettings(row);
   }
 
   Future<void> setAdaptiveDarkModeEnabled(bool enabled) {
@@ -81,6 +89,17 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setEqualizerPreset(String? presetId) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        currentEqualizerPresetId: Value(presetId),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(currentEqualizerPresetId: Value(presetId)),
+    );
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -101,6 +120,7 @@ class SettingsRepository {
       visualizerColorHex: row.visualizerColorHex,
       crossfadeEnabled: row.crossfadeEnabled,
       crossfadeDuration: Duration(milliseconds: row.crossfadeDurationMs),
+      currentEqualizerPresetId: row.currentEqualizerPresetId,
     );
   }
 }
