@@ -1,211 +1,181 @@
 import 'dart:async';
-import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/services/audio_engine.dart';
+import '../../../core/services/audio_player_service.dart';
 import '../../../data/models/song.dart';
+import '../../../data/repositories/song_repository.dart';
+import '../../settings/application/equalizer_controller.dart';
+import '../../settings/application/settings_controller.dart';
 
-/// Owns the playback queue and transport state for the whole app.
-///
-/// The mini-player and the Now Playing screen are both views onto this
-/// controller, which is why queue state lives here rather than in either
-/// screen.
-class PlaybackController extends ChangeNotifier {
-  PlaybackController({required AudioEngine engine, Random? random})
-    : _engine = engine,
-      _random = random ?? Random() {
-    _positionSubscription = _engine.positionStream.listen(_onPositionChanged);
-    _completionSubscription = _engine.trackCompletions.listen(
-      (_) => unawaited(next()),
+final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
+  final service = AudioPlayerService();
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+/// How long a preview clip plays before auto-advancing (SRS F-4.1).
+const previewClipDuration = Duration(seconds: 30);
+
+/// Snapshot of the current playback queue and transport state.
+class PlaybackState {
+  const PlaybackState({
+    this.queue = const [],
+    this.currentIndex,
+    this.isPlaying = false,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
+    this.shuffleEnabled = false,
+    this.previewModeEnabled = false,
+  });
+
+  final List<Song> queue;
+  final int? currentIndex;
+  final bool isPlaying;
+  final Duration position;
+  final Duration duration;
+  final bool shuffleEnabled;
+  final bool previewModeEnabled;
+
+  Song? get currentSong {
+    final index = currentIndex;
+    if (index == null || index < 0 || index >= queue.length) {
+      return null;
+    }
+    return queue[index];
+  }
+
+  PlaybackState copyWith({
+    List<Song>? queue,
+    int? currentIndex,
+    bool? isPlaying,
+    Duration? position,
+    Duration? duration,
+    bool? shuffleEnabled,
+    bool? previewModeEnabled,
+  }) {
+    return PlaybackState(
+      queue: queue ?? this.queue,
+      currentIndex: currentIndex ?? this.currentIndex,
+      isPlaying: isPlaying ?? this.isPlaying,
+      position: position ?? this.position,
+      duration: duration ?? this.duration,
+      shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
+      previewModeEnabled: previewModeEnabled ?? this.previewModeEnabled,
     );
   }
+}
 
-  /// Pressing previous past this point restarts the track instead of going
-  /// back a track — the behavior every player has trained users to expect.
-  static const _restartThreshold = Duration(seconds: 3);
+/// Drives the audio engine and exposes transport state to the UI.
+class PlaybackController extends Notifier<PlaybackState> {
+  late final AudioPlayerService _player;
 
-  final AudioEngine _engine;
-  final Random _random;
-
-  late final StreamSubscription<Duration> _positionSubscription;
-  late final StreamSubscription<void> _completionSubscription;
-
-  List<Song> _queue = const [];
-
-  /// Indices into [_queue], in the order they will play. Shuffle reorders this
-  /// rather than the queue itself, so turning shuffle off restores the
-  /// original order without a reload.
-  List<int> _order = const [];
-  int _orderIndex = -1;
-
-  bool _isPlaying = false;
-  bool _isShuffleEnabled = false;
-  Duration _position = Duration.zero;
-
-  List<Song> get queue => List.unmodifiable(_queue);
-
-  Song? get currentSong => _orderIndex < 0 || _orderIndex >= _order.length
-      ? null
-      : _queue[_order[_orderIndex]];
-
-  bool get isPlaying => _isPlaying;
-  bool get isShuffleEnabled => _isShuffleEnabled;
-  Duration get position => _position;
-  Duration get duration => currentSong?.duration ?? Duration.zero;
-
-  /// Playback progress from 0 to 1, safe to hand straight to a progress bar.
-  double get progress {
-    final total = duration.inMilliseconds;
-    if (total <= 0) return 0;
-    return (_position.inMilliseconds / total).clamp(0.0, 1.0);
-  }
-
-  /// Replaces the queue with [songs] and starts playing at [startIndex].
-  ///
-  /// Missing files are dropped from the queue rather than played and failed;
-  /// if [startIndex] points at one, playback starts from the next playable
-  /// track instead.
-  Future<void> playQueue(List<Song> songs, {int startIndex = 0}) async {
-    final playable = songs.where((song) => !song.isMissing).toList();
-    if (playable.isEmpty) return;
-
-    _queue = playable;
-    _setOrder(startAt: _resolveStart(songs, playable, startIndex));
-
-    await _loadCurrent();
-    await _resume();
-  }
-
-  Future<void> togglePlayPause() async {
-    if (currentSong == null) return;
-    if (_isPlaying) {
-      await _engine.pause();
-      _isPlaying = false;
-      notifyListeners();
-      return;
-    }
-    await _resume();
-  }
-
-  /// Advances to the next track, stopping at the end of the queue.
-  Future<void> next() async {
-    if (currentSong == null) return;
-
-    if (_orderIndex >= _order.length - 1) {
-      await _engine.pause();
-      await _engine.seek(Duration.zero);
-      _isPlaying = false;
-      notifyListeners();
-      return;
-    }
-
-    _orderIndex++;
-    await _loadCurrent();
-    await _resume();
-  }
-
-  /// Restarts the current track, or steps back one if it just started.
-  Future<void> previous() async {
-    if (currentSong == null) return;
-
-    if (_position > _restartThreshold || _orderIndex == 0) {
-      await _engine.seek(Duration.zero);
-      return;
-    }
-
-    _orderIndex--;
-    await _loadCurrent();
-    await _resume();
-  }
-
-  Future<void> seek(Duration position) => _engine.seek(position);
-
-  /// Toggles shuffle, keeping the current track playing in place.
-  Future<void> toggleShuffle() async {
-    _isShuffleEnabled = !_isShuffleEnabled;
-
-    final current = currentSong;
-    if (current == null) {
-      notifyListeners();
-      return;
-    }
-
-    _setOrder(startAt: _queue.indexOf(current));
-    notifyListeners();
-  }
-
-  /// Keeps the queue in sync when a song's metadata changes elsewhere, e.g.
-  /// after a like toggle or a tag edit.
-  void syncSong(Song song) {
-    final index = _queue.indexWhere((candidate) => candidate.id == song.id);
-    if (index == -1) return;
-
-    _queue = List.of(_queue)..[index] = song;
-    notifyListeners();
-  }
-
-  /// Maps [startIndex] in [songs] onto an index in the [playable] queue.
-  ///
-  /// When the requested song is missing, playback moves forward to the next
-  /// file that is actually there rather than refusing to start.
-  static int _resolveStart(
-    List<Song> songs,
-    List<Song> playable,
-    int startIndex,
-  ) {
-    for (var i = max(0, startIndex); i < songs.length; i++) {
-      final index = playable.indexWhere((song) => song.id == songs[i].id);
-      if (index != -1) return index;
-    }
-
-    return 0;
-  }
-
-  /// Rebuilds the play order around [startAt] and points at that track.
-  ///
-  /// Shuffling promotes [startAt] to the front so the track the user picked
-  /// still plays first; in order, the queue plays from [startAt] onward.
-  void _setOrder({required int startAt}) {
-    final natural = [for (var i = 0; i < _queue.length; i++) i];
-
-    if (!_isShuffleEnabled) {
-      _order = natural;
-      _orderIndex = startAt;
-      return;
-    }
-
-    final rest = natural.where((index) => index != startAt).toList()
-      ..shuffle(_random);
-    _order = [startAt, ...rest];
-    _orderIndex = 0;
-  }
-
-  Future<void> _loadCurrent() async {
-    final song = currentSong;
-    if (song == null) return;
-
-    _position = Duration.zero;
-    await _engine.load(song);
-    notifyListeners();
-  }
-
-  Future<void> _resume() async {
-    await _engine.play();
-    _isPlaying = true;
-    notifyListeners();
-  }
-
-  void _onPositionChanged(Duration position) {
-    _position = position;
-    notifyListeners();
-  }
+  /// Guards against repeatedly calling `seekToNext` while position keeps
+  /// reporting past [previewClipDuration] during the async gap before the
+  /// track actually changes.
+  bool _previewSkipPending = false;
 
   @override
-  void dispose() {
-    unawaited(_positionSubscription.cancel());
-    unawaited(_completionSubscription.cancel());
-    unawaited(_engine.dispose());
-    super.dispose();
+  PlaybackState build() {
+    _player = ref.read(audioPlayerServiceProvider);
+
+    final subscriptions = <StreamSubscription<void>>[
+      _player.positionStream.listen(_onPosition),
+      _player.durationStream.listen(
+        (duration) =>
+            state = state.copyWith(duration: duration ?? Duration.zero),
+      ),
+      _player.playingStream.listen(
+        (isPlaying) => state = state.copyWith(isPlaying: isPlaying),
+      ),
+      _player.currentIndexStream.listen((index) {
+        if (index != null) {
+          _previewSkipPending = false;
+          state = state.copyWith(currentIndex: index);
+        }
+      }),
+      _player.playbackErrorIndexStream.listen(_onPlaybackError),
+    ];
+    ref.onDispose(() {
+      for (final subscription in subscriptions) {
+        subscription.cancel();
+      }
+    });
+
+    // Keep the engine's crossfade config in sync with the persisted setting.
+    ref.listen(settingsStreamProvider, (previous, next) {
+      final settings = next.value;
+      if (settings != null) {
+        _player.setCrossfadeSettings(
+          enabled: settings.crossfadeEnabled,
+          duration: settings.crossfadeDuration,
+        );
+      }
+    }, fireImmediately: true);
+
+    // Keep the device equalizer in sync with the selected preset.
+    ref.listen(effectiveEqualizerBandGainsProvider, (previous, next) {
+      if (next != null) {
+        _player.applyEqualizerBandGains(next);
+      } else {
+        _player.disableEqualizer();
+      }
+    }, fireImmediately: true);
+
+    return const PlaybackState();
+  }
+
+  void _onPosition(Duration position) {
+    state = state.copyWith(position: position);
+    if (state.previewModeEnabled &&
+        !_previewSkipPending &&
+        position >= previewClipDuration) {
+      _previewSkipPending = true;
+      _player.seekToNext();
+    }
+  }
+
+  /// Marks the failed track missing and skips past it (SRS F-5.3): a
+  /// deleted or corrupt file should never crash playback.
+  Future<void> _onPlaybackError(int index) async {
+    if (index >= 0 && index < state.queue.length) {
+      final song = state.queue[index];
+      await ref.read(songRepositoryProvider).setMissing(song.id, true);
+    }
+    try {
+      await _player.seekToNext();
+    } catch (_) {
+      // Nothing left to skip to.
+    }
+  }
+
+  /// Loads [queue] into the engine and starts playback at [startIndex].
+  Future<void> playQueue(List<Song> queue, {required int startIndex}) async {
+    state = state.copyWith(queue: queue, currentIndex: startIndex);
+    await _player.loadQueue(queue, initialIndex: startIndex);
+    await _player.play();
+  }
+
+  Future<void> togglePlayPause() {
+    return state.isPlaying ? _player.pause() : _player.play();
+  }
+
+  Future<void> next() => _player.seekToNext();
+
+  Future<void> previous() => _player.seekToPrevious();
+
+  Future<void> seek(Duration position) => _player.seek(position);
+
+  Future<void> toggleShuffle() async {
+    final enabled = !state.shuffleEnabled;
+    await _player.setShuffleModeEnabled(enabled);
+    state = state.copyWith(shuffleEnabled: enabled);
+  }
+
+  void togglePreviewMode() {
+    state = state.copyWith(previewModeEnabled: !state.previewModeEnabled);
   }
 }
+
+final playbackControllerProvider =
+    NotifierProvider<PlaybackController, PlaybackState>(PlaybackController.new);

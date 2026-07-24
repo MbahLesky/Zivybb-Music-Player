@@ -1,229 +1,223 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app_scope.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/mood_tags.dart';
-import '../../../core/utils/duration_formatter.dart';
-import '../../../shared/widgets/album_art.dart';
-import '../../../shared/widgets/empty_state.dart';
-import '../../../shared/widgets/mood_chip.dart';
+import '../../../data/models/mood_tag.dart';
+import '../../../data/repositories/song_repository.dart';
+import '../../mood_tagging/application/mood_tagging_controller.dart';
+import '../../mood_tagging/presentation/mood_tagging_screen.dart';
+import '../../settings/application/settings_controller.dart';
+import '../../settings/presentation/equalizer_screen.dart';
+import '../../tag_editor/presentation/tag_editor_screen.dart';
+import '../../visualizer/presentation/wave_visualizer.dart';
 import '../application/playback_controller.dart';
 
-/// The full playback view for the current track.
-///
-/// The beat-reactive visualizer takes the place of the artwork block once the
-/// audio analysis pipeline lands (Development Plan, Week 3).
-class NowPlayingScreen extends StatefulWidget {
+/// Full playback experience for the current track.
+class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
 
   @override
-  State<NowPlayingScreen> createState() => _NowPlayingScreenState();
-}
-
-class _NowPlayingScreenState extends State<NowPlayingScreen> {
-  /// Position being dragged to, held locally so the thumb tracks the finger
-  /// instead of snapping back to the engine's position on every tick.
-  double? _scrubPosition;
-
-  @override
-  Widget build(BuildContext context) {
-    final playback = AppScope.playbackOf(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playback = ref.watch(playbackControllerProvider);
+    final song = playback.currentSong;
+    // Watched separately so the mood tag badge reflects live edits, since
+    // `song` is a snapshot taken when the queue was loaded.
+    final liveSong = song == null
+        ? null
+        : ref.watch(songStreamProvider(song.id)).value ?? song;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: Navigator.of(context).pop,
-          icon: const Icon(Icons.keyboard_arrow_down),
-          tooltip: 'Back to library',
-        ),
         title: const Text('Now Playing'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.timelapse,
+              color: playback.previewModeEnabled
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            tooltip: playback.previewModeEnabled
+                ? 'Preview mode on (30s clips)'
+                : 'Preview mode off',
+            onPressed: () => ref
+                .read(playbackControllerProvider.notifier)
+                .togglePreviewMode(),
+          ),
+          if (song != null) ...[
+            IconButton(
+              icon: const Icon(Icons.mood),
+              tooltip: 'Tag mood',
+              onPressed: () => MoodTaggingSheet.show(context, song),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit tags',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => TagEditorScreen(song: song)),
+              ),
+            ),
+          ],
+          IconButton(
+            icon: const Icon(Icons.equalizer),
+            tooltip: 'Equalizer',
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+          ),
+        ],
       ),
-      body: AnimatedBuilder(
-        animation: playback,
-        builder: (context, _) {
-          final song = playback.currentSong;
-          if (song == null) {
-            return const EmptyState(
-              icon: Icons.play_circle_outline,
-              title: 'Nothing playing',
-              message: 'Pick a song from your library to start.',
-            );
-          }
-
-          final mood = MoodTags.byId(song.moodTagId);
-
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      body: song == null
+          ? const Center(child: Text('Nothing is playing.'))
+          : Padding(
+              padding: const EdgeInsets.all(24),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Center(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) => AlbumArt(
-                          seed: song.id,
-                          size: constraints.biggest.shortestSide.clamp(
-                            120.0,
-                            320.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     song.title,
-                    maxLines: 2,
+                    style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.headlineLarge,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: 8),
                   Text(
-                    '${song.artist} · ${song.album}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    '${song.artist} — ${song.album}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
                   ),
-                  if (mood != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    MoodChip(tag: mood),
+                  if (liveSong?.moodTagId != null) ...[
+                    const SizedBox(height: 8),
+                    _MoodTagLabel(moodTagId: liveSong!.moodTagId!),
                   ],
-                  const SizedBox(height: AppSpacing.lg),
-                  _ProgressBar(
-                    playback: playback,
-                    scrubPosition: _scrubPosition,
-                    onScrub: (value) => setState(() => _scrubPosition = value),
-                    onScrubEnd: (value) {
-                      playback.seek(Duration(milliseconds: value.round()));
-                      setState(() => _scrubPosition = null);
-                    },
+                  const _CrossfadeIndicator(),
+                  const SizedBox(height: 16),
+                  WaveVisualizer(color: ref.watch(visualizerColorProvider)),
+                  const SizedBox(height: 24),
+                  Slider(
+                    min: 0,
+                    max: playback.duration.inMilliseconds > 0
+                        ? playback.duration.inMilliseconds.toDouble()
+                        : 1,
+                    value: playback.position.inMilliseconds
+                        .clamp(0, playback.duration.inMilliseconds)
+                        .toDouble(),
+                    onChanged: (value) => ref
+                        .read(playbackControllerProvider.notifier)
+                        .seek(Duration(milliseconds: value.round())),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _TransportControls(playback: playback),
-                  const SizedBox(height: AppSpacing.xl),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(_format(playback.position)),
+                      Text(_format(playback.duration)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        iconSize: 32,
+                        icon: Icon(
+                          playback.shuffleEnabled
+                              ? Icons.shuffle_on_outlined
+                              : Icons.shuffle,
+                        ),
+                        tooltip: playback.shuffleEnabled
+                            ? 'Shuffle on'
+                            : 'Shuffle off',
+                        onPressed: () => ref
+                            .read(playbackControllerProvider.notifier)
+                            .toggleShuffle(),
+                      ),
+                      IconButton(
+                        iconSize: 32,
+                        icon: const Icon(Icons.skip_previous),
+                        tooltip: 'Previous',
+                        onPressed: () => ref
+                            .read(playbackControllerProvider.notifier)
+                            .previous(),
+                      ),
+                      IconButton(
+                        iconSize: 48,
+                        icon: Icon(
+                          playback.isPlaying
+                              ? Icons.pause_circle_filled
+                              : Icons.play_circle_filled,
+                        ),
+                        tooltip: playback.isPlaying ? 'Pause' : 'Play',
+                        onPressed: () => ref
+                            .read(playbackControllerProvider.notifier)
+                            .togglePlayPause(),
+                      ),
+                      IconButton(
+                        iconSize: 32,
+                        icon: const Icon(Icons.skip_next),
+                        tooltip: 'Next',
+                        onPressed: () => ref
+                            .read(playbackControllerProvider.notifier)
+                            .next(),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-          );
-        },
-      ),
     );
+  }
+
+  String _format(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 }
 
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({
-    required this.playback,
-    required this.scrubPosition,
-    required this.onScrub,
-    required this.onScrubEnd,
-  });
+class _MoodTagLabel extends ConsumerWidget {
+  const _MoodTagLabel({required this.moodTagId});
 
-  final PlaybackController playback;
-  final double? scrubPosition;
-  final ValueChanged<double> onScrub;
-  final ValueChanged<double> onScrubEnd;
+  final String moodTagId;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final total = playback.duration.inMilliseconds.toDouble();
-    final current = (scrubPosition ?? playback.position.inMilliseconds)
-        .toDouble()
-        .clamp(0.0, total == 0 ? 1.0 : total);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tags = ref.watch(moodTagsStreamProvider).value ?? const [];
+    MoodTag? match;
+    for (final tag in tags) {
+      if (tag.id == moodTagId) {
+        match = tag;
+        break;
+      }
+    }
+    if (match == null) return const SizedBox.shrink();
+    return Chip(label: Text(match.label), visualDensity: VisualDensity.compact);
+  }
+}
 
-    return Column(
-      children: [
-        Slider(
-          value: current,
-          max: total == 0 ? 1 : total,
-          onChanged: onScrub,
-          onChangeEnd: onScrubEnd,
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                formatTrackDuration(Duration(milliseconds: current.round())),
-                style: theme.textTheme.bodySmall,
-              ),
-              Text(
-                formatTrackDuration(playback.duration),
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
+class _CrossfadeIndicator extends ConsumerWidget {
+  const _CrossfadeIndicator();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsStreamProvider).value;
+    if (settings == null || !settings.crossfadeEnabled) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.compare_arrows,
+            size: 16,
+            color: Theme.of(context).colorScheme.primary,
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TransportControls extends StatelessWidget {
-  const _TransportControls({required this.playback});
-
-  final PlaybackController playback;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        IconButton(
-          onPressed: playback.toggleShuffle,
-          icon: const Icon(Icons.shuffle),
-          color: playback.isShuffleEnabled ? theme.colorScheme.primary : null,
-          tooltip: playback.isShuffleEnabled ? 'Shuffle on' : 'Shuffle off',
-        ),
-        IconButton(
-          onPressed: playback.previous,
-          iconSize: 36,
-          icon: const Icon(Icons.skip_previous),
-          tooltip: 'Previous',
-        ),
-        IconButton.filled(
-          onPressed: playback.togglePlayPause,
-          iconSize: 40,
-          padding: const EdgeInsets.all(AppSpacing.md),
-          icon: Icon(playback.isPlaying ? Icons.pause : Icons.play_arrow),
-          tooltip: playback.isPlaying ? 'Pause' : 'Play',
-        ),
-        IconButton(
-          onPressed: playback.next,
-          iconSize: 36,
-          icon: const Icon(Icons.skip_next),
-          tooltip: 'Next',
-        ),
-        _LikeButton(playback: playback),
-      ],
-    );
-  }
-}
-
-class _LikeButton extends StatelessWidget {
-  const _LikeButton({required this.playback});
-
-  final PlaybackController playback;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final library = AppScope.libraryOf(context);
-    final song = playback.currentSong;
-    if (song == null) return const SizedBox.shrink();
-
-    return IconButton(
-      onPressed: () async {
-        playback.syncSong(await library.toggleLiked(song));
-      },
-      icon: Icon(song.isLiked ? Icons.favorite : Icons.favorite_border),
-      color: song.isLiked ? theme.colorScheme.secondary : null,
-      tooltip: song.isLiked ? 'Remove from Liked' : 'Add to Liked',
+          const SizedBox(width: 4),
+          Text(
+            'Crossfade ${settings.crossfadeDuration.inSeconds}s',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 }
