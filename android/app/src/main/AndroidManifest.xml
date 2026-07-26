@@ -1,7 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Local audio library scanning: Android 13+ uses the granular media
-         permission, older versions fall back to READ_EXTERNAL_STORAGE. -->
+         permissions, older versions fall back to READ_EXTERNAL_STORAGE.
+         READ_MEDIA_IMAGES is required by the on_audio_query plugin (it reads
+         album artwork): the plugin's permission check demands BOTH audio and
+         images on Android 13+, and it crashes any query if either is missing. -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>

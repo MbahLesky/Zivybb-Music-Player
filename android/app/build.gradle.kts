@@ -8,9 +8,10 @@ plugins {
 android {
     namespace = "com.lespa.zivybb.zivybb"
     compileSdk = flutter.compileSdkVersion
-    // Flutter's default NDK (26.3.11579264) is not installed correctly in this
-    // SDK, so pin to an installed, valid version instead.
-    ndkVersion = "27.0.12077973"
+    // Pin to the NDK version actually installed in this SDK. It also satisfies
+    // the highest requirement among plugins (jni needs >= 28.2), since NDK
+    // releases are backward compatible.
+    ndkVersion = "29.0.14206865"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

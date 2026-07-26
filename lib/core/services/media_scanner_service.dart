@@ -3,10 +3,14 @@ import 'package:on_audio_query_pluse/on_audio_query.dart';
 
 import '../../data/models/song.dart';
 
-/// Thrown when the user has not granted permission to read the device's
-/// local media library.
+/// Thrown when the device's media library can't be read because the user
+/// hasn't granted the required media permissions.
 class MediaPermissionDeniedException implements Exception {
   const MediaPermissionDeniedException();
+
+  @override
+  String toString() =>
+      'Zivybb needs permission to read the media on your device.';
 }
 
 /// Scans the device's local audio library.
@@ -20,14 +24,20 @@ class MediaScannerService {
 
   final OnAudioQuery _audioQuery;
 
-  /// Requests (if needed) and reports whether local-library access is
-  /// granted.
+  /// Requests (if needed) and reports whether media-library access is granted.
+  ///
+  /// The bundled query plugin needs BOTH `READ_MEDIA_AUDIO` and
+  /// `READ_MEDIA_IMAGES` on Android 13+ (it reads album artwork). Critically,
+  /// it *crashes* any query call unless both are granted — it replies twice on
+  /// its shared method-channel result ("Reply already submitted"). So this
+  /// gate must return true before [scanLibrary] is allowed to query.
   Future<bool> hasLibraryAccess() => _audioQuery.checkAndRequest();
 
   /// Scans the device for local audio tracks.
   ///
-  /// Throws [MediaPermissionDeniedException] if the user has not granted
-  /// media access.
+  /// Throws [MediaPermissionDeniedException] if access hasn't been granted, so
+  /// the query — which would otherwise crash the app without both media
+  /// permissions — is never reached until it's safe.
   Future<List<Song>> scanLibrary() async {
     if (!await hasLibraryAccess()) {
       throw const MediaPermissionDeniedException();

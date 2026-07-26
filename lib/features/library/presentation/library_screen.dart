@@ -110,7 +110,7 @@ class _AllSongsTab extends ConsumerWidget {
           emptyMessage: scanStatus.isLoading
               ? 'Scanning your device for music…'
               : scanStatus.hasError
-              ? 'Could not access your music library.\n${scanStatus.error}'
+              ? 'Could not scan your music library. Pull down to try again.'
               : 'No songs found yet. Pull down to scan.',
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
