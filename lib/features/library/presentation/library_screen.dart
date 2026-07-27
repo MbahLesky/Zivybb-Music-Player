@@ -83,13 +83,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            _AllSongsTab(),
-            PlaylistListScreen(),
-            FolderBrowserTab(),
-            _LikedSongsTab(),
-          ],
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.surfaceContainerLow,
+                Theme.of(context).colorScheme.surface,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: const SafeArea(
+            child: TabBarView(
+              children: [
+                _AllSongsTab(),
+                PlaylistListScreen(),
+                FolderBrowserTab(),
+                _LikedSongsTab(),
+              ],
+            ),
+          ),
         ),
         floatingActionButton: library.isEmpty
             ? null

@@ -23,6 +23,8 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final borderColor = scheme.primary.withValues(alpha: 0.16);
+
     return AppBar(
       title: title,
       actions: actions,
@@ -32,8 +34,26 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       foregroundColor: scheme.onPrimary,
       iconTheme: IconThemeData(color: scheme.onPrimary),
-      flexibleSpace: DecoratedBox(
-        decoration: BoxDecoration(gradient: AppGradients.primary(scheme)),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: AppGradients.primary(scheme),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.16),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+          ),
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
     );
   }

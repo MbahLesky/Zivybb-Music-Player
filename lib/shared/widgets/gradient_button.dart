@@ -32,15 +32,21 @@ class GradientButton extends StatelessWidget {
             gradient: enabled ? AppGradients.primary(scheme) : null,
             color: enabled ? null : scheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : null,
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.16)),
+            boxShadow: [
+              if (enabled)
+                BoxShadow(
+                  color: scheme.primary.withValues(alpha: 0.28),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                )
+              else
+                BoxShadow(
+                  color: scheme.shadow.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -103,15 +109,21 @@ class GradientFab extends StatelessWidget {
               gradient: enabled ? AppGradients.primary(scheme) : null,
               color: enabled ? null : scheme.surfaceContainerHighest,
               shape: BoxShape.circle,
-              boxShadow: enabled
-                  ? [
-                      BoxShadow(
-                        color: scheme.primary.withValues(alpha: 0.4),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
-                  : null,
+              border: Border.all(color: scheme.primary.withValues(alpha: 0.16)),
+              boxShadow: [
+                if (enabled)
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.32),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  )
+                else
+                  BoxShadow(
+                    color: scheme.shadow.withValues(alpha: 0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+              ],
             ),
             child: Icon(
               icon,

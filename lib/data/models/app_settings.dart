@@ -27,6 +27,7 @@ class AppSettings {
     this.manualThemeOverride,
     this.themeSeedColorHex = '#673AB7',
     this.visualizerColorHex = '#673AB7',
+    this.themeStyleName = 'aurora',
     this.crossfadeEnabled = false,
     this.crossfadeDuration = const Duration(seconds: 3),
     this.currentEqualizerPresetId,
@@ -37,6 +38,7 @@ class AppSettings {
   final ThemeOverride? manualThemeOverride;
   final String themeSeedColorHex;
   final String visualizerColorHex;
+  final String themeStyleName;
   final bool crossfadeEnabled;
   final Duration crossfadeDuration;
   final String? currentEqualizerPresetId;
@@ -49,6 +51,7 @@ class AppSettings {
     Object? manualThemeOverride = _unset,
     String? themeSeedColorHex,
     String? visualizerColorHex,
+    String? themeStyleName,
     bool? crossfadeEnabled,
     Duration? crossfadeDuration,
     Object? currentEqualizerPresetId = _unset,
@@ -62,6 +65,7 @@ class AppSettings {
           : manualThemeOverride as ThemeOverride?,
       themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
       visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+      themeStyleName: themeStyleName ?? this.themeStyleName,
       crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
       crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
       currentEqualizerPresetId: identical(currentEqualizerPresetId, _unset)

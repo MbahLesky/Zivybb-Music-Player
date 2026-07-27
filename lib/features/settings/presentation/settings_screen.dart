@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/app_settings.dart';
+import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../mood_tagging/presentation/mood_tag_management_screen.dart';
 import '../application/settings_controller.dart';
@@ -21,109 +22,130 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: const GradientAppBar(title: Text('Settings')),
-      body: ListView(
-        children: [
-          SwitchListTile(
-            title: const Text('Adaptive dark mode'),
-            subtitle: const Text(
-              'Switch between light and dark based on time of day',
-            ),
-            value: settings.adaptiveDarkModeEnabled,
-            onChanged: settings.manualThemeOverride != null
-                ? null
-                : (enabled) => controller.setAdaptiveDarkModeEnabled(enabled),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surfaceContainerLow,
+              Theme.of(context).colorScheme.surface,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Text('Appearance'),
-          ),
-          RadioGroup<ThemeOverride?>(
-            groupValue: settings.manualThemeOverride,
-            onChanged: (value) => controller.setManualThemeOverride(value),
-            child: const Column(
-              children: [
-                RadioListTile<ThemeOverride?>(title: Text('Auto'), value: null),
-                RadioListTile<ThemeOverride?>(
-                  title: Text('Light'),
-                  value: ThemeOverride.light,
-                ),
-                RadioListTile<ThemeOverride?>(
-                  title: Text('Dark'),
-                  value: ThemeOverride.dark,
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.palette_outlined),
-            title: const Text('Theme Customization'),
-            subtitle: const Text('App color, visualizer color, and style'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ThemeCustomizationScreen(),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GlassCard(
+              padding: EdgeInsets.zero,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  SwitchListTile(
+                    title: const Text('Adaptive dark mode'),
+                    subtitle: const Text(
+                      'Switch between light and dark based on time of day',
+                    ),
+                    value: settings.adaptiveDarkModeEnabled,
+                    onChanged: settings.manualThemeOverride != null
+                        ? null
+                        : (enabled) => controller.setAdaptiveDarkModeEnabled(enabled),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+                    child: Text('Appearance'),
+                  ),
+                  RadioGroup<ThemeOverride?>(
+                    groupValue: settings.manualThemeOverride,
+                    onChanged: (value) => controller.setManualThemeOverride(value),
+                    child: const Column(
+                      children: [
+                        RadioListTile<ThemeOverride?>(title: Text('Auto'), value: null),
+                        RadioListTile<ThemeOverride?>(
+                          title: Text('Light'),
+                          value: ThemeOverride.light,
+                        ),
+                        RadioListTile<ThemeOverride?>(
+                          title: Text('Dark'),
+                          value: ThemeOverride.dark,
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.palette_outlined),
+                    title: const Text('Theme Customization'),
+                    subtitle: const Text('App color, visualizer color, and style'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ThemeCustomizationScreen(),
+                      ),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+                    child: Text('Playback'),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Crossfade'),
+                    subtitle: const Text('Fade out/in between tracks'),
+                    value: settings.crossfadeEnabled,
+                    onChanged: (enabled) => controller.setCrossfadeEnabled(enabled),
+                  ),
+                  ListTile(
+                    title: const Text('Crossfade duration'),
+                    subtitle: Slider(
+                      min: 1,
+                      max: 8,
+                      divisions: 7,
+                      label: '${settings.crossfadeDuration.inSeconds}s',
+                      value: settings.crossfadeDuration.inSeconds
+                          .clamp(1, 8)
+                          .toDouble(),
+                      onChanged: settings.crossfadeEnabled
+                          ? (value) => controller.setCrossfadeDuration(
+                              Duration(seconds: value.round()),
+                            )
+                          : null,
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.equalizer),
+                    title: const Text('Equalizer'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+                    child: Text('Library'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.mood_outlined),
+                    title: const Text('Manage Moods'),
+                    subtitle: const Text('Add, rename, recolor, or remove mood tags'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const MoodTagManagementScreen(),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.backup_outlined),
+                    title: const Text('Backup & Restore'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Text('Playback'),
-          ),
-          SwitchListTile(
-            title: const Text('Crossfade'),
-            subtitle: const Text('Fade out/in between tracks'),
-            value: settings.crossfadeEnabled,
-            onChanged: (enabled) => controller.setCrossfadeEnabled(enabled),
-          ),
-          ListTile(
-            title: const Text('Crossfade duration'),
-            subtitle: Slider(
-              min: 1,
-              max: 8,
-              divisions: 7,
-              label: '${settings.crossfadeDuration.inSeconds}s',
-              value: settings.crossfadeDuration.inSeconds
-                  .clamp(1, 8)
-                  .toDouble(),
-              onChanged: settings.crossfadeEnabled
-                  ? (value) => controller.setCrossfadeDuration(
-                      Duration(seconds: value.round()),
-                    )
-                  : null,
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.equalizer),
-            title: const Text('Equalizer'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Text('Library'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.mood_outlined),
-            title: const Text('Manage Moods'),
-            subtitle: const Text('Add, rename, recolor, or remove mood tags'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const MoodTagManagementScreen(),
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.backup_outlined),
-            title: const Text('Backup & Restore'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

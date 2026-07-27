@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/color_hex.dart';
 import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
+import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../application/settings_controller.dart';
 
@@ -18,67 +20,126 @@ class ThemeCustomizationScreen extends ConsumerWidget {
         ref.watch(settingsStreamProvider).value ?? const AppSettings();
     final controller = ref.read(settingsControllerProvider.notifier);
 
+    final selectedStyle = ref.watch(appThemeStyleProvider);
+
     return Scaffold(
       appBar: const GradientAppBar(title: Text('Theme Customization')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'App theme color',
-            style: Theme.of(context).textTheme.titleMedium,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surfaceContainerLow,
+              Theme.of(context).colorScheme.surface,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 12),
-          ColorSwatchPicker(
-            selectedHex: settings.themeSeedColorHex,
-            onSelected: controller.setThemeSeedColor,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Visualizer color',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          ColorSwatchPicker(
-            selectedHex: settings.visualizerColorHex,
-            onSelected: controller.setVisualizerColor,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Visualizer style',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+        ),
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              for (final style in VisualizerStyle.values)
-                ChoiceChip(
-                  label: Text(style.label),
-                  selected: settings.visualizerStyle == style,
-                  onSelected: (_) => controller.setVisualizerStyle(style),
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Theme family',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final style in AppThemeStyle.values)
+                          ChoiceChip(
+                            label: Text(style.label),
+                            selected: selectedStyle == style,
+                            onSelected: (_) => controller.setAppThemeStyle(style),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'App theme color',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    ColorSwatchPicker(
+                      selectedHex: settings.themeSeedColorHex,
+                      onSelected: controller.setThemeSeedColor,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Visualizer color',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    ColorSwatchPicker(
+                      selectedHex: settings.visualizerColorHex,
+                      onSelected: controller.setVisualizerColor,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Visualizer style',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final style in VisualizerStyle.values)
+                          ChoiceChip(
+                            label: Text(style.label),
+                            selected: settings.visualizerStyle == style,
+                            onSelected: (_) => controller.setVisualizerStyle(style),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassCard(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.palette,
+                      color: colorFromHex(settings.visualizerColorHex),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text('Live preview — changes apply immediately.'),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.palette,
-                    color: colorFromHex(settings.visualizerColorHex),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('Live preview — changes apply immediately.'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
