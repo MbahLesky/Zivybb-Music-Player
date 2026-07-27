@@ -20,7 +20,10 @@ ThemeData buildAppTheme({
   required AppThemeStyle style,
   required Color seedColor,
 }) {
-  final baseScheme = ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness);
+  final baseScheme = ColorScheme.fromSeed(
+    seedColor: seedColor,
+    brightness: brightness,
+  );
   final styleColors = style.gradientColors();
   final primary = _mixColors(seedColor, styleColors.first, 0.6);
   final secondary = _mixColors(seedColor, styleColors[1], 0.45);
@@ -86,15 +89,24 @@ ThemeData buildAppTheme({
       color: elevatedSurface,
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: radius, side: BorderSide(color: borderColor)),
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: borderColor),
+      ),
     ),
     listTileTheme: ListTileThemeData(
-      shape: RoundedRectangleBorder(borderRadius: radius, side: BorderSide(color: borderColor)),
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: borderColor),
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       iconColor: scheme.primary,
     ),
     chipTheme: ChipThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999), side: BorderSide(color: borderColor)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(color: borderColor),
+      ),
       backgroundColor: elevatedSurface,
       selectedColor: primary.withValues(alpha: 0.2),
       side: BorderSide(color: borderColor),
@@ -106,9 +118,18 @@ ThemeData buildAppTheme({
     inputDecorationTheme: InputDecorationTheme(
       fillColor: elevatedSurface,
       filled: true,
-      border: OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: borderColor)),
-      enabledBorder: OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: borderColor)),
-      focusedBorder: OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: primary, width: 1.4)),
+      border: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: borderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: primary, width: 1.4),
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -189,10 +210,26 @@ ThemeData buildAppTheme({
 
 extension AppThemeStyleX on AppThemeStyle {
   List<Color> gradientColors() => switch (this) {
-    AppThemeStyle.aurora => const [Color(0xFF7C3AED), Color(0xFF22D3EE), Color(0xFF34D399)],
-    AppThemeStyle.midnight => const [Color(0xFF4F46E5), Color(0xFF0EA5E9), Color(0xFF38BDF8)],
-    AppThemeStyle.sunset => const [Color(0xFFF59E0B), Color(0xFFFB7185), Color(0xFFEC4899)],
-    AppThemeStyle.mist => const [Color(0xFF14B8A6), Color(0xFF60A5FA), Color(0xFFA78BFA)],
+    AppThemeStyle.aurora => const [
+      Color(0xFF7C3AED),
+      Color(0xFF22D3EE),
+      Color(0xFF34D399),
+    ],
+    AppThemeStyle.midnight => const [
+      Color(0xFF4F46E5),
+      Color(0xFF0EA5E9),
+      Color(0xFF38BDF8),
+    ],
+    AppThemeStyle.sunset => const [
+      Color(0xFFF59E0B),
+      Color(0xFFFB7185),
+      Color(0xFFEC4899),
+    ],
+    AppThemeStyle.mist => const [
+      Color(0xFF14B8A6),
+      Color(0xFF60A5FA),
+      Color(0xFFA78BFA),
+    ],
   };
 }
 
@@ -229,7 +266,9 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
   AppThemePalette lerp(ThemeExtension<AppThemePalette>? other, double t) {
     if (other is! AppThemePalette) return this;
     return AppThemePalette(
-      glassSurfaceColor: Color.lerp(glassSurfaceColor, other.glassSurfaceColor, t) ?? glassSurfaceColor,
+      glassSurfaceColor:
+          Color.lerp(glassSurfaceColor, other.glassSurfaceColor, t) ??
+          glassSurfaceColor,
       borderColor: Color.lerp(borderColor, other.borderColor, t) ?? borderColor,
       shadowColor: Color.lerp(shadowColor, other.shadowColor, t) ?? shadowColor,
     );

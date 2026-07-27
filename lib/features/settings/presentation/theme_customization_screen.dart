@@ -56,7 +56,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                           ChoiceChip(
                             label: Text(style.label),
                             selected: selectedStyle == style,
-                            onSelected: (_) => controller.setAppThemeStyle(style),
+                            onSelected: (_) =>
+                                controller.setAppThemeStyle(style),
                           ),
                       ],
                     ),
@@ -115,7 +116,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                           ChoiceChip(
                             label: Text(style.label),
                             selected: settings.visualizerStyle == style,
-                            onSelected: (_) => controller.setVisualizerStyle(style),
+                            onSelected: (_) =>
+                                controller.setVisualizerStyle(style),
                           ),
                       ],
                     ),

@@ -56,7 +56,9 @@ class MiniPlayer extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(playback.isPlaying ? Icons.pause : Icons.play_arrow),
+                  icon: Icon(
+                    playback.isPlaying ? Icons.pause : Icons.play_arrow,
+                  ),
                   tooltip: playback.isPlaying ? 'Pause' : 'Play',
                   onPressed: () => ref
                       .read(playbackControllerProvider.notifier)

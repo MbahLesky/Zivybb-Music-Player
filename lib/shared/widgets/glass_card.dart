@@ -28,9 +28,14 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<AppThemePalette>();
     final theme = Theme.of(context);
-    final resolvedColor = color ?? palette?.glassSurfaceColor ?? theme.colorScheme.surfaceContainerHighest;
-    final resolvedBorder = borderColor ?? palette?.borderColor ?? theme.colorScheme.outlineVariant;
-    final resolvedShadow = shadowColor ?? palette?.shadowColor ?? theme.colorScheme.shadow;
+    final resolvedColor =
+        color ??
+        palette?.glassSurfaceColor ??
+        theme.colorScheme.surfaceContainerHighest;
+    final resolvedBorder =
+        borderColor ?? palette?.borderColor ?? theme.colorScheme.outlineVariant;
+    final resolvedShadow =
+        shadowColor ?? palette?.shadowColor ?? theme.colorScheme.shadow;
 
     return Container(
       margin: margin,
