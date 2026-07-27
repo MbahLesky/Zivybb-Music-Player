@@ -98,6 +98,23 @@ class PlaylistRepository {
     });
   }
 
+  /// Removes the auto-generated playlist tied to [sourceMoodTagId], if any.
+  ///
+  /// Call this *before* deleting the mood tag itself — the tag's `onDelete:
+  /// setNull` foreign key would otherwise clear `sourceMoodTagId` first,
+  /// making the orphaned playlist impossible to find afterward.
+  Future<void> deleteAutoPlaylistForMoodTag(String sourceMoodTagId) async {
+    final existing =
+        await (_database.select(_database.playlists)
+              ..where((t) => t.sourceMoodTagId.equals(sourceMoodTagId)))
+            .getSingleOrNull();
+    if (existing != null) {
+      await (_database.delete(
+        _database.playlists,
+      )..where((t) => t.id.equals(existing.id))).go();
+    }
+  }
+
   /// Replaces an auto-generated playlist's membership to match [songIds]
   /// exactly, creating the playlist if needed and removing it if [songIds]
   /// is empty (SRS F-4.2: auto-generated mood playlists).

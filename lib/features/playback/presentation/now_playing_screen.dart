@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_gradients.dart';
 import '../../../data/models/mood_tag.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/gradient_button.dart';
 import '../../mood_tagging/application/mood_tagging_controller.dart';
 import '../../mood_tagging/presentation/mood_tagging_screen.dart';
 import '../../settings/application/settings_controller.dart';
@@ -26,7 +29,7 @@ class NowPlayingScreen extends ConsumerWidget {
         : ref.watch(songStreamProvider(song.id)).value ?? song;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: const Text('Now Playing'),
         actions: [
           IconButton(
@@ -66,102 +69,108 @@ class NowPlayingScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: song == null
-          ? const Center(child: Text('Nothing is playing.'))
-          : Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    song.title,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${song.artist} — ${song.album}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  if (liveSong?.moodTagId != null) ...[
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppGradients.surface(Theme.of(context).colorScheme),
+        ),
+        child: song == null
+            ? const Center(child: Text('Nothing is playing.'))
+            : Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      song.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 8),
-                    _MoodTagLabel(moodTagId: liveSong!.moodTagId!),
+                    Text(
+                      '${song.artist} — ${song.album}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    if (liveSong?.moodTagId != null) ...[
+                      const SizedBox(height: 8),
+                      _MoodTagLabel(moodTagId: liveSong!.moodTagId!),
+                    ],
+                    const _CrossfadeIndicator(),
+                    const SizedBox(height: 16),
+                    WaveVisualizer(color: ref.watch(visualizerColorProvider)),
+                    const SizedBox(height: 24),
+                    Slider(
+                      min: 0,
+                      max: playback.duration.inMilliseconds > 0
+                          ? playback.duration.inMilliseconds.toDouble()
+                          : 1,
+                      value: playback.position.inMilliseconds
+                          .clamp(0, playback.duration.inMilliseconds)
+                          .toDouble(),
+                      onChanged: (value) => ref
+                          .read(playbackControllerProvider.notifier)
+                          .seek(Duration(milliseconds: value.round())),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_format(playback.position)),
+                        Text(_format(playback.duration)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          iconSize: 32,
+                          icon: Icon(
+                            playback.shuffleEnabled
+                                ? Icons.shuffle_on_outlined
+                                : Icons.shuffle,
+                          ),
+                          tooltip: playback.shuffleEnabled
+                              ? 'Shuffle on'
+                              : 'Shuffle off',
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .toggleShuffle(),
+                        ),
+                        IconButton(
+                          iconSize: 32,
+                          icon: const Icon(Icons.skip_previous),
+                          tooltip: 'Previous',
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .previous(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: GradientFab(
+                            size: 72,
+                            icon: playback.isPlaying
+                                ? Icons.pause
+                                : Icons.play_arrow,
+                            tooltip: playback.isPlaying ? 'Pause' : 'Play',
+                            onPressed: () => ref
+                                .read(playbackControllerProvider.notifier)
+                                .togglePlayPause(),
+                          ),
+                        ),
+                        IconButton(
+                          iconSize: 32,
+                          icon: const Icon(Icons.skip_next),
+                          tooltip: 'Next',
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .next(),
+                        ),
+                      ],
+                    ),
                   ],
-                  const _CrossfadeIndicator(),
-                  const SizedBox(height: 16),
-                  WaveVisualizer(color: ref.watch(visualizerColorProvider)),
-                  const SizedBox(height: 24),
-                  Slider(
-                    min: 0,
-                    max: playback.duration.inMilliseconds > 0
-                        ? playback.duration.inMilliseconds.toDouble()
-                        : 1,
-                    value: playback.position.inMilliseconds
-                        .clamp(0, playback.duration.inMilliseconds)
-                        .toDouble(),
-                    onChanged: (value) => ref
-                        .read(playbackControllerProvider.notifier)
-                        .seek(Duration(milliseconds: value.round())),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_format(playback.position)),
-                      Text(_format(playback.duration)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        iconSize: 32,
-                        icon: Icon(
-                          playback.shuffleEnabled
-                              ? Icons.shuffle_on_outlined
-                              : Icons.shuffle,
-                        ),
-                        tooltip: playback.shuffleEnabled
-                            ? 'Shuffle on'
-                            : 'Shuffle off',
-                        onPressed: () => ref
-                            .read(playbackControllerProvider.notifier)
-                            .toggleShuffle(),
-                      ),
-                      IconButton(
-                        iconSize: 32,
-                        icon: const Icon(Icons.skip_previous),
-                        tooltip: 'Previous',
-                        onPressed: () => ref
-                            .read(playbackControllerProvider.notifier)
-                            .previous(),
-                      ),
-                      IconButton(
-                        iconSize: 48,
-                        icon: Icon(
-                          playback.isPlaying
-                              ? Icons.pause_circle_filled
-                              : Icons.play_circle_filled,
-                        ),
-                        tooltip: playback.isPlaying ? 'Pause' : 'Play',
-                        onPressed: () => ref
-                            .read(playbackControllerProvider.notifier)
-                            .togglePlayPause(),
-                      ),
-                      IconButton(
-                        iconSize: 32,
-                        icon: const Icon(Icons.skip_next),
-                        tooltip: 'Next',
-                        onPressed: () => ref
-                            .read(playbackControllerProvider.notifier)
-                            .next(),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/models/app_settings.dart';
 import '../../playback/application/playback_controller.dart';
+import '../../settings/application/settings_controller.dart';
 import '../application/visualizer_math.dart';
 
 /// Beat-reactive wave visualizer shown on the Now Playing screen.
@@ -49,6 +53,7 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
   Widget build(BuildContext context) {
     final playback = ref.watch(playbackControllerProvider);
     final song = playback.currentSong;
+    final style = ref.watch(visualizerStyleProvider);
 
     if (song?.id != _lastSongId) {
       _lastSongId = song?.id;
@@ -64,17 +69,38 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
       _ticker.stop();
     }
 
-    return RepaintBoundary(
-      child: CustomPaint(
-        size: const Size(double.infinity, 80),
-        painter: _WavePainter(amplitudes: _amplitudes, color: widget.color),
+    final painter = switch (style) {
+      VisualizerStyle.bars => _BarsPainter(
+        amplitudes: _amplitudes,
+        color: widget.color,
       ),
+      VisualizerStyle.radial => _RadialPainter(
+        amplitudes: _amplitudes,
+        color: widget.color,
+      ),
+      VisualizerStyle.particles => _ParticlesPainter(
+        amplitudes: _amplitudes,
+        color: widget.color,
+      ),
+      VisualizerStyle.line => _LinePainter(
+        amplitudes: _amplitudes,
+        color: widget.color,
+      ),
+    };
+
+    final height = switch (style) {
+      VisualizerStyle.bars || VisualizerStyle.line => 80.0,
+      VisualizerStyle.radial || VisualizerStyle.particles => 160.0,
+    };
+
+    return RepaintBoundary(
+      child: CustomPaint(size: Size(double.infinity, height), painter: painter),
     );
   }
 }
 
-class _WavePainter extends CustomPainter {
-  _WavePainter({required this.amplitudes, required this.color});
+class _BarsPainter extends CustomPainter {
+  _BarsPainter({required this.amplitudes, required this.color});
 
   final List<double> amplitudes;
   final Color color;
@@ -100,7 +126,105 @@ class _WavePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _WavePainter oldDelegate) {
+  bool shouldRepaint(covariant _BarsPainter oldDelegate) {
+    return oldDelegate.amplitudes != amplitudes || oldDelegate.color != color;
+  }
+}
+
+class _RadialPainter extends CustomPainter {
+  _RadialPainter({required this.amplitudes, required this.color});
+
+  final List<double> amplitudes;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final maxRadius = size.shortestSide / 2;
+    final innerRadius = maxRadius * 0.35;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+
+    for (var i = 0; i < amplitudes.length; i++) {
+      final angle = 2 * math.pi * i / amplitudes.length;
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      final length = innerRadius + amplitudes[i] * (maxRadius - innerRadius);
+      canvas.drawLine(
+        center + direction * innerRadius,
+        center + direction * length,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RadialPainter oldDelegate) {
+    return oldDelegate.amplitudes != amplitudes || oldDelegate.color != color;
+  }
+}
+
+class _ParticlesPainter extends CustomPainter {
+  _ParticlesPainter({required this.amplitudes, required this.color});
+
+  final List<double> amplitudes;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final ringRadius = size.shortestSide / 2 * 0.7;
+    final paint = Paint();
+
+    for (var i = 0; i < amplitudes.length; i++) {
+      final angle = 2 * math.pi * i / amplitudes.length;
+      final position =
+          center + Offset(math.cos(angle), math.sin(angle)) * ringRadius;
+      final particleRadius = 3 + amplitudes[i] * 10;
+      paint.color = color.withValues(alpha: 0.4 + amplitudes[i] * 0.6);
+      canvas.drawCircle(position, particleRadius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParticlesPainter oldDelegate) {
+    return oldDelegate.amplitudes != amplitudes || oldDelegate.color != color;
+  }
+}
+
+class _LinePainter extends CustomPainter {
+  _LinePainter({required this.amplitudes, required this.color});
+
+  final List<double> amplitudes;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final divisions = amplitudes.length > 1 ? amplitudes.length - 1 : 1;
+    final stepX = size.width / divisions;
+    final path = Path();
+
+    for (var i = 0; i < amplitudes.length; i++) {
+      final x = i * stepX;
+      final y = size.height - amplitudes[i] * size.height;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LinePainter oldDelegate) {
     return oldDelegate.amplitudes != amplitudes || oldDelegate.color != color;
   }
 }

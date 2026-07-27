@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'app_database.g.dart';
 
-/// Preset mood/energy label a song can be tagged with (SRS F-2.6).
+/// A mood/energy label a song can be tagged with (SRS F-2.6). Starts out
+/// with a handful of built-in presets, but is fully user-manageable.
 @DataClassName('MoodTagRow')
 class MoodTags extends Table {
   TextColumn get id => text()();
   TextColumn get label => text()();
   TextColumn get colorHex => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -117,6 +119,8 @@ class Settings extends Table {
     #id,
     onDelete: KeyAction.setNull,
   )();
+  TextColumn get visualizerStyle =>
+      text().withDefault(const Constant('bars'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -140,7 +144,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -162,6 +166,10 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(equalizerPresets);
         await m.createTable(backups);
         await m.addColumn(settings, settings.currentEqualizerPresetId);
+      }
+      if (from < 5) {
+        await m.addColumn(moodTags, moodTags.sortOrder);
+        await m.addColumn(settings, settings.visualizerStyle);
       }
     },
   );

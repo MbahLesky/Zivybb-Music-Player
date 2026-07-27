@@ -3,6 +3,21 @@ import 'package:flutter/foundation.dart';
 /// A user-forced light/dark choice that overrides the adaptive schedule.
 enum ThemeOverride { light, dark }
 
+/// The wave visualizer's rendering style, user-selectable in Settings.
+enum VisualizerStyle {
+  bars,
+  radial,
+  particles,
+  line;
+
+  String get label => switch (this) {
+    VisualizerStyle.bars => 'Bars',
+    VisualizerStyle.radial => 'Radial',
+    VisualizerStyle.particles => 'Particles',
+    VisualizerStyle.line => 'Line',
+  };
+}
+
 const _unset = Object();
 
 @immutable
@@ -15,6 +30,7 @@ class AppSettings {
     this.crossfadeEnabled = false,
     this.crossfadeDuration = const Duration(seconds: 3),
     this.currentEqualizerPresetId,
+    this.visualizerStyle = VisualizerStyle.bars,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -24,6 +40,7 @@ class AppSettings {
   final bool crossfadeEnabled;
   final Duration crossfadeDuration;
   final String? currentEqualizerPresetId;
+  final VisualizerStyle visualizerStyle;
 
   /// Pass [manualThemeOverride] or [currentEqualizerPresetId] to change
   /// them, including to `null`. Omit either to leave it untouched.
@@ -35,6 +52,7 @@ class AppSettings {
     bool? crossfadeEnabled,
     Duration? crossfadeDuration,
     Object? currentEqualizerPresetId = _unset,
+    VisualizerStyle? visualizerStyle,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -49,6 +67,7 @@ class AppSettings {
       currentEqualizerPresetId: identical(currentEqualizerPresetId, _unset)
           ? this.currentEqualizerPresetId
           : currentEqualizerPresetId as String?,
+      visualizerStyle: visualizerStyle ?? this.visualizerStyle,
     );
   }
 }

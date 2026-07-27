@@ -46,6 +46,13 @@ final visualizerColorProvider = Provider<Color>((ref) {
   return colorFromHex(settings.visualizerColorHex);
 });
 
+/// The wave visualizer's rendering style, derived from the user's choice.
+final visualizerStyleProvider = Provider<VisualizerStyle>((ref) {
+  final settings =
+      ref.watch(settingsStreamProvider).value ?? const AppSettings();
+  return settings.visualizerStyle;
+});
+
 /// Applies settings changes made from the Settings screen.
 class SettingsController extends Notifier<AsyncValue<void>> {
   @override
@@ -104,6 +111,13 @@ class SettingsController extends Notifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
       () => ref.read(settingsRepositoryProvider).setEqualizerPreset(presetId),
+    );
+  }
+
+  Future<void> setVisualizerStyle(VisualizerStyle style) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setVisualizerStyle(style),
     );
   }
 }

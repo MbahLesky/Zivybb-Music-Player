@@ -32,6 +32,14 @@ class MoodPlaylistGenerator {
       );
     }
   }
+
+  /// Deletes a mood tag along with its auto-generated playlist. The
+  /// playlist must go first, before the tag's `onDelete: setNull` foreign
+  /// key clears the link between them.
+  Future<void> deleteMoodTag(String tagId) async {
+    await _playlistRepository.deleteAutoPlaylistForMoodTag(tagId);
+    await _moodTagRepository.deleteMoodTag(tagId);
+  }
 }
 
 final moodPlaylistGeneratorProvider = Provider<MoodPlaylistGenerator>((ref) {

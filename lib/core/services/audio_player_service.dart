@@ -19,9 +19,7 @@ class AudioPlayerService {
     }
     final equalizer = Platform.isAndroid ? AndroidEqualizer() : null;
     final newPlayer = AudioPlayer(
-      audioPipeline: AudioPipeline(
-        androidAudioEffects: [?equalizer],
-      ),
+      audioPipeline: AudioPipeline(androidAudioEffects: [?equalizer]),
     );
     return AudioPlayerService._(newPlayer, equalizer);
   }

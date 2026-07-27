@@ -6,6 +6,8 @@ import '../../../data/repositories/equalizer_preset_repository.dart';
 import '../../../data/repositories/mood_tag_repository.dart';
 import '../../../data/repositories/song_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
@@ -42,11 +44,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget build(BuildContext context) {
     final missingCount =
         ref.watch(missingSongsStreamProvider).value?.length ?? 0;
+    final library = ref.watch(libraryStreamProvider).value ?? const [];
 
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: GradientAppBar(
           title: const Text('Zivybb'),
           actions: [
             IconButton(
@@ -88,6 +91,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             _LikedSongsTab(),
           ],
         ),
+        floatingActionButton: library.isEmpty
+            ? null
+            : GradientFab(
+                icon: Icons.shuffle,
+                tooltip: 'Shuffle play all',
+                onPressed: () => ref
+                    .read(playbackControllerProvider.notifier)
+                    .shuffleAndPlay(library),
+              ),
         bottomNavigationBar: const MiniPlayer(),
       ),
     );

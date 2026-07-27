@@ -38,8 +38,20 @@ class $MoodTagsTable extends MoodTags
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, label, colorHex];
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, label, colorHex, sortOrder];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -73,6 +85,12 @@ class $MoodTagsTable extends MoodTags
     } else if (isInserting) {
       context.missing(_colorHexMeta);
     }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
     return context;
   }
 
@@ -94,6 +112,10 @@ class $MoodTagsTable extends MoodTags
         DriftSqlType.string,
         data['${effectivePrefix}color_hex'],
       )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
     );
   }
 
@@ -107,10 +129,12 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
   final String id;
   final String label;
   final String colorHex;
+  final int sortOrder;
   const MoodTagRow({
     required this.id,
     required this.label,
     required this.colorHex,
+    required this.sortOrder,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -118,6 +142,7 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
     map['id'] = Variable<String>(id);
     map['label'] = Variable<String>(label);
     map['color_hex'] = Variable<String>(colorHex);
+    map['sort_order'] = Variable<int>(sortOrder);
     return map;
   }
 
@@ -126,6 +151,7 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
       id: Value(id),
       label: Value(label),
       colorHex: Value(colorHex),
+      sortOrder: Value(sortOrder),
     );
   }
 
@@ -138,6 +164,7 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
       id: serializer.fromJson<String>(json['id']),
       label: serializer.fromJson<String>(json['label']),
       colorHex: serializer.fromJson<String>(json['colorHex']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
     );
   }
   @override
@@ -147,20 +174,27 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
       'id': serializer.toJson<String>(id),
       'label': serializer.toJson<String>(label),
       'colorHex': serializer.toJson<String>(colorHex),
+      'sortOrder': serializer.toJson<int>(sortOrder),
     };
   }
 
-  MoodTagRow copyWith({String? id, String? label, String? colorHex}) =>
-      MoodTagRow(
-        id: id ?? this.id,
-        label: label ?? this.label,
-        colorHex: colorHex ?? this.colorHex,
-      );
+  MoodTagRow copyWith({
+    String? id,
+    String? label,
+    String? colorHex,
+    int? sortOrder,
+  }) => MoodTagRow(
+    id: id ?? this.id,
+    label: label ?? this.label,
+    colorHex: colorHex ?? this.colorHex,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
   MoodTagRow copyWithCompanion(MoodTagsCompanion data) {
     return MoodTagRow(
       id: data.id.present ? data.id.value : this.id,
       label: data.label.present ? data.label.value : this.label,
       colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
     );
   }
 
@@ -169,37 +203,42 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
     return (StringBuffer('MoodTagRow(')
           ..write('id: $id, ')
           ..write('label: $label, ')
-          ..write('colorHex: $colorHex')
+          ..write('colorHex: $colorHex, ')
+          ..write('sortOrder: $sortOrder')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, label, colorHex);
+  int get hashCode => Object.hash(id, label, colorHex, sortOrder);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is MoodTagRow &&
           other.id == this.id &&
           other.label == this.label &&
-          other.colorHex == this.colorHex);
+          other.colorHex == this.colorHex &&
+          other.sortOrder == this.sortOrder);
 }
 
 class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
   final Value<String> id;
   final Value<String> label;
   final Value<String> colorHex;
+  final Value<int> sortOrder;
   final Value<int> rowid;
   const MoodTagsCompanion({
     this.id = const Value.absent(),
     this.label = const Value.absent(),
     this.colorHex = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MoodTagsCompanion.insert({
     required String id,
     required String label,
     required String colorHex,
+    this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        label = Value(label),
@@ -208,12 +247,14 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
     Expression<String>? id,
     Expression<String>? label,
     Expression<String>? colorHex,
+    Expression<int>? sortOrder,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (label != null) 'label': label,
       if (colorHex != null) 'color_hex': colorHex,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -222,12 +263,14 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
     Value<String>? id,
     Value<String>? label,
     Value<String>? colorHex,
+    Value<int>? sortOrder,
     Value<int>? rowid,
   }) {
     return MoodTagsCompanion(
       id: id ?? this.id,
       label: label ?? this.label,
       colorHex: colorHex ?? this.colorHex,
+      sortOrder: sortOrder ?? this.sortOrder,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -244,6 +287,9 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
     if (colorHex.present) {
       map['color_hex'] = Variable<String>(colorHex.value);
     }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -256,6 +302,7 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
           ..write('id: $id, ')
           ..write('label: $label, ')
           ..write('colorHex: $colorHex, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -335,9 +382,6 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES mood_tags (id) ON DELETE SET NULL',
-    ),
   );
   static const VerificationMeta _isLikedMeta = const VerificationMeta(
     'isLiked',
@@ -872,9 +916,6 @@ class $PlaylistsTable extends Playlists
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES mood_tags (id) ON DELETE SET NULL',
-    ),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -1217,9 +1258,6 @@ class $PlaylistSongsTable extends PlaylistSongs
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES playlists (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _songIdMeta = const VerificationMeta('songId');
   @override
@@ -1229,9 +1267,6 @@ class $PlaylistSongsTable extends PlaylistSongs
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES songs (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _positionMeta = const VerificationMeta(
     'position',
@@ -1470,6 +1505,636 @@ class PlaylistSongsCompanion extends UpdateCompanion<PlaylistSongRow> {
           ..write('playlistId: $playlistId, ')
           ..write('songId: $songId, ')
           ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SettingsTable extends Settings
+    with TableInfo<$SettingsTable, SettingsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _adaptiveDarkModeEnabledMeta =
+      const VerificationMeta('adaptiveDarkModeEnabled');
+  @override
+  late final GeneratedColumn<bool> adaptiveDarkModeEnabled =
+      GeneratedColumn<bool>(
+        'adaptive_dark_mode_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("adaptive_dark_mode_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _manualThemeOverrideMeta =
+      const VerificationMeta('manualThemeOverride');
+  @override
+  late final GeneratedColumn<String> manualThemeOverride =
+      GeneratedColumn<String>(
+        'manual_theme_override',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _themeSeedColorHexMeta = const VerificationMeta(
+    'themeSeedColorHex',
+  );
+  @override
+  late final GeneratedColumn<String> themeSeedColorHex =
+      GeneratedColumn<String>(
+        'theme_seed_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#673AB7'),
+      );
+  static const VerificationMeta _visualizerColorHexMeta =
+      const VerificationMeta('visualizerColorHex');
+  @override
+  late final GeneratedColumn<String> visualizerColorHex =
+      GeneratedColumn<String>(
+        'visualizer_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#673AB7'),
+      );
+  static const VerificationMeta _crossfadeEnabledMeta = const VerificationMeta(
+    'crossfadeEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> crossfadeEnabled = GeneratedColumn<bool>(
+    'crossfade_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("crossfade_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _crossfadeDurationMsMeta =
+      const VerificationMeta('crossfadeDurationMs');
+  @override
+  late final GeneratedColumn<int> crossfadeDurationMs = GeneratedColumn<int>(
+    'crossfade_duration_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(3000),
+  );
+  static const VerificationMeta _currentEqualizerPresetIdMeta =
+      const VerificationMeta('currentEqualizerPresetId');
+  @override
+  late final GeneratedColumn<String> currentEqualizerPresetId =
+      GeneratedColumn<String>(
+        'current_equalizer_preset_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _visualizerStyleMeta = const VerificationMeta(
+    'visualizerStyle',
+  );
+  @override
+  late final GeneratedColumn<String> visualizerStyle = GeneratedColumn<String>(
+    'visualizer_style',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('bars'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    adaptiveDarkModeEnabled,
+    manualThemeOverride,
+    themeSeedColorHex,
+    visualizerColorHex,
+    crossfadeEnabled,
+    crossfadeDurationMs,
+    currentEqualizerPresetId,
+    visualizerStyle,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SettingsRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('adaptive_dark_mode_enabled')) {
+      context.handle(
+        _adaptiveDarkModeEnabledMeta,
+        adaptiveDarkModeEnabled.isAcceptableOrUnknown(
+          data['adaptive_dark_mode_enabled']!,
+          _adaptiveDarkModeEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('manual_theme_override')) {
+      context.handle(
+        _manualThemeOverrideMeta,
+        manualThemeOverride.isAcceptableOrUnknown(
+          data['manual_theme_override']!,
+          _manualThemeOverrideMeta,
+        ),
+      );
+    }
+    if (data.containsKey('theme_seed_color_hex')) {
+      context.handle(
+        _themeSeedColorHexMeta,
+        themeSeedColorHex.isAcceptableOrUnknown(
+          data['theme_seed_color_hex']!,
+          _themeSeedColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_color_hex')) {
+      context.handle(
+        _visualizerColorHexMeta,
+        visualizerColorHex.isAcceptableOrUnknown(
+          data['visualizer_color_hex']!,
+          _visualizerColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('crossfade_enabled')) {
+      context.handle(
+        _crossfadeEnabledMeta,
+        crossfadeEnabled.isAcceptableOrUnknown(
+          data['crossfade_enabled']!,
+          _crossfadeEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('crossfade_duration_ms')) {
+      context.handle(
+        _crossfadeDurationMsMeta,
+        crossfadeDurationMs.isAcceptableOrUnknown(
+          data['crossfade_duration_ms']!,
+          _crossfadeDurationMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_equalizer_preset_id')) {
+      context.handle(
+        _currentEqualizerPresetIdMeta,
+        currentEqualizerPresetId.isAcceptableOrUnknown(
+          data['current_equalizer_preset_id']!,
+          _currentEqualizerPresetIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_style')) {
+      context.handle(
+        _visualizerStyleMeta,
+        visualizerStyle.isAcceptableOrUnknown(
+          data['visualizer_style']!,
+          _visualizerStyleMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SettingsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SettingsRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      adaptiveDarkModeEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}adaptive_dark_mode_enabled'],
+      )!,
+      manualThemeOverride: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}manual_theme_override'],
+      ),
+      themeSeedColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_seed_color_hex'],
+      )!,
+      visualizerColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visualizer_color_hex'],
+      )!,
+      crossfadeEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}crossfade_enabled'],
+      )!,
+      crossfadeDurationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}crossfade_duration_ms'],
+      )!,
+      currentEqualizerPresetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_equalizer_preset_id'],
+      ),
+      visualizerStyle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visualizer_style'],
+      )!,
+    );
+  }
+
+  @override
+  $SettingsTable createAlias(String alias) {
+    return $SettingsTable(attachedDatabase, alias);
+  }
+}
+
+class SettingsRow extends DataClass implements Insertable<SettingsRow> {
+  final String id;
+  final bool adaptiveDarkModeEnabled;
+  final String? manualThemeOverride;
+  final String themeSeedColorHex;
+  final String visualizerColorHex;
+  final bool crossfadeEnabled;
+  final int crossfadeDurationMs;
+  final String? currentEqualizerPresetId;
+  final String visualizerStyle;
+  const SettingsRow({
+    required this.id,
+    required this.adaptiveDarkModeEnabled,
+    this.manualThemeOverride,
+    required this.themeSeedColorHex,
+    required this.visualizerColorHex,
+    required this.crossfadeEnabled,
+    required this.crossfadeDurationMs,
+    this.currentEqualizerPresetId,
+    required this.visualizerStyle,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['adaptive_dark_mode_enabled'] = Variable<bool>(adaptiveDarkModeEnabled);
+    if (!nullToAbsent || manualThemeOverride != null) {
+      map['manual_theme_override'] = Variable<String>(manualThemeOverride);
+    }
+    map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex);
+    map['visualizer_color_hex'] = Variable<String>(visualizerColorHex);
+    map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled);
+    map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs);
+    if (!nullToAbsent || currentEqualizerPresetId != null) {
+      map['current_equalizer_preset_id'] = Variable<String>(
+        currentEqualizerPresetId,
+      );
+    }
+    map['visualizer_style'] = Variable<String>(visualizerStyle);
+    return map;
+  }
+
+  SettingsCompanion toCompanion(bool nullToAbsent) {
+    return SettingsCompanion(
+      id: Value(id),
+      adaptiveDarkModeEnabled: Value(adaptiveDarkModeEnabled),
+      manualThemeOverride: manualThemeOverride == null && nullToAbsent
+          ? const Value.absent()
+          : Value(manualThemeOverride),
+      themeSeedColorHex: Value(themeSeedColorHex),
+      visualizerColorHex: Value(visualizerColorHex),
+      crossfadeEnabled: Value(crossfadeEnabled),
+      crossfadeDurationMs: Value(crossfadeDurationMs),
+      currentEqualizerPresetId: currentEqualizerPresetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentEqualizerPresetId),
+      visualizerStyle: Value(visualizerStyle),
+    );
+  }
+
+  factory SettingsRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SettingsRow(
+      id: serializer.fromJson<String>(json['id']),
+      adaptiveDarkModeEnabled: serializer.fromJson<bool>(
+        json['adaptiveDarkModeEnabled'],
+      ),
+      manualThemeOverride: serializer.fromJson<String?>(
+        json['manualThemeOverride'],
+      ),
+      themeSeedColorHex: serializer.fromJson<String>(json['themeSeedColorHex']),
+      visualizerColorHex: serializer.fromJson<String>(
+        json['visualizerColorHex'],
+      ),
+      crossfadeEnabled: serializer.fromJson<bool>(json['crossfadeEnabled']),
+      crossfadeDurationMs: serializer.fromJson<int>(
+        json['crossfadeDurationMs'],
+      ),
+      currentEqualizerPresetId: serializer.fromJson<String?>(
+        json['currentEqualizerPresetId'],
+      ),
+      visualizerStyle: serializer.fromJson<String>(json['visualizerStyle']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'adaptiveDarkModeEnabled': serializer.toJson<bool>(
+        adaptiveDarkModeEnabled,
+      ),
+      'manualThemeOverride': serializer.toJson<String?>(manualThemeOverride),
+      'themeSeedColorHex': serializer.toJson<String>(themeSeedColorHex),
+      'visualizerColorHex': serializer.toJson<String>(visualizerColorHex),
+      'crossfadeEnabled': serializer.toJson<bool>(crossfadeEnabled),
+      'crossfadeDurationMs': serializer.toJson<int>(crossfadeDurationMs),
+      'currentEqualizerPresetId': serializer.toJson<String?>(
+        currentEqualizerPresetId,
+      ),
+      'visualizerStyle': serializer.toJson<String>(visualizerStyle),
+    };
+  }
+
+  SettingsRow copyWith({
+    String? id,
+    bool? adaptiveDarkModeEnabled,
+    Value<String?> manualThemeOverride = const Value.absent(),
+    String? themeSeedColorHex,
+    String? visualizerColorHex,
+    bool? crossfadeEnabled,
+    int? crossfadeDurationMs,
+    Value<String?> currentEqualizerPresetId = const Value.absent(),
+    String? visualizerStyle,
+  }) => SettingsRow(
+    id: id ?? this.id,
+    adaptiveDarkModeEnabled:
+        adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
+    manualThemeOverride: manualThemeOverride.present
+        ? manualThemeOverride.value
+        : this.manualThemeOverride,
+    themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
+    visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+    crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
+    crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
+    currentEqualizerPresetId: currentEqualizerPresetId.present
+        ? currentEqualizerPresetId.value
+        : this.currentEqualizerPresetId,
+    visualizerStyle: visualizerStyle ?? this.visualizerStyle,
+  );
+  SettingsRow copyWithCompanion(SettingsCompanion data) {
+    return SettingsRow(
+      id: data.id.present ? data.id.value : this.id,
+      adaptiveDarkModeEnabled: data.adaptiveDarkModeEnabled.present
+          ? data.adaptiveDarkModeEnabled.value
+          : this.adaptiveDarkModeEnabled,
+      manualThemeOverride: data.manualThemeOverride.present
+          ? data.manualThemeOverride.value
+          : this.manualThemeOverride,
+      themeSeedColorHex: data.themeSeedColorHex.present
+          ? data.themeSeedColorHex.value
+          : this.themeSeedColorHex,
+      visualizerColorHex: data.visualizerColorHex.present
+          ? data.visualizerColorHex.value
+          : this.visualizerColorHex,
+      crossfadeEnabled: data.crossfadeEnabled.present
+          ? data.crossfadeEnabled.value
+          : this.crossfadeEnabled,
+      crossfadeDurationMs: data.crossfadeDurationMs.present
+          ? data.crossfadeDurationMs.value
+          : this.crossfadeDurationMs,
+      currentEqualizerPresetId: data.currentEqualizerPresetId.present
+          ? data.currentEqualizerPresetId.value
+          : this.currentEqualizerPresetId,
+      visualizerStyle: data.visualizerStyle.present
+          ? data.visualizerStyle.value
+          : this.visualizerStyle,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsRow(')
+          ..write('id: $id, ')
+          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
+          ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('themeSeedColorHex: $themeSeedColorHex, ')
+          ..write('visualizerColorHex: $visualizerColorHex, ')
+          ..write('crossfadeEnabled: $crossfadeEnabled, ')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
+          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
+          ..write('visualizerStyle: $visualizerStyle')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    adaptiveDarkModeEnabled,
+    manualThemeOverride,
+    themeSeedColorHex,
+    visualizerColorHex,
+    crossfadeEnabled,
+    crossfadeDurationMs,
+    currentEqualizerPresetId,
+    visualizerStyle,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SettingsRow &&
+          other.id == this.id &&
+          other.adaptiveDarkModeEnabled == this.adaptiveDarkModeEnabled &&
+          other.manualThemeOverride == this.manualThemeOverride &&
+          other.themeSeedColorHex == this.themeSeedColorHex &&
+          other.visualizerColorHex == this.visualizerColorHex &&
+          other.crossfadeEnabled == this.crossfadeEnabled &&
+          other.crossfadeDurationMs == this.crossfadeDurationMs &&
+          other.currentEqualizerPresetId == this.currentEqualizerPresetId &&
+          other.visualizerStyle == this.visualizerStyle);
+}
+
+class SettingsCompanion extends UpdateCompanion<SettingsRow> {
+  final Value<String> id;
+  final Value<bool> adaptiveDarkModeEnabled;
+  final Value<String?> manualThemeOverride;
+  final Value<String> themeSeedColorHex;
+  final Value<String> visualizerColorHex;
+  final Value<bool> crossfadeEnabled;
+  final Value<int> crossfadeDurationMs;
+  final Value<String?> currentEqualizerPresetId;
+  final Value<String> visualizerStyle;
+  final Value<int> rowid;
+  const SettingsCompanion({
+    this.id = const Value.absent(),
+    this.adaptiveDarkModeEnabled = const Value.absent(),
+    this.manualThemeOverride = const Value.absent(),
+    this.themeSeedColorHex = const Value.absent(),
+    this.visualizerColorHex = const Value.absent(),
+    this.crossfadeEnabled = const Value.absent(),
+    this.crossfadeDurationMs = const Value.absent(),
+    this.currentEqualizerPresetId = const Value.absent(),
+    this.visualizerStyle = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SettingsCompanion.insert({
+    required String id,
+    this.adaptiveDarkModeEnabled = const Value.absent(),
+    this.manualThemeOverride = const Value.absent(),
+    this.themeSeedColorHex = const Value.absent(),
+    this.visualizerColorHex = const Value.absent(),
+    this.crossfadeEnabled = const Value.absent(),
+    this.crossfadeDurationMs = const Value.absent(),
+    this.currentEqualizerPresetId = const Value.absent(),
+    this.visualizerStyle = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<SettingsRow> custom({
+    Expression<String>? id,
+    Expression<bool>? adaptiveDarkModeEnabled,
+    Expression<String>? manualThemeOverride,
+    Expression<String>? themeSeedColorHex,
+    Expression<String>? visualizerColorHex,
+    Expression<bool>? crossfadeEnabled,
+    Expression<int>? crossfadeDurationMs,
+    Expression<String>? currentEqualizerPresetId,
+    Expression<String>? visualizerStyle,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (adaptiveDarkModeEnabled != null)
+        'adaptive_dark_mode_enabled': adaptiveDarkModeEnabled,
+      if (manualThemeOverride != null)
+        'manual_theme_override': manualThemeOverride,
+      if (themeSeedColorHex != null) 'theme_seed_color_hex': themeSeedColorHex,
+      if (visualizerColorHex != null)
+        'visualizer_color_hex': visualizerColorHex,
+      if (crossfadeEnabled != null) 'crossfade_enabled': crossfadeEnabled,
+      if (crossfadeDurationMs != null)
+        'crossfade_duration_ms': crossfadeDurationMs,
+      if (currentEqualizerPresetId != null)
+        'current_equalizer_preset_id': currentEqualizerPresetId,
+      if (visualizerStyle != null) 'visualizer_style': visualizerStyle,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SettingsCompanion copyWith({
+    Value<String>? id,
+    Value<bool>? adaptiveDarkModeEnabled,
+    Value<String?>? manualThemeOverride,
+    Value<String>? themeSeedColorHex,
+    Value<String>? visualizerColorHex,
+    Value<bool>? crossfadeEnabled,
+    Value<int>? crossfadeDurationMs,
+    Value<String?>? currentEqualizerPresetId,
+    Value<String>? visualizerStyle,
+    Value<int>? rowid,
+  }) {
+    return SettingsCompanion(
+      id: id ?? this.id,
+      adaptiveDarkModeEnabled:
+          adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
+      manualThemeOverride: manualThemeOverride ?? this.manualThemeOverride,
+      themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
+      visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+      crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
+      crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
+      currentEqualizerPresetId:
+          currentEqualizerPresetId ?? this.currentEqualizerPresetId,
+      visualizerStyle: visualizerStyle ?? this.visualizerStyle,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (adaptiveDarkModeEnabled.present) {
+      map['adaptive_dark_mode_enabled'] = Variable<bool>(
+        adaptiveDarkModeEnabled.value,
+      );
+    }
+    if (manualThemeOverride.present) {
+      map['manual_theme_override'] = Variable<String>(
+        manualThemeOverride.value,
+      );
+    }
+    if (themeSeedColorHex.present) {
+      map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex.value);
+    }
+    if (visualizerColorHex.present) {
+      map['visualizer_color_hex'] = Variable<String>(visualizerColorHex.value);
+    }
+    if (crossfadeEnabled.present) {
+      map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled.value);
+    }
+    if (crossfadeDurationMs.present) {
+      map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs.value);
+    }
+    if (currentEqualizerPresetId.present) {
+      map['current_equalizer_preset_id'] = Variable<String>(
+        currentEqualizerPresetId.value,
+      );
+    }
+    if (visualizerStyle.present) {
+      map['visualizer_style'] = Variable<String>(visualizerStyle.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
+          ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('themeSeedColorHex: $themeSeedColorHex, ')
+          ..write('visualizerColorHex: $visualizerColorHex, ')
+          ..write('crossfadeEnabled: $crossfadeEnabled, ')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
+          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
+          ..write('visualizerStyle: $visualizerStyle, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1746,588 +2411,6 @@ class EqualizerPresetsCompanion extends UpdateCompanion<EqualizerPresetRow> {
   }
 }
 
-class $SettingsTable extends Settings
-    with TableInfo<$SettingsTable, SettingsRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SettingsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _adaptiveDarkModeEnabledMeta =
-      const VerificationMeta('adaptiveDarkModeEnabled');
-  @override
-  late final GeneratedColumn<bool> adaptiveDarkModeEnabled =
-      GeneratedColumn<bool>(
-        'adaptive_dark_mode_enabled',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("adaptive_dark_mode_enabled" IN (0, 1))',
-        ),
-        defaultValue: const Constant(true),
-      );
-  static const VerificationMeta _manualThemeOverrideMeta =
-      const VerificationMeta('manualThemeOverride');
-  @override
-  late final GeneratedColumn<String> manualThemeOverride =
-      GeneratedColumn<String>(
-        'manual_theme_override',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _themeSeedColorHexMeta = const VerificationMeta(
-    'themeSeedColorHex',
-  );
-  @override
-  late final GeneratedColumn<String> themeSeedColorHex =
-      GeneratedColumn<String>(
-        'theme_seed_color_hex',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('#673AB7'),
-      );
-  static const VerificationMeta _visualizerColorHexMeta =
-      const VerificationMeta('visualizerColorHex');
-  @override
-  late final GeneratedColumn<String> visualizerColorHex =
-      GeneratedColumn<String>(
-        'visualizer_color_hex',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('#673AB7'),
-      );
-  static const VerificationMeta _crossfadeEnabledMeta = const VerificationMeta(
-    'crossfadeEnabled',
-  );
-  @override
-  late final GeneratedColumn<bool> crossfadeEnabled = GeneratedColumn<bool>(
-    'crossfade_enabled',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("crossfade_enabled" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _crossfadeDurationMsMeta =
-      const VerificationMeta('crossfadeDurationMs');
-  @override
-  late final GeneratedColumn<int> crossfadeDurationMs = GeneratedColumn<int>(
-    'crossfade_duration_ms',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(3000),
-  );
-  static const VerificationMeta _currentEqualizerPresetIdMeta =
-      const VerificationMeta('currentEqualizerPresetId');
-  @override
-  late final GeneratedColumn<String> currentEqualizerPresetId =
-      GeneratedColumn<String>(
-        'current_equalizer_preset_id',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES equalizer_presets (id) ON DELETE SET NULL',
-        ),
-      );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    adaptiveDarkModeEnabled,
-    manualThemeOverride,
-    themeSeedColorHex,
-    visualizerColorHex,
-    crossfadeEnabled,
-    crossfadeDurationMs,
-    currentEqualizerPresetId,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'settings';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SettingsRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('adaptive_dark_mode_enabled')) {
-      context.handle(
-        _adaptiveDarkModeEnabledMeta,
-        adaptiveDarkModeEnabled.isAcceptableOrUnknown(
-          data['adaptive_dark_mode_enabled']!,
-          _adaptiveDarkModeEnabledMeta,
-        ),
-      );
-    }
-    if (data.containsKey('manual_theme_override')) {
-      context.handle(
-        _manualThemeOverrideMeta,
-        manualThemeOverride.isAcceptableOrUnknown(
-          data['manual_theme_override']!,
-          _manualThemeOverrideMeta,
-        ),
-      );
-    }
-    if (data.containsKey('theme_seed_color_hex')) {
-      context.handle(
-        _themeSeedColorHexMeta,
-        themeSeedColorHex.isAcceptableOrUnknown(
-          data['theme_seed_color_hex']!,
-          _themeSeedColorHexMeta,
-        ),
-      );
-    }
-    if (data.containsKey('visualizer_color_hex')) {
-      context.handle(
-        _visualizerColorHexMeta,
-        visualizerColorHex.isAcceptableOrUnknown(
-          data['visualizer_color_hex']!,
-          _visualizerColorHexMeta,
-        ),
-      );
-    }
-    if (data.containsKey('crossfade_enabled')) {
-      context.handle(
-        _crossfadeEnabledMeta,
-        crossfadeEnabled.isAcceptableOrUnknown(
-          data['crossfade_enabled']!,
-          _crossfadeEnabledMeta,
-        ),
-      );
-    }
-    if (data.containsKey('crossfade_duration_ms')) {
-      context.handle(
-        _crossfadeDurationMsMeta,
-        crossfadeDurationMs.isAcceptableOrUnknown(
-          data['crossfade_duration_ms']!,
-          _crossfadeDurationMsMeta,
-        ),
-      );
-    }
-    if (data.containsKey('current_equalizer_preset_id')) {
-      context.handle(
-        _currentEqualizerPresetIdMeta,
-        currentEqualizerPresetId.isAcceptableOrUnknown(
-          data['current_equalizer_preset_id']!,
-          _currentEqualizerPresetIdMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  SettingsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SettingsRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      adaptiveDarkModeEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}adaptive_dark_mode_enabled'],
-      )!,
-      manualThemeOverride: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}manual_theme_override'],
-      ),
-      themeSeedColorHex: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}theme_seed_color_hex'],
-      )!,
-      visualizerColorHex: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}visualizer_color_hex'],
-      )!,
-      crossfadeEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}crossfade_enabled'],
-      )!,
-      crossfadeDurationMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}crossfade_duration_ms'],
-      )!,
-      currentEqualizerPresetId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}current_equalizer_preset_id'],
-      ),
-    );
-  }
-
-  @override
-  $SettingsTable createAlias(String alias) {
-    return $SettingsTable(attachedDatabase, alias);
-  }
-}
-
-class SettingsRow extends DataClass implements Insertable<SettingsRow> {
-  final String id;
-  final bool adaptiveDarkModeEnabled;
-  final String? manualThemeOverride;
-  final String themeSeedColorHex;
-  final String visualizerColorHex;
-  final bool crossfadeEnabled;
-  final int crossfadeDurationMs;
-  final String? currentEqualizerPresetId;
-  const SettingsRow({
-    required this.id,
-    required this.adaptiveDarkModeEnabled,
-    this.manualThemeOverride,
-    required this.themeSeedColorHex,
-    required this.visualizerColorHex,
-    required this.crossfadeEnabled,
-    required this.crossfadeDurationMs,
-    this.currentEqualizerPresetId,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['adaptive_dark_mode_enabled'] = Variable<bool>(adaptiveDarkModeEnabled);
-    if (!nullToAbsent || manualThemeOverride != null) {
-      map['manual_theme_override'] = Variable<String>(manualThemeOverride);
-    }
-    map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex);
-    map['visualizer_color_hex'] = Variable<String>(visualizerColorHex);
-    map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled);
-    map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs);
-    if (!nullToAbsent || currentEqualizerPresetId != null) {
-      map['current_equalizer_preset_id'] = Variable<String>(
-        currentEqualizerPresetId,
-      );
-    }
-    return map;
-  }
-
-  SettingsCompanion toCompanion(bool nullToAbsent) {
-    return SettingsCompanion(
-      id: Value(id),
-      adaptiveDarkModeEnabled: Value(adaptiveDarkModeEnabled),
-      manualThemeOverride: manualThemeOverride == null && nullToAbsent
-          ? const Value.absent()
-          : Value(manualThemeOverride),
-      themeSeedColorHex: Value(themeSeedColorHex),
-      visualizerColorHex: Value(visualizerColorHex),
-      crossfadeEnabled: Value(crossfadeEnabled),
-      crossfadeDurationMs: Value(crossfadeDurationMs),
-      currentEqualizerPresetId: currentEqualizerPresetId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(currentEqualizerPresetId),
-    );
-  }
-
-  factory SettingsRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SettingsRow(
-      id: serializer.fromJson<String>(json['id']),
-      adaptiveDarkModeEnabled: serializer.fromJson<bool>(
-        json['adaptiveDarkModeEnabled'],
-      ),
-      manualThemeOverride: serializer.fromJson<String?>(
-        json['manualThemeOverride'],
-      ),
-      themeSeedColorHex: serializer.fromJson<String>(json['themeSeedColorHex']),
-      visualizerColorHex: serializer.fromJson<String>(
-        json['visualizerColorHex'],
-      ),
-      crossfadeEnabled: serializer.fromJson<bool>(json['crossfadeEnabled']),
-      crossfadeDurationMs: serializer.fromJson<int>(
-        json['crossfadeDurationMs'],
-      ),
-      currentEqualizerPresetId: serializer.fromJson<String?>(
-        json['currentEqualizerPresetId'],
-      ),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'adaptiveDarkModeEnabled': serializer.toJson<bool>(
-        adaptiveDarkModeEnabled,
-      ),
-      'manualThemeOverride': serializer.toJson<String?>(manualThemeOverride),
-      'themeSeedColorHex': serializer.toJson<String>(themeSeedColorHex),
-      'visualizerColorHex': serializer.toJson<String>(visualizerColorHex),
-      'crossfadeEnabled': serializer.toJson<bool>(crossfadeEnabled),
-      'crossfadeDurationMs': serializer.toJson<int>(crossfadeDurationMs),
-      'currentEqualizerPresetId': serializer.toJson<String?>(
-        currentEqualizerPresetId,
-      ),
-    };
-  }
-
-  SettingsRow copyWith({
-    String? id,
-    bool? adaptiveDarkModeEnabled,
-    Value<String?> manualThemeOverride = const Value.absent(),
-    String? themeSeedColorHex,
-    String? visualizerColorHex,
-    bool? crossfadeEnabled,
-    int? crossfadeDurationMs,
-    Value<String?> currentEqualizerPresetId = const Value.absent(),
-  }) => SettingsRow(
-    id: id ?? this.id,
-    adaptiveDarkModeEnabled:
-        adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
-    manualThemeOverride: manualThemeOverride.present
-        ? manualThemeOverride.value
-        : this.manualThemeOverride,
-    themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
-    visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
-    crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
-    crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
-    currentEqualizerPresetId: currentEqualizerPresetId.present
-        ? currentEqualizerPresetId.value
-        : this.currentEqualizerPresetId,
-  );
-  SettingsRow copyWithCompanion(SettingsCompanion data) {
-    return SettingsRow(
-      id: data.id.present ? data.id.value : this.id,
-      adaptiveDarkModeEnabled: data.adaptiveDarkModeEnabled.present
-          ? data.adaptiveDarkModeEnabled.value
-          : this.adaptiveDarkModeEnabled,
-      manualThemeOverride: data.manualThemeOverride.present
-          ? data.manualThemeOverride.value
-          : this.manualThemeOverride,
-      themeSeedColorHex: data.themeSeedColorHex.present
-          ? data.themeSeedColorHex.value
-          : this.themeSeedColorHex,
-      visualizerColorHex: data.visualizerColorHex.present
-          ? data.visualizerColorHex.value
-          : this.visualizerColorHex,
-      crossfadeEnabled: data.crossfadeEnabled.present
-          ? data.crossfadeEnabled.value
-          : this.crossfadeEnabled,
-      crossfadeDurationMs: data.crossfadeDurationMs.present
-          ? data.crossfadeDurationMs.value
-          : this.crossfadeDurationMs,
-      currentEqualizerPresetId: data.currentEqualizerPresetId.present
-          ? data.currentEqualizerPresetId.value
-          : this.currentEqualizerPresetId,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SettingsRow(')
-          ..write('id: $id, ')
-          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
-          ..write('manualThemeOverride: $manualThemeOverride, ')
-          ..write('themeSeedColorHex: $themeSeedColorHex, ')
-          ..write('visualizerColorHex: $visualizerColorHex, ')
-          ..write('crossfadeEnabled: $crossfadeEnabled, ')
-          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
-          ..write('currentEqualizerPresetId: $currentEqualizerPresetId')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    adaptiveDarkModeEnabled,
-    manualThemeOverride,
-    themeSeedColorHex,
-    visualizerColorHex,
-    crossfadeEnabled,
-    crossfadeDurationMs,
-    currentEqualizerPresetId,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SettingsRow &&
-          other.id == this.id &&
-          other.adaptiveDarkModeEnabled == this.adaptiveDarkModeEnabled &&
-          other.manualThemeOverride == this.manualThemeOverride &&
-          other.themeSeedColorHex == this.themeSeedColorHex &&
-          other.visualizerColorHex == this.visualizerColorHex &&
-          other.crossfadeEnabled == this.crossfadeEnabled &&
-          other.crossfadeDurationMs == this.crossfadeDurationMs &&
-          other.currentEqualizerPresetId == this.currentEqualizerPresetId);
-}
-
-class SettingsCompanion extends UpdateCompanion<SettingsRow> {
-  final Value<String> id;
-  final Value<bool> adaptiveDarkModeEnabled;
-  final Value<String?> manualThemeOverride;
-  final Value<String> themeSeedColorHex;
-  final Value<String> visualizerColorHex;
-  final Value<bool> crossfadeEnabled;
-  final Value<int> crossfadeDurationMs;
-  final Value<String?> currentEqualizerPresetId;
-  final Value<int> rowid;
-  const SettingsCompanion({
-    this.id = const Value.absent(),
-    this.adaptiveDarkModeEnabled = const Value.absent(),
-    this.manualThemeOverride = const Value.absent(),
-    this.themeSeedColorHex = const Value.absent(),
-    this.visualizerColorHex = const Value.absent(),
-    this.crossfadeEnabled = const Value.absent(),
-    this.crossfadeDurationMs = const Value.absent(),
-    this.currentEqualizerPresetId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SettingsCompanion.insert({
-    required String id,
-    this.adaptiveDarkModeEnabled = const Value.absent(),
-    this.manualThemeOverride = const Value.absent(),
-    this.themeSeedColorHex = const Value.absent(),
-    this.visualizerColorHex = const Value.absent(),
-    this.crossfadeEnabled = const Value.absent(),
-    this.crossfadeDurationMs = const Value.absent(),
-    this.currentEqualizerPresetId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : id = Value(id);
-  static Insertable<SettingsRow> custom({
-    Expression<String>? id,
-    Expression<bool>? adaptiveDarkModeEnabled,
-    Expression<String>? manualThemeOverride,
-    Expression<String>? themeSeedColorHex,
-    Expression<String>? visualizerColorHex,
-    Expression<bool>? crossfadeEnabled,
-    Expression<int>? crossfadeDurationMs,
-    Expression<String>? currentEqualizerPresetId,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (adaptiveDarkModeEnabled != null)
-        'adaptive_dark_mode_enabled': adaptiveDarkModeEnabled,
-      if (manualThemeOverride != null)
-        'manual_theme_override': manualThemeOverride,
-      if (themeSeedColorHex != null) 'theme_seed_color_hex': themeSeedColorHex,
-      if (visualizerColorHex != null)
-        'visualizer_color_hex': visualizerColorHex,
-      if (crossfadeEnabled != null) 'crossfade_enabled': crossfadeEnabled,
-      if (crossfadeDurationMs != null)
-        'crossfade_duration_ms': crossfadeDurationMs,
-      if (currentEqualizerPresetId != null)
-        'current_equalizer_preset_id': currentEqualizerPresetId,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SettingsCompanion copyWith({
-    Value<String>? id,
-    Value<bool>? adaptiveDarkModeEnabled,
-    Value<String?>? manualThemeOverride,
-    Value<String>? themeSeedColorHex,
-    Value<String>? visualizerColorHex,
-    Value<bool>? crossfadeEnabled,
-    Value<int>? crossfadeDurationMs,
-    Value<String?>? currentEqualizerPresetId,
-    Value<int>? rowid,
-  }) {
-    return SettingsCompanion(
-      id: id ?? this.id,
-      adaptiveDarkModeEnabled:
-          adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
-      manualThemeOverride: manualThemeOverride ?? this.manualThemeOverride,
-      themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
-      visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
-      crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
-      crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
-      currentEqualizerPresetId:
-          currentEqualizerPresetId ?? this.currentEqualizerPresetId,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (adaptiveDarkModeEnabled.present) {
-      map['adaptive_dark_mode_enabled'] = Variable<bool>(
-        adaptiveDarkModeEnabled.value,
-      );
-    }
-    if (manualThemeOverride.present) {
-      map['manual_theme_override'] = Variable<String>(
-        manualThemeOverride.value,
-      );
-    }
-    if (themeSeedColorHex.present) {
-      map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex.value);
-    }
-    if (visualizerColorHex.present) {
-      map['visualizer_color_hex'] = Variable<String>(visualizerColorHex.value);
-    }
-    if (crossfadeEnabled.present) {
-      map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled.value);
-    }
-    if (crossfadeDurationMs.present) {
-      map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs.value);
-    }
-    if (currentEqualizerPresetId.present) {
-      map['current_equalizer_preset_id'] = Variable<String>(
-        currentEqualizerPresetId.value,
-      );
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SettingsCompanion(')
-          ..write('id: $id, ')
-          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
-          ..write('manualThemeOverride: $manualThemeOverride, ')
-          ..write('themeSeedColorHex: $themeSeedColorHex, ')
-          ..write('visualizerColorHex: $visualizerColorHex, ')
-          ..write('crossfadeEnabled: $crossfadeEnabled, ')
-          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
-          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $BackupsTable extends Backups with TableInfo<$BackupsTable, BackupRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -2595,10 +2678,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SongsTable songs = $SongsTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
+  late final $SettingsTable settings = $SettingsTable(this);
   late final $EqualizerPresetsTable equalizerPresets = $EqualizerPresetsTable(
     this,
   );
-  late final $SettingsTable settings = $SettingsTable(this);
   late final $BackupsTable backups = $BackupsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -2609,48 +2692,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     songs,
     playlists,
     playlistSongs,
-    equalizerPresets,
     settings,
+    equalizerPresets,
     backups,
   ];
-  @override
-  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'mood_tags',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('songs', kind: UpdateKind.update)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'mood_tags',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('playlists', kind: UpdateKind.update)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'playlists',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('playlist_songs', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'songs',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('playlist_songs', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'equalizer_presets',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('settings', kind: UpdateKind.update)],
-    ),
-  ]);
 }
 
 typedef $$MoodTagsTableCreateCompanionBuilder =
@@ -2658,6 +2703,7 @@ typedef $$MoodTagsTableCreateCompanionBuilder =
       required String id,
       required String label,
       required String colorHex,
+      Value<int> sortOrder,
       Value<int> rowid,
     });
 typedef $$MoodTagsTableUpdateCompanionBuilder =
@@ -2665,49 +2711,9 @@ typedef $$MoodTagsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> label,
       Value<String> colorHex,
+      Value<int> sortOrder,
       Value<int> rowid,
     });
-
-final class $$MoodTagsTableReferences
-    extends BaseReferences<_$AppDatabase, $MoodTagsTable, MoodTagRow> {
-  $$MoodTagsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$SongsTable, List<SongRow>> _songsRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.songs,
-    aliasName: 'mood_tags__id__songs__mood_tag_id',
-  );
-
-  $$SongsTableProcessedTableManager get songsRefs {
-    final manager = $$SongsTableTableManager(
-      $_db,
-      $_db.songs,
-    ).filter((f) => f.moodTagId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_songsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$PlaylistsTable, List<PlaylistRow>>
-  _playlistsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.playlists,
-    aliasName: 'mood_tags__id__playlists__source_mood_tag_id',
-  );
-
-  $$PlaylistsTableProcessedTableManager get playlistsRefs {
-    final manager = $$PlaylistsTableTableManager($_db, $_db.playlists).filter(
-      (f) => f.sourceMoodTagId.id.sqlEquals($_itemColumn<String>('id')!),
-    );
-
-    final cache = $_typedResult.readTableOrNull(_playlistsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$MoodTagsTableFilterComposer
     extends Composer<_$AppDatabase, $MoodTagsTable> {
@@ -2733,55 +2739,10 @@ class $$MoodTagsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> songsRefs(
-    Expression<bool> Function($$SongsTableFilterComposer f) f,
-  ) {
-    final $$SongsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.songs,
-      getReferencedColumn: (t) => t.moodTagId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SongsTableFilterComposer(
-            $db: $db,
-            $table: $db.songs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> playlistsRefs(
-    Expression<bool> Function($$PlaylistsTableFilterComposer f) f,
-  ) {
-    final $$PlaylistsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.playlists,
-      getReferencedColumn: (t) => t.sourceMoodTagId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistsTableFilterComposer(
-            $db: $db,
-            $table: $db.playlists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$MoodTagsTableOrderingComposer
@@ -2807,6 +2768,11 @@ class $$MoodTagsTableOrderingComposer
     column: $table.colorHex,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MoodTagsTableAnnotationComposer
@@ -2827,55 +2793,8 @@ class $$MoodTagsTableAnnotationComposer
   GeneratedColumn<String> get colorHex =>
       $composableBuilder(column: $table.colorHex, builder: (column) => column);
 
-  Expression<T> songsRefs<T extends Object>(
-    Expression<T> Function($$SongsTableAnnotationComposer a) f,
-  ) {
-    final $$SongsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.songs,
-      getReferencedColumn: (t) => t.moodTagId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SongsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.songs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<T> playlistsRefs<T extends Object>(
-    Expression<T> Function($$PlaylistsTableAnnotationComposer a) f,
-  ) {
-    final $$PlaylistsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.playlists,
-      getReferencedColumn: (t) => t.sourceMoodTagId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.playlists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 }
 
 class $$MoodTagsTableTableManager
@@ -2889,9 +2808,12 @@ class $$MoodTagsTableTableManager
           $$MoodTagsTableAnnotationComposer,
           $$MoodTagsTableCreateCompanionBuilder,
           $$MoodTagsTableUpdateCompanionBuilder,
-          (MoodTagRow, $$MoodTagsTableReferences),
+          (
+            MoodTagRow,
+            BaseReferences<_$AppDatabase, $MoodTagsTable, MoodTagRow>,
+          ),
           MoodTagRow,
-          PrefetchHooks Function({bool songsRefs, bool playlistsRefs})
+          PrefetchHooks Function()
         > {
   $$MoodTagsTableTableManager(_$AppDatabase db, $MoodTagsTable table)
     : super(
@@ -2909,11 +2831,13 @@ class $$MoodTagsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> label = const Value.absent(),
                 Value<String> colorHex = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MoodTagsCompanion(
                 id: id,
                 label: label,
                 colorHex: colorHex,
+                sortOrder: sortOrder,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2921,70 +2845,19 @@ class $$MoodTagsTableTableManager
                 required String id,
                 required String label,
                 required String colorHex,
+                Value<int> sortOrder = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MoodTagsCompanion.insert(
                 id: id,
                 label: label,
                 colorHex: colorHex,
+                sortOrder: sortOrder,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$MoodTagsTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({songsRefs = false, playlistsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (songsRefs) db.songs,
-                if (playlistsRefs) db.playlists,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (songsRefs)
-                    await $_getPrefetchedData<
-                      MoodTagRow,
-                      $MoodTagsTable,
-                      SongRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$MoodTagsTableReferences
-                          ._songsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$MoodTagsTableReferences(db, table, p0).songsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.moodTagId == item.id),
-                      typedResults: items,
-                    ),
-                  if (playlistsRefs)
-                    await $_getPrefetchedData<
-                      MoodTagRow,
-                      $MoodTagsTable,
-                      PlaylistRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$MoodTagsTableReferences
-                          ._playlistsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$MoodTagsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).playlistsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.sourceMoodTagId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -2999,9 +2872,9 @@ typedef $$MoodTagsTableProcessedTableManager =
       $$MoodTagsTableAnnotationComposer,
       $$MoodTagsTableCreateCompanionBuilder,
       $$MoodTagsTableUpdateCompanionBuilder,
-      (MoodTagRow, $$MoodTagsTableReferences),
+      (MoodTagRow, BaseReferences<_$AppDatabase, $MoodTagsTable, MoodTagRow>),
       MoodTagRow,
-      PrefetchHooks Function({bool songsRefs, bool playlistsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$SongsTableCreateCompanionBuilder =
     SongsCompanion Function({
@@ -3029,46 +2902,6 @@ typedef $$SongsTableUpdateCompanionBuilder =
       Value<bool> isMissing,
       Value<int> rowid,
     });
-
-final class $$SongsTableReferences
-    extends BaseReferences<_$AppDatabase, $SongsTable, SongRow> {
-  $$SongsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $MoodTagsTable _moodTagIdTable(_$AppDatabase db) =>
-      db.moodTags.createAlias('songs__mood_tag_id__mood_tags__id');
-
-  $$MoodTagsTableProcessedTableManager? get moodTagId {
-    final $_column = $_itemColumn<String>('mood_tag_id');
-    if ($_column == null) return null;
-    final manager = $$MoodTagsTableTableManager(
-      $_db,
-      $_db.moodTags,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_moodTagIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$PlaylistSongsTable, List<PlaylistSongRow>>
-  _playlistSongsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.playlistSongs,
-    aliasName: 'songs__id__playlist_songs__song_id',
-  );
-
-  $$PlaylistSongsTableProcessedTableManager get playlistSongsRefs {
-    final manager = $$PlaylistSongsTableTableManager(
-      $_db,
-      $_db.playlistSongs,
-    ).filter((f) => f.songId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_playlistSongsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
   $$SongsTableFilterComposer({
@@ -3108,6 +2941,11 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get moodTagId => $composableBuilder(
+    column: $table.moodTagId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<bool> get isLiked => $composableBuilder(
     column: $table.isLiked,
     builder: (column) => ColumnFilters(column),
@@ -3117,54 +2955,6 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
     column: $table.isMissing,
     builder: (column) => ColumnFilters(column),
   );
-
-  $$MoodTagsTableFilterComposer get moodTagId {
-    final $$MoodTagsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.moodTagId,
-      referencedTable: $db.moodTags,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MoodTagsTableFilterComposer(
-            $db: $db,
-            $table: $db.moodTags,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<bool> playlistSongsRefs(
-    Expression<bool> Function($$PlaylistSongsTableFilterComposer f) f,
-  ) {
-    final $$PlaylistSongsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.playlistSongs,
-      getReferencedColumn: (t) => t.songId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistSongsTableFilterComposer(
-            $db: $db,
-            $table: $db.playlistSongs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$SongsTableOrderingComposer
@@ -3206,6 +2996,11 @@ class $$SongsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get moodTagId => $composableBuilder(
+    column: $table.moodTagId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isLiked => $composableBuilder(
     column: $table.isLiked,
     builder: (column) => ColumnOrderings(column),
@@ -3215,29 +3010,6 @@ class $$SongsTableOrderingComposer
     column: $table.isMissing,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$MoodTagsTableOrderingComposer get moodTagId {
-    final $$MoodTagsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.moodTagId,
-      referencedTable: $db.moodTags,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MoodTagsTableOrderingComposer(
-            $db: $db,
-            $table: $db.moodTags,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$SongsTableAnnotationComposer
@@ -3269,59 +3041,14 @@ class $$SongsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get moodTagId =>
+      $composableBuilder(column: $table.moodTagId, builder: (column) => column);
+
   GeneratedColumn<bool> get isLiked =>
       $composableBuilder(column: $table.isLiked, builder: (column) => column);
 
   GeneratedColumn<bool> get isMissing =>
       $composableBuilder(column: $table.isMissing, builder: (column) => column);
-
-  $$MoodTagsTableAnnotationComposer get moodTagId {
-    final $$MoodTagsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.moodTagId,
-      referencedTable: $db.moodTags,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MoodTagsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.moodTags,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<T> playlistSongsRefs<T extends Object>(
-    Expression<T> Function($$PlaylistSongsTableAnnotationComposer a) f,
-  ) {
-    final $$PlaylistSongsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.playlistSongs,
-      getReferencedColumn: (t) => t.songId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistSongsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.playlistSongs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$SongsTableTableManager
@@ -3335,9 +3062,9 @@ class $$SongsTableTableManager
           $$SongsTableAnnotationComposer,
           $$SongsTableCreateCompanionBuilder,
           $$SongsTableUpdateCompanionBuilder,
-          (SongRow, $$SongsTableReferences),
+          (SongRow, BaseReferences<_$AppDatabase, $SongsTable, SongRow>),
           SongRow,
-          PrefetchHooks Function({bool moodTagId, bool playlistSongsRefs})
+          PrefetchHooks Function()
         > {
   $$SongsTableTableManager(_$AppDatabase db, $SongsTable table)
     : super(
@@ -3399,77 +3126,9 @@ class $$SongsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$SongsTableReferences(db, table, e)),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback:
-              ({moodTagId = false, playlistSongsRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (playlistSongsRefs) db.playlistSongs,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (moodTagId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.moodTagId,
-                                    referencedTable: $$SongsTableReferences
-                                        ._moodTagIdTable(db),
-                                    referencedColumn: $$SongsTableReferences
-                                        ._moodTagIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
-                        }
-
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (playlistSongsRefs)
-                        await $_getPrefetchedData<
-                          SongRow,
-                          $SongsTable,
-                          PlaylistSongRow
-                        >(
-                          currentTable: table,
-                          referencedTable: $$SongsTableReferences
-                              ._playlistSongsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$SongsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).playlistSongsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.songId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
-              },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -3484,9 +3143,9 @@ typedef $$SongsTableProcessedTableManager =
       $$SongsTableAnnotationComposer,
       $$SongsTableCreateCompanionBuilder,
       $$SongsTableUpdateCompanionBuilder,
-      (SongRow, $$SongsTableReferences),
+      (SongRow, BaseReferences<_$AppDatabase, $SongsTable, SongRow>),
       SongRow,
-      PrefetchHooks Function({bool moodTagId, bool playlistSongsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$PlaylistsTableCreateCompanionBuilder =
     PlaylistsCompanion Function({
@@ -3506,46 +3165,6 @@ typedef $$PlaylistsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
-
-final class $$PlaylistsTableReferences
-    extends BaseReferences<_$AppDatabase, $PlaylistsTable, PlaylistRow> {
-  $$PlaylistsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $MoodTagsTable _sourceMoodTagIdTable(_$AppDatabase db) =>
-      db.moodTags.createAlias('playlists__source_mood_tag_id__mood_tags__id');
-
-  $$MoodTagsTableProcessedTableManager? get sourceMoodTagId {
-    final $_column = $_itemColumn<String>('source_mood_tag_id');
-    if ($_column == null) return null;
-    final manager = $$MoodTagsTableTableManager(
-      $_db,
-      $_db.moodTags,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sourceMoodTagIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$PlaylistSongsTable, List<PlaylistSongRow>>
-  _playlistSongsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.playlistSongs,
-    aliasName: 'playlists__id__playlist_songs__playlist_id',
-  );
-
-  $$PlaylistSongsTableProcessedTableManager get playlistSongsRefs {
-    final manager = $$PlaylistSongsTableTableManager(
-      $_db,
-      $_db.playlistSongs,
-    ).filter((f) => f.playlistId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_playlistSongsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$PlaylistsTableFilterComposer
     extends Composer<_$AppDatabase, $PlaylistsTable> {
@@ -3571,58 +3190,15 @@ class $$PlaylistsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get sourceMoodTagId => $composableBuilder(
+    column: $table.sourceMoodTagId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
-
-  $$MoodTagsTableFilterComposer get sourceMoodTagId {
-    final $$MoodTagsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sourceMoodTagId,
-      referencedTable: $db.moodTags,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MoodTagsTableFilterComposer(
-            $db: $db,
-            $table: $db.moodTags,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<bool> playlistSongsRefs(
-    Expression<bool> Function($$PlaylistSongsTableFilterComposer f) f,
-  ) {
-    final $$PlaylistSongsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.playlistSongs,
-      getReferencedColumn: (t) => t.playlistId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistSongsTableFilterComposer(
-            $db: $db,
-            $table: $db.playlistSongs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$PlaylistsTableOrderingComposer
@@ -3649,33 +3225,15 @@ class $$PlaylistsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sourceMoodTagId => $composableBuilder(
+    column: $table.sourceMoodTagId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$MoodTagsTableOrderingComposer get sourceMoodTagId {
-    final $$MoodTagsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sourceMoodTagId,
-      referencedTable: $db.moodTags,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MoodTagsTableOrderingComposer(
-            $db: $db,
-            $table: $db.moodTags,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$PlaylistsTableAnnotationComposer
@@ -3698,56 +3256,13 @@ class $$PlaylistsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get sourceMoodTagId => $composableBuilder(
+    column: $table.sourceMoodTagId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  $$MoodTagsTableAnnotationComposer get sourceMoodTagId {
-    final $$MoodTagsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sourceMoodTagId,
-      referencedTable: $db.moodTags,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$MoodTagsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.moodTags,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<T> playlistSongsRefs<T extends Object>(
-    Expression<T> Function($$PlaylistSongsTableAnnotationComposer a) f,
-  ) {
-    final $$PlaylistSongsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.playlistSongs,
-      getReferencedColumn: (t) => t.playlistId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistSongsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.playlistSongs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$PlaylistsTableTableManager
@@ -3761,9 +3276,12 @@ class $$PlaylistsTableTableManager
           $$PlaylistsTableAnnotationComposer,
           $$PlaylistsTableCreateCompanionBuilder,
           $$PlaylistsTableUpdateCompanionBuilder,
-          (PlaylistRow, $$PlaylistsTableReferences),
+          (
+            PlaylistRow,
+            BaseReferences<_$AppDatabase, $PlaylistsTable, PlaylistRow>,
+          ),
           PlaylistRow,
-          PrefetchHooks Function({bool sourceMoodTagId, bool playlistSongsRefs})
+          PrefetchHooks Function()
         > {
   $$PlaylistsTableTableManager(_$AppDatabase db, $PlaylistsTable table)
     : super(
@@ -3809,79 +3327,9 @@ class $$PlaylistsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$PlaylistsTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback:
-              ({sourceMoodTagId = false, playlistSongsRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (playlistSongsRefs) db.playlistSongs,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (sourceMoodTagId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.sourceMoodTagId,
-                                    referencedTable: $$PlaylistsTableReferences
-                                        ._sourceMoodTagIdTable(db),
-                                    referencedColumn: $$PlaylistsTableReferences
-                                        ._sourceMoodTagIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
-                        }
-
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (playlistSongsRefs)
-                        await $_getPrefetchedData<
-                          PlaylistRow,
-                          $PlaylistsTable,
-                          PlaylistSongRow
-                        >(
-                          currentTable: table,
-                          referencedTable: $$PlaylistsTableReferences
-                              ._playlistSongsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$PlaylistsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).playlistSongsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.playlistId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
-              },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -3896,9 +3344,12 @@ typedef $$PlaylistsTableProcessedTableManager =
       $$PlaylistsTableAnnotationComposer,
       $$PlaylistsTableCreateCompanionBuilder,
       $$PlaylistsTableUpdateCompanionBuilder,
-      (PlaylistRow, $$PlaylistsTableReferences),
+      (
+        PlaylistRow,
+        BaseReferences<_$AppDatabase, $PlaylistsTable, PlaylistRow>,
+      ),
       PlaylistRow,
-      PrefetchHooks Function({bool sourceMoodTagId, bool playlistSongsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$PlaylistSongsTableCreateCompanionBuilder =
     PlaylistSongsCompanion Function({
@@ -3915,50 +3366,6 @@ typedef $$PlaylistSongsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-final class $$PlaylistSongsTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $PlaylistSongsTable, PlaylistSongRow> {
-  $$PlaylistSongsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $PlaylistsTable _playlistIdTable(_$AppDatabase db) =>
-      db.playlists.createAlias('playlist_songs__playlist_id__playlists__id');
-
-  $$PlaylistsTableProcessedTableManager get playlistId {
-    final $_column = $_itemColumn<String>('playlist_id')!;
-
-    final manager = $$PlaylistsTableTableManager(
-      $_db,
-      $_db.playlists,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_playlistIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static $SongsTable _songIdTable(_$AppDatabase db) =>
-      db.songs.createAlias('playlist_songs__song_id__songs__id');
-
-  $$SongsTableProcessedTableManager get songId {
-    final $_column = $_itemColumn<String>('song_id')!;
-
-    final manager = $$SongsTableTableManager(
-      $_db,
-      $_db.songs,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_songIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
 class $$PlaylistSongsTableFilterComposer
     extends Composer<_$AppDatabase, $PlaylistSongsTable> {
   $$PlaylistSongsTableFilterComposer({
@@ -3968,56 +3375,20 @@ class $$PlaylistSongsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get playlistId => $composableBuilder(
+    column: $table.playlistId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get position => $composableBuilder(
     column: $table.position,
     builder: (column) => ColumnFilters(column),
   );
-
-  $$PlaylistsTableFilterComposer get playlistId {
-    final $$PlaylistsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.playlistId,
-      referencedTable: $db.playlists,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistsTableFilterComposer(
-            $db: $db,
-            $table: $db.playlists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$SongsTableFilterComposer get songId {
-    final $$SongsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.songId,
-      referencedTable: $db.songs,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SongsTableFilterComposer(
-            $db: $db,
-            $table: $db.songs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$PlaylistSongsTableOrderingComposer
@@ -4029,56 +3400,20 @@ class $$PlaylistSongsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get playlistId => $composableBuilder(
+    column: $table.playlistId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get position => $composableBuilder(
     column: $table.position,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$PlaylistsTableOrderingComposer get playlistId {
-    final $$PlaylistsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.playlistId,
-      referencedTable: $db.playlists,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistsTableOrderingComposer(
-            $db: $db,
-            $table: $db.playlists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$SongsTableOrderingComposer get songId {
-    final $$SongsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.songId,
-      referencedTable: $db.songs,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SongsTableOrderingComposer(
-            $db: $db,
-            $table: $db.songs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$PlaylistSongsTableAnnotationComposer
@@ -4090,54 +3425,16 @@ class $$PlaylistSongsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get playlistId => $composableBuilder(
+    column: $table.playlistId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get songId =>
+      $composableBuilder(column: $table.songId, builder: (column) => column);
+
   GeneratedColumn<int> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
-
-  $$PlaylistsTableAnnotationComposer get playlistId {
-    final $$PlaylistsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.playlistId,
-      referencedTable: $db.playlists,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlaylistsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.playlists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$SongsTableAnnotationComposer get songId {
-    final $$SongsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.songId,
-      referencedTable: $db.songs,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SongsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.songs,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$PlaylistSongsTableTableManager
@@ -4151,9 +3448,12 @@ class $$PlaylistSongsTableTableManager
           $$PlaylistSongsTableAnnotationComposer,
           $$PlaylistSongsTableCreateCompanionBuilder,
           $$PlaylistSongsTableUpdateCompanionBuilder,
-          (PlaylistSongRow, $$PlaylistSongsTableReferences),
+          (
+            PlaylistSongRow,
+            BaseReferences<_$AppDatabase, $PlaylistSongsTable, PlaylistSongRow>,
+          ),
           PlaylistSongRow,
-          PrefetchHooks Function({bool playlistId, bool songId})
+          PrefetchHooks Function()
         > {
   $$PlaylistSongsTableTableManager(_$AppDatabase db, $PlaylistSongsTable table)
     : super(
@@ -4191,67 +3491,9 @@ class $$PlaylistSongsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$PlaylistSongsTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({playlistId = false, songId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (playlistId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.playlistId,
-                                referencedTable: $$PlaylistSongsTableReferences
-                                    ._playlistIdTable(db),
-                                referencedColumn: $$PlaylistSongsTableReferences
-                                    ._playlistIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (songId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.songId,
-                                referencedTable: $$PlaylistSongsTableReferences
-                                    ._songIdTable(db),
-                                referencedColumn: $$PlaylistSongsTableReferences
-                                    ._songIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -4266,287 +3508,12 @@ typedef $$PlaylistSongsTableProcessedTableManager =
       $$PlaylistSongsTableAnnotationComposer,
       $$PlaylistSongsTableCreateCompanionBuilder,
       $$PlaylistSongsTableUpdateCompanionBuilder,
-      (PlaylistSongRow, $$PlaylistSongsTableReferences),
+      (
+        PlaylistSongRow,
+        BaseReferences<_$AppDatabase, $PlaylistSongsTable, PlaylistSongRow>,
+      ),
       PlaylistSongRow,
-      PrefetchHooks Function({bool playlistId, bool songId})
-    >;
-typedef $$EqualizerPresetsTableCreateCompanionBuilder =
-    EqualizerPresetsCompanion Function({
-      required String id,
-      required String name,
-      required String bandLevelsJson,
-      Value<int> rowid,
-    });
-typedef $$EqualizerPresetsTableUpdateCompanionBuilder =
-    EqualizerPresetsCompanion Function({
-      Value<String> id,
-      Value<String> name,
-      Value<String> bandLevelsJson,
-      Value<int> rowid,
-    });
-
-final class $$EqualizerPresetsTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $EqualizerPresetsTable,
-          EqualizerPresetRow
-        > {
-  $$EqualizerPresetsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static MultiTypedResultKey<$SettingsTable, List<SettingsRow>>
-  _settingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.settings,
-    aliasName: 'equalizer_presets__id__settings__current_equalizer_preset_id',
-  );
-
-  $$SettingsTableProcessedTableManager get settingsRefs {
-    final manager = $$SettingsTableTableManager($_db, $_db.settings).filter(
-      (f) =>
-          f.currentEqualizerPresetId.id.sqlEquals($_itemColumn<String>('id')!),
-    );
-
-    final cache = $_typedResult.readTableOrNull(_settingsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
-
-class $$EqualizerPresetsTableFilterComposer
-    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
-  $$EqualizerPresetsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get bandLevelsJson => $composableBuilder(
-    column: $table.bandLevelsJson,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  Expression<bool> settingsRefs(
-    Expression<bool> Function($$SettingsTableFilterComposer f) f,
-  ) {
-    final $$SettingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.settings,
-      getReferencedColumn: (t) => t.currentEqualizerPresetId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SettingsTableFilterComposer(
-            $db: $db,
-            $table: $db.settings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $$EqualizerPresetsTableOrderingComposer
-    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
-  $$EqualizerPresetsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get bandLevelsJson => $composableBuilder(
-    column: $table.bandLevelsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$EqualizerPresetsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
-  $$EqualizerPresetsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get bandLevelsJson => $composableBuilder(
-    column: $table.bandLevelsJson,
-    builder: (column) => column,
-  );
-
-  Expression<T> settingsRefs<T extends Object>(
-    Expression<T> Function($$SettingsTableAnnotationComposer a) f,
-  ) {
-    final $$SettingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.settings,
-      getReferencedColumn: (t) => t.currentEqualizerPresetId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SettingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.settings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $$EqualizerPresetsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $EqualizerPresetsTable,
-          EqualizerPresetRow,
-          $$EqualizerPresetsTableFilterComposer,
-          $$EqualizerPresetsTableOrderingComposer,
-          $$EqualizerPresetsTableAnnotationComposer,
-          $$EqualizerPresetsTableCreateCompanionBuilder,
-          $$EqualizerPresetsTableUpdateCompanionBuilder,
-          (EqualizerPresetRow, $$EqualizerPresetsTableReferences),
-          EqualizerPresetRow,
-          PrefetchHooks Function({bool settingsRefs})
-        > {
-  $$EqualizerPresetsTableTableManager(
-    _$AppDatabase db,
-    $EqualizerPresetsTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$EqualizerPresetsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$EqualizerPresetsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$EqualizerPresetsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> bandLevelsJson = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => EqualizerPresetsCompanion(
-                id: id,
-                name: name,
-                bandLevelsJson: bandLevelsJson,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String name,
-                required String bandLevelsJson,
-                Value<int> rowid = const Value.absent(),
-              }) => EqualizerPresetsCompanion.insert(
-                id: id,
-                name: name,
-                bandLevelsJson: bandLevelsJson,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$EqualizerPresetsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({settingsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (settingsRefs) db.settings],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (settingsRefs)
-                    await $_getPrefetchedData<
-                      EqualizerPresetRow,
-                      $EqualizerPresetsTable,
-                      SettingsRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$EqualizerPresetsTableReferences
-                          ._settingsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$EqualizerPresetsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).settingsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.currentEqualizerPresetId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$EqualizerPresetsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $EqualizerPresetsTable,
-      EqualizerPresetRow,
-      $$EqualizerPresetsTableFilterComposer,
-      $$EqualizerPresetsTableOrderingComposer,
-      $$EqualizerPresetsTableAnnotationComposer,
-      $$EqualizerPresetsTableCreateCompanionBuilder,
-      $$EqualizerPresetsTableUpdateCompanionBuilder,
-      (EqualizerPresetRow, $$EqualizerPresetsTableReferences),
-      EqualizerPresetRow,
-      PrefetchHooks Function({bool settingsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$SettingsTableCreateCompanionBuilder =
     SettingsCompanion Function({
@@ -4558,6 +3525,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<bool> crossfadeEnabled,
       Value<int> crossfadeDurationMs,
       Value<String?> currentEqualizerPresetId,
+      Value<String> visualizerStyle,
       Value<int> rowid,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
@@ -4570,35 +3538,9 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<bool> crossfadeEnabled,
       Value<int> crossfadeDurationMs,
       Value<String?> currentEqualizerPresetId,
+      Value<String> visualizerStyle,
       Value<int> rowid,
     });
-
-final class $$SettingsTableReferences
-    extends BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow> {
-  $$SettingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $EqualizerPresetsTable _currentEqualizerPresetIdTable(
-    _$AppDatabase db,
-  ) => db.equalizerPresets.createAlias(
-    'settings__current_equalizer_preset_id__equalizer_presets__id',
-  );
-
-  $$EqualizerPresetsTableProcessedTableManager? get currentEqualizerPresetId {
-    final $_column = $_itemColumn<String>('current_equalizer_preset_id');
-    if ($_column == null) return null;
-    final manager = $$EqualizerPresetsTableTableManager(
-      $_db,
-      $_db.equalizerPresets,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(
-      _currentEqualizerPresetIdTable($_db),
-    );
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$SettingsTableFilterComposer
     extends Composer<_$AppDatabase, $SettingsTable> {
@@ -4644,28 +3586,15 @@ class $$SettingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$EqualizerPresetsTableFilterComposer get currentEqualizerPresetId {
-    final $$EqualizerPresetsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.currentEqualizerPresetId,
-      referencedTable: $db.equalizerPresets,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EqualizerPresetsTableFilterComposer(
-            $db: $db,
-            $table: $db.equalizerPresets,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnFilters<String> get currentEqualizerPresetId => $composableBuilder(
+    column: $table.currentEqualizerPresetId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visualizerStyle => $composableBuilder(
+    column: $table.visualizerStyle,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SettingsTableOrderingComposer
@@ -4712,28 +3641,15 @@ class $$SettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$EqualizerPresetsTableOrderingComposer get currentEqualizerPresetId {
-    final $$EqualizerPresetsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.currentEqualizerPresetId,
-      referencedTable: $db.equalizerPresets,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EqualizerPresetsTableOrderingComposer(
-            $db: $db,
-            $table: $db.equalizerPresets,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnOrderings<String> get currentEqualizerPresetId => $composableBuilder(
+    column: $table.currentEqualizerPresetId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visualizerStyle => $composableBuilder(
+    column: $table.visualizerStyle,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -4778,28 +3694,15 @@ class $$SettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  $$EqualizerPresetsTableAnnotationComposer get currentEqualizerPresetId {
-    final $$EqualizerPresetsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.currentEqualizerPresetId,
-      referencedTable: $db.equalizerPresets,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$EqualizerPresetsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.equalizerPresets,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  GeneratedColumn<String> get currentEqualizerPresetId => $composableBuilder(
+    column: $table.currentEqualizerPresetId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get visualizerStyle => $composableBuilder(
+    column: $table.visualizerStyle,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -4813,9 +3716,12 @@ class $$SettingsTableTableManager
           $$SettingsTableAnnotationComposer,
           $$SettingsTableCreateCompanionBuilder,
           $$SettingsTableUpdateCompanionBuilder,
-          (SettingsRow, $$SettingsTableReferences),
+          (
+            SettingsRow,
+            BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>,
+          ),
           SettingsRow,
-          PrefetchHooks Function({bool currentEqualizerPresetId})
+          PrefetchHooks Function()
         > {
   $$SettingsTableTableManager(_$AppDatabase db, $SettingsTable table)
     : super(
@@ -4838,6 +3744,7 @@ class $$SettingsTableTableManager
                 Value<bool> crossfadeEnabled = const Value.absent(),
                 Value<int> crossfadeDurationMs = const Value.absent(),
                 Value<String?> currentEqualizerPresetId = const Value.absent(),
+                Value<String> visualizerStyle = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
@@ -4848,6 +3755,7 @@ class $$SettingsTableTableManager
                 crossfadeEnabled: crossfadeEnabled,
                 crossfadeDurationMs: crossfadeDurationMs,
                 currentEqualizerPresetId: currentEqualizerPresetId,
+                visualizerStyle: visualizerStyle,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4860,6 +3768,7 @@ class $$SettingsTableTableManager
                 Value<bool> crossfadeEnabled = const Value.absent(),
                 Value<int> crossfadeDurationMs = const Value.absent(),
                 Value<String?> currentEqualizerPresetId = const Value.absent(),
+                Value<String> visualizerStyle = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
@@ -4870,57 +3779,13 @@ class $$SettingsTableTableManager
                 crossfadeEnabled: crossfadeEnabled,
                 crossfadeDurationMs: crossfadeDurationMs,
                 currentEqualizerPresetId: currentEqualizerPresetId,
+                visualizerStyle: visualizerStyle,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SettingsTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({currentEqualizerPresetId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (currentEqualizerPresetId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.currentEqualizerPresetId,
-                                referencedTable: $$SettingsTableReferences
-                                    ._currentEqualizerPresetIdTable(db),
-                                referencedColumn: $$SettingsTableReferences
-                                    ._currentEqualizerPresetIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -4935,9 +3800,183 @@ typedef $$SettingsTableProcessedTableManager =
       $$SettingsTableAnnotationComposer,
       $$SettingsTableCreateCompanionBuilder,
       $$SettingsTableUpdateCompanionBuilder,
-      (SettingsRow, $$SettingsTableReferences),
+      (SettingsRow, BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>),
       SettingsRow,
-      PrefetchHooks Function({bool currentEqualizerPresetId})
+      PrefetchHooks Function()
+    >;
+typedef $$EqualizerPresetsTableCreateCompanionBuilder =
+    EqualizerPresetsCompanion Function({
+      required String id,
+      required String name,
+      required String bandLevelsJson,
+      Value<int> rowid,
+    });
+typedef $$EqualizerPresetsTableUpdateCompanionBuilder =
+    EqualizerPresetsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> bandLevelsJson,
+      Value<int> rowid,
+    });
+
+class $$EqualizerPresetsTableFilterComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EqualizerPresetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EqualizerPresetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => column,
+  );
+}
+
+class $$EqualizerPresetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EqualizerPresetsTable,
+          EqualizerPresetRow,
+          $$EqualizerPresetsTableFilterComposer,
+          $$EqualizerPresetsTableOrderingComposer,
+          $$EqualizerPresetsTableAnnotationComposer,
+          $$EqualizerPresetsTableCreateCompanionBuilder,
+          $$EqualizerPresetsTableUpdateCompanionBuilder,
+          (
+            EqualizerPresetRow,
+            BaseReferences<
+              _$AppDatabase,
+              $EqualizerPresetsTable,
+              EqualizerPresetRow
+            >,
+          ),
+          EqualizerPresetRow,
+          PrefetchHooks Function()
+        > {
+  $$EqualizerPresetsTableTableManager(
+    _$AppDatabase db,
+    $EqualizerPresetsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EqualizerPresetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EqualizerPresetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EqualizerPresetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> bandLevelsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EqualizerPresetsCompanion(
+                id: id,
+                name: name,
+                bandLevelsJson: bandLevelsJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String bandLevelsJson,
+                Value<int> rowid = const Value.absent(),
+              }) => EqualizerPresetsCompanion.insert(
+                id: id,
+                name: name,
+                bandLevelsJson: bandLevelsJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EqualizerPresetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EqualizerPresetsTable,
+      EqualizerPresetRow,
+      $$EqualizerPresetsTableFilterComposer,
+      $$EqualizerPresetsTableOrderingComposer,
+      $$EqualizerPresetsTableAnnotationComposer,
+      $$EqualizerPresetsTableCreateCompanionBuilder,
+      $$EqualizerPresetsTableUpdateCompanionBuilder,
+      (
+        EqualizerPresetRow,
+        BaseReferences<
+          _$AppDatabase,
+          $EqualizerPresetsTable,
+          EqualizerPresetRow
+        >,
+      ),
+      EqualizerPresetRow,
+      PrefetchHooks Function()
     >;
 typedef $$BackupsTableCreateCompanionBuilder =
     BackupsCompanion Function({
@@ -5107,10 +4146,10 @@ class $AppDatabaseManager {
       $$PlaylistsTableTableManager(_db, _db.playlists);
   $$PlaylistSongsTableTableManager get playlistSongs =>
       $$PlaylistSongsTableTableManager(_db, _db.playlistSongs);
-  $$EqualizerPresetsTableTableManager get equalizerPresets =>
-      $$EqualizerPresetsTableTableManager(_db, _db.equalizerPresets);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
+  $$EqualizerPresetsTableTableManager get equalizerPresets =>
+      $$EqualizerPresetsTableTableManager(_db, _db.equalizerPresets);
   $$BackupsTableTableManager get backups =>
       $$BackupsTableTableManager(_db, _db.backups);
 }

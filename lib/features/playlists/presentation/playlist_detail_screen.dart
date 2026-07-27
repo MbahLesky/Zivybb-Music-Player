@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/repositories/playlist_repository.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
 import '../application/playlist_controller.dart';
@@ -19,7 +21,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
     final songs = detail.value?.songs ?? const [];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: Text(detail.value?.playlist.name ?? 'Playlist'),
         actions: [
           IconButton(
@@ -79,11 +81,12 @@ class PlaylistDetailScreen extends ConsumerWidget {
       ),
       floatingActionButton: songs.isEmpty
           ? null
-          : FloatingActionButton(
+          : GradientFab(
+              icon: Icons.play_arrow,
+              tooltip: 'Play all',
               onPressed: () => ref
                   .read(playbackControllerProvider.notifier)
                   .playQueue(songs, startIndex: 0),
-              child: const Icon(Icons.play_arrow),
             ),
     );
   }

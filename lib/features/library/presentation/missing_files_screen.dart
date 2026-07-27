@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/missing_file_service.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
 
 /// Surfaces songs whose files could not be found, with the option to
 /// auto-detect relocated files or drop them from the library
@@ -31,7 +32,7 @@ class _MissingFilesScreenState extends ConsumerState<MissingFilesScreen> {
     final missing = ref.watch(missingSongsStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: const Text('Missing Files'),
         actions: [
           IconButton(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/app_settings.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../mood_tagging/presentation/mood_tag_management_screen.dart';
 import '../application/settings_controller.dart';
 import 'backup_restore_screen.dart';
 import 'equalizer_screen.dart';
@@ -18,7 +20,7 @@ class SettingsScreen extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: const GradientAppBar(title: Text('Settings')),
       body: ListView(
         children: [
           SwitchListTile(
@@ -55,7 +57,7 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.palette_outlined),
             title: const Text('Theme Customization'),
-            subtitle: const Text('App color and visualizer color'),
+            subtitle: const Text('App color, visualizer color, and style'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -101,6 +103,17 @@ class SettingsScreen extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
             child: Text('Library'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.mood_outlined),
+            title: const Text('Manage Moods'),
+            subtitle: const Text('Add, rename, recolor, or remove mood tags'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const MoodTagManagementScreen(),
+              ),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.backup_outlined),

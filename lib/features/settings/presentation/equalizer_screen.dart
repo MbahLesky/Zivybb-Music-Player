@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/widgets/gradient_app_bar.dart';
 import '../application/equalizer_controller.dart';
 import '../application/settings_controller.dart';
 
@@ -22,7 +23,7 @@ class EqualizerScreen extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Equalizer')),
+      appBar: const GradientAppBar(title: Text('Equalizer')),
       body: presets.when(
         data: (items) => ListView(
           children: [

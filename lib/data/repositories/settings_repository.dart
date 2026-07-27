@@ -100,6 +100,16 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setVisualizerStyle(VisualizerStyle style) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        visualizerStyle: Value(style.name),
+      ),
+      onConflict: (_) => SettingsCompanion(visualizerStyle: Value(style.name)),
+    );
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -121,6 +131,7 @@ class SettingsRepository {
       crossfadeEnabled: row.crossfadeEnabled,
       crossfadeDuration: Duration(milliseconds: row.crossfadeDurationMs),
       currentEqualizerPresetId: row.currentEqualizerPresetId,
+      visualizerStyle: VisualizerStyle.values.byName(row.visualizerStyle),
     );
   }
 }

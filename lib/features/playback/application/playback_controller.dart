@@ -156,6 +156,17 @@ class PlaybackController extends Notifier<PlaybackState> {
     await _player.play();
   }
 
+  /// Shuffles [queue] and plays it from the start, enabling shuffle mode
+  /// if it isn't already on. Backs the home screen's "shuffle all" action.
+  Future<void> shuffleAndPlay(List<Song> queue) async {
+    if (queue.isEmpty) return;
+    if (!state.shuffleEnabled) {
+      await toggleShuffle();
+    }
+    final shuffled = List<Song>.of(queue)..shuffle();
+    await playQueue(shuffled, startIndex: 0);
+  }
+
   Future<void> togglePlayPause() {
     return state.isPlaying ? _player.pause() : _player.play();
   }

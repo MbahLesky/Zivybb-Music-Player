@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/theme_palette.dart';
 import '../../../core/utils/color_hex.dart';
 import '../../../data/models/app_settings.dart';
+import '../../../shared/widgets/color_swatch_picker.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
 import '../application/settings_controller.dart';
 
-/// Choose the app's color theme and the wave visualizer's color, with a
-/// live preview (Screens.md #12).
+/// Choose the app's color theme, the wave visualizer's color and style,
+/// with a live preview (Screens.md #12).
 class ThemeCustomizationScreen extends ConsumerWidget {
   const ThemeCustomizationScreen({super.key});
 
@@ -18,7 +19,7 @@ class ThemeCustomizationScreen extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Theme Customization')),
+      appBar: const GradientAppBar(title: Text('Theme Customization')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -27,7 +28,7 @@ class ThemeCustomizationScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
-          _ColorSwatchGrid(
+          ColorSwatchPicker(
             selectedHex: settings.themeSeedColorHex,
             onSelected: controller.setThemeSeedColor,
           ),
@@ -37,9 +38,27 @@ class ThemeCustomizationScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
-          _ColorSwatchGrid(
+          ColorSwatchPicker(
             selectedHex: settings.visualizerColorHex,
             onSelected: controller.setVisualizerColor,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Visualizer style',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final style in VisualizerStyle.values)
+                ChoiceChip(
+                  label: Text(style.label),
+                  selected: settings.visualizerStyle == style,
+                  onSelected: (_) => controller.setVisualizerStyle(style),
+                ),
+            ],
           ),
           const SizedBox(height: 24),
           Card(
@@ -61,46 +80,6 @@ class ThemeCustomizationScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ColorSwatchGrid extends StatelessWidget {
-  const _ColorSwatchGrid({required this.selectedHex, required this.onSelected});
-
-  final String selectedHex;
-  final ValueChanged<Color> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = colorFromHex(selectedHex);
-
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        for (final color in themePalette)
-          GestureDetector(
-            onTap: () => onSelected(color),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: color.toARGB32() == selected.toARGB32()
-                    ? Border.all(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        width: 3,
-                      )
-                    : null,
-              ),
-              child: color.toARGB32() == selected.toARGB32()
-                  ? const Icon(Icons.check, color: Colors.white)
-                  : null,
-            ),
-          ),
-      ],
     );
   }
 }

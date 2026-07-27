@@ -15,3 +15,19 @@ const themePalette = <Color>[
   Color(0xFFE91E63), // Pink
   Color(0xFF795548), // Brown
 ];
+
+/// Palette offered when picking a mood tag's color — brighter and more
+/// varied than [themePalette] since moods benefit from being visually
+/// distinct from one another at a glance.
+const moodColorPalette = <Color>[
+  Color(0xFFFF7043), // Energetic (orange)
+  Color(0xFF4FC3F7), // Chill (light blue)
+  Color(0xFFFFCA28), // Happy (yellow)
+  Color(0xFF5C6BC0), // Sad (indigo)
+  Color(0xFFE53935), // Angry (red)
+  Color(0xFF66BB6A), // Relaxed (green)
+  Color(0xFFAB47BC), // Purple
+  Color(0xFF26A69A), // Teal
+  Color(0xFFEC407A), // Pink
+  Color(0xFF8D6E63), // Brown
+];

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/song.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
 
 /// Edit a song's metadata (Screens.md #9, SRS F-6.1).
 ///
@@ -50,10 +51,13 @@ class _TagEditorScreenState extends ConsumerState<TagEditorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: const Text('Edit Tags'),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            ),
             onPressed: _saving ? null : _save,
             child: const Text('Save'),
           ),

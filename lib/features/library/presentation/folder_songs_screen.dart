@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../data/models/song.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
 
@@ -40,7 +41,7 @@ class _FolderSongsScreenState extends State<FolderSongsScreen> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: Text(p.basename(widget.folderPath)),
         actions: [
           PopupMenuButton<_DurationFilter>(
