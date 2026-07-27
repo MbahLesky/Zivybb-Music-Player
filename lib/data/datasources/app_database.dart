@@ -36,6 +36,8 @@ class Songs extends Table {
   )();
   BoolColumn get isLiked => boolean().withDefault(const Constant(false))();
   BoolColumn get isMissing => boolean().withDefault(const Constant(false))();
+  IntColumn get playCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastPlayedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -144,7 +146,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -170,6 +172,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 5) {
         await m.addColumn(moodTags, moodTags.sortOrder);
         await m.addColumn(settings, settings.visualizerStyle);
+      }
+      if (from < 6) {
+        await m.addColumn(songs, songs.playCount);
+        await m.addColumn(songs, songs.lastPlayedAt);
       }
     },
   );

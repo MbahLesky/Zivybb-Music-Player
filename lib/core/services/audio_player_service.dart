@@ -85,6 +85,8 @@ class AudioPlayerService {
     }
   }
 
+  Future<void> setLoopMode(LoopMode mode) => _player.setLoopMode(mode);
+
   /// Configures the fade applied around track boundaries (SRS F-1.4).
   ///
   /// This is a same-engine volume fade at the boundary between consecutive

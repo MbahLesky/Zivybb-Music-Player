@@ -8,6 +8,7 @@ import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../mood_tagging/application/mood_tagging_controller.dart';
 import '../../mood_tagging/presentation/mood_tagging_screen.dart';
+import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../settings/presentation/equalizer_screen.dart';
 import '../../tag_editor/presentation/tag_editor_screen.dart';
@@ -47,6 +48,22 @@ class NowPlayingScreen extends ConsumerWidget {
                 .togglePreviewMode(),
           ),
           if (song != null) ...[
+            IconButton(
+              icon: Icon(
+                liveSong?.isLiked ?? song.isLiked
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+              ),
+              tooltip: (liveSong?.isLiked ?? song.isLiked) ? 'Unlike' : 'Like',
+              onPressed: () => ref
+                  .read(songRepositoryProvider)
+                  .setLiked(song.id, !(liveSong?.isLiked ?? song.isLiked)),
+            ),
+            IconButton(
+              icon: const Icon(Icons.playlist_add),
+              tooltip: 'Add to playlist',
+              onPressed: () => AddToPlaylistSheet.show(context, song.id),
+            ),
             IconButton(
               icon: const Icon(Icons.mood),
               tooltip: 'Tag mood',
@@ -164,6 +181,25 @@ class NowPlayingScreen extends ConsumerWidget {
                           onPressed: () => ref
                               .read(playbackControllerProvider.notifier)
                               .next(),
+                        ),
+                        IconButton(
+                          iconSize: 32,
+                          icon: Icon(
+                            playback.repeatMode == PlaybackRepeatMode.one
+                                ? Icons.repeat_one
+                                : Icons.repeat,
+                            color: playback.repeatMode == PlaybackRepeatMode.off
+                                ? null
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                          tooltip: switch (playback.repeatMode) {
+                            PlaybackRepeatMode.off => 'Repeat off',
+                            PlaybackRepeatMode.all => 'Repeat all',
+                            PlaybackRepeatMode.one => 'Repeat one',
+                          },
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .cycleRepeatMode(),
                         ),
                       ],
                     ),

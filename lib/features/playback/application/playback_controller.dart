@@ -1,12 +1,32 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart' show LoopMode;
 
 import '../../../core/services/audio_player_service.dart';
 import '../../../data/models/song.dart';
 import '../../../data/repositories/song_repository.dart';
 import '../../settings/application/equalizer_controller.dart';
 import '../../settings/application/settings_controller.dart';
+
+/// How the queue repeats once it reaches the end (SRS F-1.2 extension).
+enum PlaybackRepeatMode {
+  off,
+  all,
+  one;
+
+  PlaybackRepeatMode get next => switch (this) {
+    PlaybackRepeatMode.off => PlaybackRepeatMode.all,
+    PlaybackRepeatMode.all => PlaybackRepeatMode.one,
+    PlaybackRepeatMode.one => PlaybackRepeatMode.off,
+  };
+
+  LoopMode get engineLoopMode => switch (this) {
+    PlaybackRepeatMode.off => LoopMode.off,
+    PlaybackRepeatMode.all => LoopMode.all,
+    PlaybackRepeatMode.one => LoopMode.one,
+  };
+}
 
 final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
   final service = AudioPlayerService();
@@ -27,6 +47,7 @@ class PlaybackState {
     this.duration = Duration.zero,
     this.shuffleEnabled = false,
     this.previewModeEnabled = false,
+    this.repeatMode = PlaybackRepeatMode.off,
   });
 
   final List<Song> queue;
@@ -36,6 +57,7 @@ class PlaybackState {
   final Duration duration;
   final bool shuffleEnabled;
   final bool previewModeEnabled;
+  final PlaybackRepeatMode repeatMode;
 
   Song? get currentSong {
     final index = currentIndex;
@@ -53,6 +75,7 @@ class PlaybackState {
     Duration? duration,
     bool? shuffleEnabled,
     bool? previewModeEnabled,
+    PlaybackRepeatMode? repeatMode,
   }) {
     return PlaybackState(
       queue: queue ?? this.queue,
@@ -62,6 +85,7 @@ class PlaybackState {
       duration: duration ?? this.duration,
       shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
       previewModeEnabled: previewModeEnabled ?? this.previewModeEnabled,
+      repeatMode: repeatMode ?? this.repeatMode,
     );
   }
 }
@@ -92,6 +116,10 @@ class PlaybackController extends Notifier<PlaybackState> {
         if (index != null) {
           _previewSkipPending = false;
           state = state.copyWith(currentIndex: index);
+          final song = state.currentSong;
+          if (song != null) {
+            ref.read(songRepositoryProvider).recordPlayed(song.id);
+          }
         }
       }),
       _player.playbackErrorIndexStream.listen(_onPlaybackError),
@@ -181,6 +209,13 @@ class PlaybackController extends Notifier<PlaybackState> {
     final enabled = !state.shuffleEnabled;
     await _player.setShuffleModeEnabled(enabled);
     state = state.copyWith(shuffleEnabled: enabled);
+  }
+
+  /// Cycles repeat mode off → all → one → off (Now Playing's repeat button).
+  Future<void> cycleRepeatMode() async {
+    final mode = state.repeatMode.next;
+    await _player.setLoopMode(mode.engineLoopMode);
+    state = state.copyWith(repeatMode: mode);
   }
 
   void togglePreviewMode() {
