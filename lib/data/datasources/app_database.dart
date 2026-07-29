@@ -36,6 +36,8 @@ class Songs extends Table {
   )();
   BoolColumn get isLiked => boolean().withDefault(const Constant(false))();
   BoolColumn get isMissing => boolean().withDefault(const Constant(false))();
+  IntColumn get playCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastPlayedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -186,6 +188,8 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(settings, settings.showVisualizerInMiniPlayer);
         await m.addColumn(settings, settings.showAlbumArtInNowPlaying);
         await m.addColumn(settings, settings.showVisualizerInNowPlaying);
+        await m.addColumn(songs, songs.playCount);
+        await m.addColumn(songs, songs.lastPlayedAt);
       }
     },
   );

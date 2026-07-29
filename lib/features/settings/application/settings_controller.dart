@@ -33,7 +33,9 @@ final themeSeedColorProvider = Provider.autoDispose<Color>((ref) {
   return colorFromHex(settings.themeSeedColorHex);
 });
 
-final appThemeStyleProvider = StateProvider<AppThemeStyle>((ref) => AppThemeStyle.aurora);
+final appThemeStyleProvider = StateProvider<AppThemeStyle>(
+  (ref) => AppThemeStyle.aurora,
+);
 
 /// The wave visualizer's color, derived from the user's choice.
 final visualizerColorProvider = Provider.autoDispose<Color>((ref) {

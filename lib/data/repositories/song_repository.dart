@@ -122,6 +122,19 @@ class SongRepository {
     )..where((t) => t.id.equals(songId))).go();
   }
 
+  /// Bumps a song's play count and last-played timestamp (SRS F-4.3), so
+  /// Song Discovery can favor tracks that are played less often.
+  Future<void> recordPlayed(String songId) {
+    return (_database.update(
+      _database.songs,
+    )..where((t) => t.id.equals(songId))).write(
+      SongsCompanion.custom(
+        playCount: _database.songs.playCount + const Constant(1),
+        lastPlayedAt: Constant(DateTime.now()),
+      ),
+    );
+  }
+
   Future<void> setLiked(String songId, bool isLiked) {
     return (_database.update(_database.songs)
           ..where((t) => t.id.equals(songId)))

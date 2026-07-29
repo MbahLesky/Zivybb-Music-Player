@@ -16,6 +16,8 @@ class Song {
     this.moodTagId,
     this.isLiked = false,
     this.isMissing = false,
+    this.playCount = 0,
+    this.lastPlayedAt,
   });
 
   factory Song.fromRow(SongRow row) {
@@ -29,6 +31,8 @@ class Song {
       moodTagId: row.moodTagId,
       isLiked: row.isLiked,
       isMissing: row.isMissing,
+      playCount: row.playCount,
+      lastPlayedAt: row.lastPlayedAt,
     );
   }
 
@@ -41,6 +45,8 @@ class Song {
   final String? moodTagId;
   final bool isLiked;
   final bool isMissing;
+  final int playCount;
+  final DateTime? lastPlayedAt;
 
   Song copyWith({
     String? title,
@@ -49,6 +55,8 @@ class Song {
     String? moodTagId,
     bool? isLiked,
     bool? isMissing,
+    int? playCount,
+    DateTime? lastPlayedAt,
   }) {
     return Song(
       id: id,
@@ -60,6 +68,8 @@ class Song {
       moodTagId: moodTagId ?? this.moodTagId,
       isLiked: isLiked ?? this.isLiked,
       isMissing: isMissing ?? this.isMissing,
+      playCount: playCount ?? this.playCount,
+      lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
     );
   }
 
@@ -74,6 +84,8 @@ class Song {
       moodTagId: Value(moodTagId),
       isLiked: Value(isLiked),
       isMissing: Value(isMissing),
+      playCount: Value(playCount),
+      lastPlayedAt: Value(lastPlayedAt),
     );
   }
 

@@ -115,6 +115,10 @@ class PlaybackController extends Notifier<PlaybackState> {
         if (index != null) {
           _previewSkipPending = false;
           state = state.copyWith(currentIndex: index);
+          final song = state.currentSong;
+          if (song != null) {
+            ref.read(songRepositoryProvider).recordPlayed(song.id);
+          }
         }
       }),
       _player.playbackErrorIndexStream.listen(_onPlaybackError),

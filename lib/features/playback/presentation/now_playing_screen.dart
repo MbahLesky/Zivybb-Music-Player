@@ -137,12 +137,19 @@ class NowPlayingScreen extends ConsumerWidget {
                       children: [
                         IconButton(
                           icon: Icon(
-                            song.isLiked ? Icons.favorite : Icons.favorite_border,
+                            (liveSong?.isLiked ?? song.isLiked)
+                                ? Icons.favorite
+                                : Icons.favorite_border,
                           ),
-                          tooltip: song.isLiked ? 'Unlike' : 'Like',
+                          tooltip: (liveSong?.isLiked ?? song.isLiked)
+                              ? 'Unlike'
+                              : 'Like',
                           onPressed: () => ref
                               .read(songRepositoryProvider)
-                              .setLiked(song.id, !song.isLiked),
+                              .setLiked(
+                                song.id,
+                                !(liveSong?.isLiked ?? song.isLiked),
+                              ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.playlist_add),

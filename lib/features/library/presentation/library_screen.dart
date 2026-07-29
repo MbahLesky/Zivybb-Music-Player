@@ -11,6 +11,7 @@ import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/song_list_tile.dart';
+import '../../discovery/presentation/song_discovery_screen.dart';
 import '../../playback/application/playback_controller.dart';
 import '../../playlists/application/mood_playlist_generator.dart';
 import '../../playlists/presentation/playlist_list_screen.dart';
@@ -53,6 +54,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         appBar: GradientAppBar(
           title: const Text('Zivybb'),
           actions: [
+            AppBarIconAction(
+              icon: const Icon(Icons.auto_awesome),
+              tooltip: 'Discover',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SongDiscoveryScreen()),
+              ),
+            ),
             AppBarIconAction(
               icon: Badge(
                 label: Text('$missingCount'),
