@@ -29,9 +29,13 @@ class AppSettings {
     this.visualizerColorHex = '#673AB7',
     this.themeStyleName = 'aurora',
     this.crossfadeEnabled = false,
-    this.crossfadeDuration = const Duration(seconds: 3),
+    this.crossfadeDuration = const Duration(seconds: 15),
     this.currentEqualizerPresetId,
     this.visualizerStyle = VisualizerStyle.bars,
+    this.showAlbumArtInMiniPlayer = true,
+    this.showVisualizerInMiniPlayer = false,
+    this.showAlbumArtInNowPlaying = true,
+    this.showVisualizerInNowPlaying = true,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -43,6 +47,10 @@ class AppSettings {
   final Duration crossfadeDuration;
   final String? currentEqualizerPresetId;
   final VisualizerStyle visualizerStyle;
+  final bool showAlbumArtInMiniPlayer;
+  final bool showVisualizerInMiniPlayer;
+  final bool showAlbumArtInNowPlaying;
+  final bool showVisualizerInNowPlaying;
 
   /// Pass [manualThemeOverride] or [currentEqualizerPresetId] to change
   /// them, including to `null`. Omit either to leave it untouched.
@@ -56,6 +64,10 @@ class AppSettings {
     Duration? crossfadeDuration,
     Object? currentEqualizerPresetId = _unset,
     VisualizerStyle? visualizerStyle,
+    bool? showAlbumArtInMiniPlayer,
+    bool? showVisualizerInMiniPlayer,
+    bool? showAlbumArtInNowPlaying,
+    bool? showVisualizerInNowPlaying,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -72,6 +84,14 @@ class AppSettings {
           ? this.currentEqualizerPresetId
           : currentEqualizerPresetId as String?,
       visualizerStyle: visualizerStyle ?? this.visualizerStyle,
+      showAlbumArtInMiniPlayer:
+          showAlbumArtInMiniPlayer ?? this.showAlbumArtInMiniPlayer,
+      showVisualizerInMiniPlayer:
+          showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
+      showAlbumArtInNowPlaying:
+          showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
+      showVisualizerInNowPlaying:
+          showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
     );
   }
 }

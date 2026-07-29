@@ -19,6 +19,7 @@ class ThemeCustomizationScreen extends ConsumerWidget {
     final settings =
         ref.watch(settingsStreamProvider).value ?? const AppSettings();
     final controller = ref.read(settingsControllerProvider.notifier);
+    final theme = Theme.of(context);
 
     final selectedStyle = ref.watch(appThemeStyleProvider);
 
@@ -55,7 +56,24 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                         for (final style in AppThemeStyle.values)
                           ChoiceChip(
                             label: Text(style.label),
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: selectedStyle == style
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
                             selected: selectedStyle == style,
+                            selectedColor: theme.colorScheme.primaryContainer,
+                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                            side: BorderSide(
+                              color: selectedStyle == style
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outlineVariant,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
                             onSelected: (_) => controller.setAppThemeStyle(style),
                           ),
                       ],
@@ -114,7 +132,24 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                         for (final style in VisualizerStyle.values)
                           ChoiceChip(
                             label: Text(style.label),
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: settings.visualizerStyle == style
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
                             selected: settings.visualizerStyle == style,
+                            selectedColor: theme.colorScheme.primaryContainer,
+                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                            side: BorderSide(
+                              color: settings.visualizerStyle == style
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outlineVariant,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
                             onSelected: (_) => controller.setVisualizerStyle(style),
                           ),
                       ],

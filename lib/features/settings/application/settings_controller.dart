@@ -121,6 +121,42 @@ class SettingsController extends Notifier<AsyncValue<void>> {
       () => ref.read(settingsRepositoryProvider).setVisualizerStyle(style),
     );
   }
+
+  Future<void> setShowAlbumArtInMiniPlayer(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setShowAlbumArtInMiniPlayer(enabled),
+    );
+  }
+
+  Future<void> setShowVisualizerInMiniPlayer(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setShowVisualizerInMiniPlayer(enabled),
+    );
+  }
+
+  Future<void> setShowAlbumArtInNowPlaying(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setShowAlbumArtInNowPlaying(enabled),
+    );
+  }
+
+  Future<void> setShowVisualizerInNowPlaying(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setShowVisualizerInNowPlaying(enabled),
+    );
+  }
 }
 
 final settingsControllerProvider =

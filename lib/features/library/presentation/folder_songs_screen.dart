@@ -40,27 +40,35 @@ class _FolderSongsScreenState extends State<FolderSongsScreen> {
       };
     }).toList();
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: GradientAppBar(
         title: Text(p.basename(widget.folderPath)),
         actions: [
-          PopupMenuButton<_DurationFilter>(
-            initialValue: _filter,
-            onSelected: (value) => setState(() => _filter = value),
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _DurationFilter.all,
-                child: Text('All durations'),
-              ),
-              PopupMenuItem(
-                value: _DurationFilter.underOneMinute,
-                child: Text('Under 1 minute'),
-              ),
-              PopupMenuItem(
-                value: _DurationFilter.oneMinuteOrMore,
-                child: Text('1 minute or more'),
-              ),
-            ],
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(color: scheme.surface, shape: BoxShape.circle),
+            child: PopupMenuButton<_DurationFilter>(
+              icon: Icon(Icons.filter_list, color: scheme.primary),
+              tooltip: 'Filter by duration',
+              initialValue: _filter,
+              onSelected: (value) => setState(() => _filter = value),
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: _DurationFilter.all,
+                  child: Text('All durations'),
+                ),
+                PopupMenuItem(
+                  value: _DurationFilter.underOneMinute,
+                  child: Text('Under 1 minute'),
+                ),
+                PopupMenuItem(
+                  value: _DurationFilter.oneMinuteOrMore,
+                  child: Text('1 minute or more'),
+                ),
+              ],
+            ),
           ),
         ],
       ),

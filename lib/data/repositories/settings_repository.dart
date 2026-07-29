@@ -110,6 +110,50 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setShowAlbumArtInMiniPlayer(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        showAlbumArtInMiniPlayer: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(showAlbumArtInMiniPlayer: Value(enabled)),
+    );
+  }
+
+  Future<void> setShowVisualizerInMiniPlayer(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        showVisualizerInMiniPlayer: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(showVisualizerInMiniPlayer: Value(enabled)),
+    );
+  }
+
+  Future<void> setShowAlbumArtInNowPlaying(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        showAlbumArtInNowPlaying: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(showAlbumArtInNowPlaying: Value(enabled)),
+    );
+  }
+
+  Future<void> setShowVisualizerInNowPlaying(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        showVisualizerInNowPlaying: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(showVisualizerInNowPlaying: Value(enabled)),
+    );
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -132,6 +176,10 @@ class SettingsRepository {
       crossfadeDuration: Duration(milliseconds: row.crossfadeDurationMs),
       currentEqualizerPresetId: row.currentEqualizerPresetId,
       visualizerStyle: VisualizerStyle.values.byName(row.visualizerStyle),
+      showAlbumArtInMiniPlayer: row.showAlbumArtInMiniPlayer,
+      showVisualizerInMiniPlayer: row.showVisualizerInMiniPlayer,
+      showAlbumArtInNowPlaying: row.showAlbumArtInNowPlaying,
+      showVisualizerInNowPlaying: row.showVisualizerInNowPlaying,
     );
   }
 }

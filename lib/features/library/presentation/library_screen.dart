@@ -6,6 +6,7 @@ import '../../../data/repositories/equalizer_preset_repository.dart';
 import '../../../data/repositories/mood_tag_repository.dart';
 import '../../../data/repositories/song_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/mini_player.dart';
@@ -52,7 +53,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         appBar: GradientAppBar(
           title: const Text('Zivybb'),
           actions: [
-            IconButton(
+            AppBarIconAction(
               icon: Badge(
                 label: Text('$missingCount'),
                 isLabelVisible: missingCount > 0,
@@ -63,7 +64,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 MaterialPageRoute(builder: (_) => const MissingFilesScreen()),
               ),
             ),
-            IconButton(
+            AppBarIconAction(
               icon: const Icon(Icons.settings),
               tooltip: 'Settings',
               onPressed: () => Navigator.of(context).push(
@@ -73,37 +74,75 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ),
               ),
             ),
+            const SizedBox(width: 4),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Songs'),
-              Tab(text: 'Playlists'),
-              Tab(text: 'Folders'),
-              Tab(text: 'Liked'),
-            ],
-          ),
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.surfaceContainerLow,
-                Theme.of(context).colorScheme.surface,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: const SafeArea(
-            child: TabBarView(
-              children: [
-                _AllSongsTab(),
-                PlaylistListScreen(),
-                FolderBrowserTab(),
-                _LikedSongsTab(),
-              ],
-            ),
-          ),
+        body: Builder(
+          builder: (context) {
+            final theme = Theme.of(context);
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.surfaceContainerLow,
+                    theme.colorScheme.surface,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      child: TabBar(
+                        dividerHeight: 0,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        splashFactory: NoSplash.splashFactory,
+                        overlayColor: const WidgetStatePropertyAll(
+                          Colors.transparent,
+                        ),
+                        indicator: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.22,
+                            ),
+                          ),
+                        ),
+                        labelColor: theme.colorScheme.onPrimaryContainer,
+                        unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                        labelStyle: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        unselectedLabelStyle: theme.textTheme.labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                        tabs: const [
+                          Tab(text: 'Songs'),
+                          Tab(text: 'Playlists'),
+                          Tab(text: 'Folders'),
+                          Tab(text: 'Liked'),
+                        ],
+                      ),
+                    ),
+                    const Expanded(
+                      child: TabBarView(
+                        children: [
+                          _AllSongsTab(),
+                          PlaylistListScreen(),
+                          FolderBrowserTab(),
+                          _LikedSongsTab(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
         floatingActionButton: library.isEmpty
             ? null

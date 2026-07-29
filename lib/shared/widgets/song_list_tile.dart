@@ -25,10 +25,17 @@ class SongListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: GlassCard(
-        radius: 20,
+        radius: 18,
         child: ListTile(
+          dense: true,
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          minLeadingWidth: 24,
           title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(
             '${song.artist} — ${song.album}',
@@ -39,7 +46,9 @@ class SongListTile extends ConsumerWidget {
           trailing:
               trailing ??
               IconButton(
-                icon: Icon(song.isLiked ? Icons.favorite : Icons.favorite_border),
+                icon: Icon(
+                  song.isLiked ? Icons.favorite : Icons.favorite_border,
+                ),
                 tooltip: song.isLiked ? 'Unlike' : 'Like',
                 onPressed: () => ref
                     .read(songRepositoryProvider)

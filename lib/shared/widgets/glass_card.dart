@@ -28,9 +28,18 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<AppThemePalette>();
     final theme = Theme.of(context);
-    final resolvedColor = color ?? palette?.glassSurfaceColor ?? theme.colorScheme.surfaceContainerHighest;
-    final resolvedBorder = borderColor ?? palette?.borderColor ?? theme.colorScheme.outlineVariant;
-    final resolvedShadow = shadowColor ?? palette?.shadowColor ?? theme.colorScheme.shadow;
+    final resolvedColor =
+        (color ??
+                palette?.glassSurfaceColor ??
+                theme.colorScheme.surfaceContainerHighest)
+            .withValues(
+              alpha: (palette?.surfaceOpacity ?? 0.8).clamp(0.0, 1.0),
+            );
+    final resolvedBorder =
+        borderColor ?? palette?.borderColor ?? theme.colorScheme.outlineVariant;
+    final resolvedShadow =
+        shadowColor ?? palette?.shadowColor ?? theme.colorScheme.shadow;
+    final blurSigma = palette?.blurSigma ?? 18.0;
 
     return Container(
       margin: margin,
@@ -49,10 +58,13 @@ class GlassCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Padding(
-            padding: padding ?? const EdgeInsets.all(16),
-            child: child,
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: Material(
+            color: Colors.transparent,
+            child: Padding(
+              padding: padding ?? const EdgeInsets.all(16),
+              child: child,
+            ),
           ),
         ),
       ),

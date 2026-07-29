@@ -17,4 +17,35 @@ void main() {
       expect(theme.appBarTheme.backgroundColor, isNotNull);
     }
   });
+
+  test('supports richer theme styles and compact list spacing', () {
+    final theme = buildAppTheme(
+      brightness: Brightness.dark,
+      style: AppThemeStyle.glass,
+      seedColor: const Color(0xFF673AB7),
+    );
+    final palette = theme.extension<AppThemePalette>();
+
+    expect(
+      AppThemeStyle.values.map((style) => style.label).toSet(),
+      containsAll(<String>{
+        'Aurora',
+        'Midnight',
+        'Sunset',
+        'Mist',
+        'Vivid',
+        'Bloom',
+        'Glass',
+        'Minimal',
+      }),
+    );
+    expect(
+      theme.listTileTheme.contentPadding,
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    );
+    expect(theme.cardTheme.margin, const EdgeInsets.symmetric(vertical: 4));
+    expect(palette, isNotNull);
+    expect(palette!.surfaceOpacity, greaterThan(0));
+    expect(palette.blurSigma, greaterThan(0));
+  });
 }

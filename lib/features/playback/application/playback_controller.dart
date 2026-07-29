@@ -17,6 +17,8 @@ final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
 /// How long a preview clip plays before auto-advancing (SRS F-4.1).
 const previewClipDuration = Duration(seconds: 30);
 
+const _unset = Object();
+
 /// Snapshot of the current playback queue and transport state.
 class PlaybackState {
   const PlaybackState({
@@ -27,6 +29,9 @@ class PlaybackState {
     this.duration = Duration.zero,
     this.shuffleEnabled = false,
     this.previewModeEnabled = false,
+    this.repeatMode = RepeatMode.off,
+    this.speed = 1.0,
+    this.sourcePlaylistId,
   });
 
   final List<Song> queue;
@@ -36,6 +41,14 @@ class PlaybackState {
   final Duration duration;
   final bool shuffleEnabled;
   final bool previewModeEnabled;
+  final RepeatMode repeatMode;
+  final double speed;
+
+  /// The playlist this queue was played from, if any — lets the Now Playing
+  /// screen's "more" menu offer "Remove from playlist" only when it makes
+  /// sense. Cleared whenever a new queue starts from somewhere else (e.g.
+  /// "shuffle all" from the library).
+  final String? sourcePlaylistId;
 
   Song? get currentSong {
     final index = currentIndex;
@@ -45,6 +58,8 @@ class PlaybackState {
     return queue[index];
   }
 
+  /// Pass [sourcePlaylistId] to change it, including to `null`. Omit it to
+  /// leave it untouched.
   PlaybackState copyWith({
     List<Song>? queue,
     int? currentIndex,
@@ -53,6 +68,9 @@ class PlaybackState {
     Duration? duration,
     bool? shuffleEnabled,
     bool? previewModeEnabled,
+    RepeatMode? repeatMode,
+    double? speed,
+    Object? sourcePlaylistId = _unset,
   }) {
     return PlaybackState(
       queue: queue ?? this.queue,
@@ -62,6 +80,11 @@ class PlaybackState {
       duration: duration ?? this.duration,
       shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
       previewModeEnabled: previewModeEnabled ?? this.previewModeEnabled,
+      repeatMode: repeatMode ?? this.repeatMode,
+      speed: speed ?? this.speed,
+      sourcePlaylistId: identical(sourcePlaylistId, _unset)
+          ? this.sourcePlaylistId
+          : sourcePlaylistId as String?,
     );
   }
 }
@@ -150,8 +173,20 @@ class PlaybackController extends Notifier<PlaybackState> {
   }
 
   /// Loads [queue] into the engine and starts playback at [startIndex].
-  Future<void> playQueue(List<Song> queue, {required int startIndex}) async {
-    state = state.copyWith(queue: queue, currentIndex: startIndex);
+  /// Pass [sourcePlaylistId] when playing from within a specific playlist
+  /// so the Now Playing screen can offer "Remove from playlist"; omit it
+  /// (or pass `null`) for queues with no such context, which also clears
+  /// any previous one.
+  Future<void> playQueue(
+    List<Song> queue, {
+    required int startIndex,
+    String? sourcePlaylistId,
+  }) async {
+    state = state.copyWith(
+      queue: queue,
+      currentIndex: startIndex,
+      sourcePlaylistId: sourcePlaylistId,
+    );
     await _player.loadQueue(queue, initialIndex: startIndex);
     await _player.play();
   }
@@ -167,9 +202,11 @@ class PlaybackController extends Notifier<PlaybackState> {
     await playQueue(shuffled, startIndex: 0);
   }
 
-  Future<void> togglePlayPause() {
-    return state.isPlaying ? _player.pause() : _player.play();
-  }
+  Future<void> togglePlayPause() => state.isPlaying ? pause() : play();
+
+  Future<void> play() => _player.play();
+
+  Future<void> pause() => _player.pause();
 
   Future<void> next() => _player.seekToNext();
 
@@ -185,6 +222,23 @@ class PlaybackController extends Notifier<PlaybackState> {
 
   void togglePreviewMode() {
     state = state.copyWith(previewModeEnabled: !state.previewModeEnabled);
+  }
+
+  /// Cycles Off -> Repeat all -> Repeat one -> Off, for a single tap-to-cycle
+  /// repeat button.
+  Future<void> cycleRepeatMode() async {
+    final next = switch (state.repeatMode) {
+      RepeatMode.off => RepeatMode.all,
+      RepeatMode.all => RepeatMode.one,
+      RepeatMode.one => RepeatMode.off,
+    };
+    await _player.setRepeatMode(next);
+    state = state.copyWith(repeatMode: next);
+  }
+
+  Future<void> setSpeed(double speed) async {
+    await _player.setSpeed(speed);
+    state = state.copyWith(speed: speed);
   }
 }
 

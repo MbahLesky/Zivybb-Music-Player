@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/repositories/playlist_repository.dart';
+import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/song_list_tile.dart';
@@ -24,7 +25,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
       appBar: GradientAppBar(
         title: Text(detail.value?.playlist.name ?? 'Playlist'),
         actions: [
-          IconButton(
+          AppBarIconAction(
             icon: const Icon(Icons.playlist_add),
             tooltip: 'Add songs',
             onPressed: () => AddSongsSheet.show(
@@ -33,6 +34,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
               songs.map((song) => song.id).toSet(),
             ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: detail.when(
@@ -63,7 +65,11 @@ class PlaylistDetailScreen extends ConsumerWidget {
                 song: song,
                 onTap: () => ref
                     .read(playbackControllerProvider.notifier)
-                    .playQueue(value.songs, startIndex: index),
+                    .playQueue(
+                      value.songs,
+                      startIndex: index,
+                      sourcePlaylistId: playlistId,
+                    ),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   tooltip: 'Remove from playlist',
@@ -86,7 +92,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
               tooltip: 'Play all',
               onPressed: () => ref
                   .read(playbackControllerProvider.notifier)
-                  .playQueue(songs, startIndex: 0),
+                  .playQueue(songs, startIndex: 0, sourcePlaylistId: playlistId),
             ),
     );
   }

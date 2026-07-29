@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/missing_file_service.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 
 /// Surfaces songs whose files could not be found, with the option to
@@ -35,7 +36,7 @@ class _MissingFilesScreenState extends ConsumerState<MissingFilesScreen> {
       appBar: GradientAppBar(
         title: const Text('Missing Files'),
         actions: [
-          IconButton(
+          AppBarIconAction(
             icon: _scanning
                 ? const SizedBox(
                     width: 20,
@@ -46,6 +47,7 @@ class _MissingFilesScreenState extends ConsumerState<MissingFilesScreen> {
             tooltip: 'Scan for matches',
             onPressed: _scanning ? null : _scanForMatches,
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: missing.when(

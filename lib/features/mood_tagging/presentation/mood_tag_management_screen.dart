@@ -5,6 +5,7 @@ import '../../../core/theme/theme_palette.dart';
 import '../../../core/utils/color_hex.dart';
 import '../../../data/models/mood_tag.dart';
 import '../../../data/repositories/mood_tag_repository.dart';
+import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
@@ -24,11 +25,12 @@ class MoodTagManagementScreen extends ConsumerWidget {
       appBar: GradientAppBar(
         title: const Text('Manage Moods'),
         actions: [
-          IconButton(
+          AppBarIconAction(
             icon: const Icon(Icons.add),
             tooltip: 'Add mood',
             onPressed: () => _createMood(context, ref),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: tags.when(

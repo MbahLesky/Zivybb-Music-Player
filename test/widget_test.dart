@@ -1,12 +1,37 @@
 import 'package:drift/native.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:zivybb/app.dart';
 import 'package:zivybb/data/datasources/app_database.dart';
+import 'package:zivybb/features/settings/presentation/settings_screen.dart';
 
 void main() {
+  testWidgets('Settings screen shows grouped theme, playback, library, and display sections', (
+    WidgetTester tester,
+  ) async {
+    final database = AppDatabase.connect(NativeDatabase.memory());
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+        ],
+        child: const MaterialApp(home: SettingsScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('Playback'), findsOneWidget);
+    expect(find.text('Library'), findsOneWidget);
+    expect(find.text('Display'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
+
   testWidgets('ZivybbApp builds without error', (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(

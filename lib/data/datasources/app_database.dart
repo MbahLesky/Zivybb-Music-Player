@@ -54,6 +54,7 @@ class Playlists extends Table {
     onDelete: KeyAction.setNull,
   )();
   DateTimeColumn get createdAt => dateTime()();
+  TextColumn get coverImagePath => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -121,6 +122,14 @@ class Settings extends Table {
   )();
   TextColumn get visualizerStyle =>
       text().withDefault(const Constant('bars'))();
+  BoolColumn get showAlbumArtInMiniPlayer =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get showVisualizerInMiniPlayer =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showAlbumArtInNowPlaying =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get showVisualizerInNowPlaying =>
+      boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -144,7 +153,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -170,6 +179,13 @@ class AppDatabase extends _$AppDatabase {
       if (from < 5) {
         await m.addColumn(moodTags, moodTags.sortOrder);
         await m.addColumn(settings, settings.visualizerStyle);
+      }
+      if (from < 6) {
+        await m.addColumn(playlists, playlists.coverImagePath);
+        await m.addColumn(settings, settings.showAlbumArtInMiniPlayer);
+        await m.addColumn(settings, settings.showVisualizerInMiniPlayer);
+        await m.addColumn(settings, settings.showAlbumArtInNowPlaying);
+        await m.addColumn(settings, settings.showVisualizerInNowPlaying);
       }
     },
   );
