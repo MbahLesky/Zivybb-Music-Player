@@ -155,7 +155,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -191,8 +191,34 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(songs, songs.playCount);
         await m.addColumn(songs, songs.lastPlayedAt);
       }
+      if (from < 7) {
+        // Some devices reached user_version 6 before the songs.playCount /
+        // songs.lastPlayedAt addColumn calls above existed, so the `from < 6`
+        // block above never (and will never again) add them for those
+        // devices. Add whichever of the two are still actually missing.
+        if (!await _hasColumn(m, 'songs', 'play_count')) {
+          await m.addColumn(songs, songs.playCount);
+        }
+        if (!await _hasColumn(m, 'songs', 'last_played_at')) {
+          await m.addColumn(songs, songs.lastPlayedAt);
+        }
+      }
     },
   );
+
+  static Future<bool> _hasColumn(
+    Migrator m,
+    String table,
+    String column,
+  ) async {
+    final row = await m.database
+        .customSelect(
+          "SELECT 1 FROM pragma_table_info('$table') WHERE name = ?",
+          variables: [Variable.withString(column)],
+        )
+        .getSingleOrNull();
+    return row != null;
+  }
 
   static QueryExecutor _openConnection() => driftDatabase(name: 'zivybb');
 }
