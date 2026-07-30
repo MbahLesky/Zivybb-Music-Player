@@ -135,7 +135,11 @@ class PlaylistDetailScreen extends ConsumerWidget {
               tooltip: 'Play all',
               onPressed: () => ref
                   .read(playbackControllerProvider.notifier)
-                  .playQueue(songs, startIndex: 0, sourcePlaylistId: playlistId),
+                  .playQueue(
+                    songs,
+                    startIndex: 0,
+                    sourcePlaylistId: playlistId,
+                  ),
             ),
     );
   }
@@ -146,9 +150,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
     ].join('\n');
     await SharePlus.instance.share(
       ShareParams(
-        text: songs.isEmpty
-            ? playlist.name
-            : '${playlist.name}\n\n$trackList',
+        text: songs.isEmpty ? playlist.name : '${playlist.name}\n\n$trackList',
       ),
     );
   }

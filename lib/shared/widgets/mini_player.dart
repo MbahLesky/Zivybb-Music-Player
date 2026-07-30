@@ -74,10 +74,14 @@ class MiniPlayer extends ConsumerWidget {
                           nullArtworkWidget: Container(
                             width: 40,
                             height: 40,
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             child: Icon(
                               Icons.music_note,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -120,7 +124,9 @@ class MiniPlayer extends ConsumerWidget {
                       onPressed: () => SaveToPlaylistSheet.show(context, song),
                     ),
                     IconButton(
-                      icon: Icon(playback.isPlaying ? Icons.pause : Icons.play_arrow),
+                      icon: Icon(
+                        playback.isPlaying ? Icons.pause : Icons.play_arrow,
+                      ),
                       tooltip: playback.isPlaying ? 'Pause' : 'Play',
                       onPressed: () => ref
                           .read(playbackControllerProvider.notifier)

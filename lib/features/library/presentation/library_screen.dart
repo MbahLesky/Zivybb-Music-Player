@@ -122,7 +122,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           ),
                         ),
                         labelColor: theme.colorScheme.onPrimaryContainer,
-                        unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                        unselectedLabelColor:
+                            theme.colorScheme.onSurfaceVariant,
                         labelStyle: theme.textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),

@@ -8,29 +8,28 @@ import 'package:zivybb/data/datasources/app_database.dart';
 import 'package:zivybb/features/settings/presentation/settings_screen.dart';
 
 void main() {
-  testWidgets('Settings screen shows grouped theme, playback, library, and display sections', (
-    WidgetTester tester,
-  ) async {
-    final database = AppDatabase.connect(NativeDatabase.memory());
+  testWidgets(
+    'Settings screen shows grouped theme, playback, library, and display sections',
+    (WidgetTester tester) async {
+      final database = AppDatabase.connect(NativeDatabase.memory());
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(database),
-        ],
-        child: const MaterialApp(home: SettingsScreen()),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appDatabaseProvider.overrideWithValue(database)],
+          child: const MaterialApp(home: SettingsScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Theme'), findsOneWidget);
-    expect(find.text('Playback'), findsOneWidget);
-    expect(find.text('Library'), findsOneWidget);
-    expect(find.text('Display'), findsOneWidget);
+      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('Playback'), findsOneWidget);
+      expect(find.text('Library'), findsOneWidget);
+      expect(find.text('Display'), findsOneWidget);
 
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(milliseconds: 1));
-  });
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 1));
+    },
+  );
 
   testWidgets('ZivybbApp builds without error', (WidgetTester tester) async {
     await tester.pumpWidget(

@@ -32,28 +32,25 @@ class PlaylistListScreen extends ConsumerWidget {
                 crossAxisSpacing: 12,
                 childAspectRatio: 0.85,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  if (index == 0) {
-                    return _CreatePlaylistCard(
-                      onTap: () => _createPlaylist(context, ref),
-                    );
-                  }
-                  final playlist = items[index - 1];
-                  return _PlaylistCard(
-                    playlist: playlist,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PlaylistDetailScreen(playlistId: playlist.id),
-                      ),
-                    ),
-                    onEdit: () => _editPlaylist(context, ref, playlist),
-                    onDelete: () => _confirmDelete(context, ref, playlist),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                if (index == 0) {
+                  return _CreatePlaylistCard(
+                    onTap: () => _createPlaylist(context, ref),
                   );
-                },
-                childCount: items.length + 1,
-              ),
+                }
+                final playlist = items[index - 1];
+                return _PlaylistCard(
+                  playlist: playlist,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PlaylistDetailScreen(playlistId: playlist.id),
+                    ),
+                  ),
+                  onEdit: () => _editPlaylist(context, ref, playlist),
+                  onDelete: () => _confirmDelete(context, ref, playlist),
+                );
+              }, childCount: items.length + 1),
             ),
           ),
           if (items.isEmpty)
@@ -131,7 +128,6 @@ class PlaylistListScreen extends ConsumerWidget {
       await ref.read(playlistRepositoryProvider).deletePlaylist(playlist.id);
     }
   }
-
 }
 
 class _CreatePlaylistCard extends StatelessWidget {
@@ -219,10 +215,7 @@ class _PlaylistCard extends StatelessWidget {
                         },
                         itemBuilder: (_) => const [
                           PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text('Delete'),
-                          ),
+                          PopupMenuItem(value: 'delete', child: Text('Delete')),
                         ],
                       ),
                     ),
@@ -236,9 +229,9 @@ class _PlaylistCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ],

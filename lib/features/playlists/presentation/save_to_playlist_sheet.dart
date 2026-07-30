@@ -89,9 +89,9 @@ class SaveToPlaylistSheet extends ConsumerWidget {
     await ref.read(playlistRepositoryProvider).addSong(playlistId, song.id);
     if (!context.mounted) return;
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Added to playlist')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Added to playlist')));
   }
 
   Future<void> _createAndSave(BuildContext context, WidgetRef ref) async {

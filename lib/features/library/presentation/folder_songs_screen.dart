@@ -48,7 +48,10 @@ class _FolderSongsScreenState extends State<FolderSongsScreen> {
         actions: [
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(color: scheme.surface, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              shape: BoxShape.circle,
+            ),
             child: PopupMenuButton<_DurationFilter>(
               icon: Icon(Icons.filter_list, color: scheme.primary),
               tooltip: 'Filter by duration',

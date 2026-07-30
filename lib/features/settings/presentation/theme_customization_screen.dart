@@ -64,7 +64,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                             ),
                             selected: selectedStyle == style,
                             selectedColor: theme.colorScheme.primaryContainer,
-                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
                             side: BorderSide(
                               color: selectedStyle == style
                                   ? theme.colorScheme.primary
@@ -74,7 +75,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                               horizontal: 10,
                               vertical: 8,
                             ),
-                            onSelected: (_) => controller.setAppThemeStyle(style),
+                            onSelected: (_) =>
+                                controller.setAppThemeStyle(style),
                           ),
                       ],
                     ),
@@ -140,7 +142,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                             ),
                             selected: settings.visualizerStyle == style,
                             selectedColor: theme.colorScheme.primaryContainer,
-                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
                             side: BorderSide(
                               color: settings.visualizerStyle == style
                                   ? theme.colorScheme.primary
@@ -150,7 +153,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                               horizontal: 10,
                               vertical: 8,
                             ),
-                            onSelected: (_) => controller.setVisualizerStyle(style),
+                            onSelected: (_) =>
+                                controller.setVisualizerStyle(style),
                           ),
                       ],
                     ),

@@ -58,7 +58,9 @@ class _FullScreenVisualizerScreenState
           child: Stack(
             children: [
               Positioned.fill(
-                child: WaveVisualizer(color: ref.watch(visualizerColorProvider)),
+                child: WaveVisualizer(
+                  color: ref.watch(visualizerColorProvider),
+                ),
               ),
               AnimatedOpacity(
                 opacity: _controlsVisible ? 1 : 0,
@@ -86,7 +88,9 @@ class _FullScreenVisualizerScreenState
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
-                                        style: Theme.of(context).textTheme.titleMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
                                       ),
                                   ],
                                 ),
