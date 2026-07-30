@@ -35,6 +35,12 @@ import 'now_playing_more_sheet.dart';
 const _speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
 /// Full playback experience for the current track.
+///
+/// Laid out minimally: artwork/visualizer as the centerpiece, track info
+/// beneath it, then one full transport row (shuffle/previous/play/next/
+/// repeat) and one short utility row (like/save/mood/more). Everything
+/// else — share, speed, edit tags, ringtone, remove, delete — lives in the
+/// "more" sheet, and the full-screen visualizer sits in the app bar.
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
 
@@ -49,6 +55,7 @@ class NowPlayingScreen extends ConsumerWidget {
     final liveSong = song == null
         ? null
         : ref.watch(songStreamProvider(song.id)).value ?? song;
+    final isLiked = liveSong?.isLiked ?? song?.isLiked ?? false;
 
     return Scaffold(
       appBar: GradientAppBar(
@@ -73,6 +80,18 @@ class NowPlayingScreen extends ConsumerWidget {
               context,
             ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
           ),
+          AppBarIconAction(
+            icon: const Icon(Icons.fullscreen),
+            tooltip: 'Full-screen visualizer',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                settings: const RouteSettings(
+                  name: AppRoutes.fullScreenVisualizer,
+                ),
+                builder: (_) => const FullScreenVisualizerScreen(),
+              ),
+            ),
+          ),
           const SizedBox(width: 4),
         ],
       ),
@@ -86,23 +105,6 @@ class NowPlayingScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    Text(
-                      song.title,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${song.artist} — ${song.album}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    if (liveSong?.moodTagId != null) ...[
-                      const SizedBox(height: 8),
-                      _MoodTagLabel(moodTagId: liveSong!.moodTagId!),
-                    ],
-                    const _CrossfadeIndicator(),
-                    const SizedBox(height: 16),
                     if (settings.showAlbumArtInNowPlaying) ...[
                       ClipRRect(
                         borderRadius: BorderRadius.circular(20),
@@ -115,11 +117,15 @@ class NowPlayingScreen extends ConsumerWidget {
                           nullArtworkWidget: Container(
                             width: 200,
                             height: 200,
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             child: Icon(
                               Icons.music_note,
                               size: 64,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -130,58 +136,26 @@ class NowPlayingScreen extends ConsumerWidget {
                       WaveVisualizer(color: ref.watch(visualizerColorProvider)),
                       const SizedBox(height: 16),
                     ],
-                    // Supporting actions: smaller than the main transport,
-                    // sits between the artwork/visualizer and the seek bar.
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            (liveSong?.isLiked ?? song.isLiked)
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                          ),
-                          tooltip: (liveSong?.isLiked ?? song.isLiked)
-                              ? 'Unlike'
-                              : 'Like',
-                          onPressed: () => ref
-                              .read(songRepositoryProvider)
-                              .setLiked(
-                                song.id,
-                                !(liveSong?.isLiked ?? song.isLiked),
-                              ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.playlist_add),
-                          tooltip: 'Save to playlist',
-                          onPressed: () =>
-                              SaveToPlaylistSheet.show(context, song),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.share_outlined),
-                          tooltip: 'Share',
-                          onPressed: () => SharePlus.instance.share(
-                            ShareParams(
-                              text: 'Listening to "${song.title}" by ${song.artist}',
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.speed),
-                          tooltip: 'Playback speed (${playback.speed}x)',
-                          onPressed: () => _showSpeedPicker(
-                            context,
-                            ref,
-                            playback.speed,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.mood),
-                          tooltip: 'Tag mood',
-                          onPressed: () => MoodTaggingSheet.show(context, song),
-                        ),
-                      ],
+                    Text(
+                      song.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${song.artist} — ${song.album}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (liveSong?.moodTagId != null) ...[
+                      const SizedBox(height: 8),
+                      _MoodTagLabel(moodTagId: liveSong!.moodTagId!),
+                    ],
+                    const _CrossfadeIndicator(),
                     const SizedBox(height: 8),
                     Slider(
                       min: 0,
@@ -195,55 +169,30 @@ class NowPlayingScreen extends ConsumerWidget {
                           .read(playbackControllerProvider.notifier)
                           .seek(Duration(milliseconds: value.round())),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(_format(playback.position)),
-                        Text(_format(playback.duration)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Main transport: previous / play-pause / next only.
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          iconSize: 40,
-                          icon: const Icon(Icons.skip_previous),
-                          tooltip: 'Previous',
-                          onPressed: () => ref
-                              .read(playbackControllerProvider.notifier)
-                              .previous(),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: GradientFab(
-                            size: 72,
-                            icon: playback.isPlaying
-                                ? Icons.pause
-                                : Icons.play_arrow,
-                            tooltip: playback.isPlaying ? 'Pause' : 'Play',
-                            onPressed: () => ref
-                                .read(playbackControllerProvider.notifier)
-                                .togglePlayPause(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _format(playback.position),
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
-                        ),
-                        IconButton(
-                          iconSize: 40,
-                          icon: const Icon(Icons.skip_next),
-                          tooltip: 'Next',
-                          onPressed: () => ref
-                              .read(playbackControllerProvider.notifier)
-                              .next(),
-                        ),
-                      ],
+                          Text(
+                            _format(playback.duration),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    // Secondary controls: shuffle, repeat, more, full screen.
+                    const SizedBox(height: 8),
+                    // Full transport in one row, the play button as the
+                    // single large control.
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         IconButton(
+                          iconSize: 28,
                           icon: Icon(
                             playback.shuffleEnabled
                                 ? Icons.shuffle_on_outlined
@@ -260,6 +209,33 @@ class NowPlayingScreen extends ConsumerWidget {
                               .toggleShuffle(),
                         ),
                         IconButton(
+                          iconSize: 36,
+                          icon: const Icon(Icons.skip_previous),
+                          tooltip: 'Previous',
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .previous(),
+                        ),
+                        GradientFab(
+                          size: 72,
+                          icon: playback.isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          tooltip: playback.isPlaying ? 'Pause' : 'Play',
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .togglePlayPause(),
+                        ),
+                        IconButton(
+                          iconSize: 36,
+                          icon: const Icon(Icons.skip_next),
+                          tooltip: 'Next',
+                          onPressed: () => ref
+                              .read(playbackControllerProvider.notifier)
+                              .next(),
+                        ),
+                        IconButton(
+                          iconSize: 28,
                           icon: Icon(
                             playback.repeatMode == RepeatMode.one
                                 ? Icons.repeat_one
@@ -277,6 +253,33 @@ class NowPlayingScreen extends ConsumerWidget {
                               .read(playbackControllerProvider.notifier)
                               .cycleRepeatMode(),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Short utility row; everything else is in the sheet.
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                          ),
+                          tooltip: isLiked ? 'Unlike' : 'Like',
+                          onPressed: () => ref
+                              .read(songRepositoryProvider)
+                              .setLiked(song.id, !isLiked),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.playlist_add),
+                          tooltip: 'Save to playlist',
+                          onPressed: () =>
+                              SaveToPlaylistSheet.show(context, song),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.mood),
+                          tooltip: 'Tag mood',
+                          onPressed: () => MoodTaggingSheet.show(context, song),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.more_horiz),
                           tooltip: 'More',
@@ -285,18 +288,6 @@ class NowPlayingScreen extends ConsumerWidget {
                             ref,
                             song,
                             playback.sourcePlaylistId,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.fullscreen),
-                          tooltip: 'Full-screen visualizer',
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              settings: const RouteSettings(
-                                name: AppRoutes.fullScreenVisualizer,
-                              ),
-                              builder: (_) => const FullScreenVisualizerScreen(),
-                            ),
                           ),
                         ),
                       ],
@@ -349,10 +340,20 @@ class NowPlayingScreen extends ConsumerWidget {
     if (!context.mounted || action == null) return;
 
     switch (action) {
-      case NowPlayingMoreAction.editTags:
-        await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => TagEditorScreen(song: song)),
+      case NowPlayingMoreAction.share:
+        await SharePlus.instance.share(
+          ShareParams(text: 'Listening to "${song.title}" by ${song.artist}'),
         );
+      case NowPlayingMoreAction.playbackSpeed:
+        _showSpeedPicker(
+          context,
+          ref,
+          ref.read(playbackControllerProvider).speed,
+        );
+      case NowPlayingMoreAction.editTags:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => TagEditorScreen(song: song)));
       case NowPlayingMoreAction.setRingtone:
         await _setAsRingtone(context, song);
       case NowPlayingMoreAction.removeFromPlaylist:
@@ -402,13 +403,13 @@ class NowPlayingScreen extends ConsumerWidget {
       );
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            success ? 'Set as ringtone' : 'Could not set ringtone',
-          ),
+          content: Text(success ? 'Set as ringtone' : 'Could not set ringtone'),
         ),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Could not set ringtone: $e')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not set ringtone: $e')),
+      );
     }
   }
 

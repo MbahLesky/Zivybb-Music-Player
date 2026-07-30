@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 /// The action the user picked from [NowPlayingMoreSheet].
-enum NowPlayingMoreAction { editTags, setRingtone, removeFromPlaylist, delete }
+enum NowPlayingMoreAction {
+  share,
+  playbackSpeed,
+  editTags,
+  setRingtone,
+  removeFromPlaylist,
+  delete,
+}
 
 /// "More" options for the currently playing song, reached from the Now
 /// Playing screen's bottom control row.
@@ -34,6 +41,17 @@ class NowPlayingMoreSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
+            leading: const Icon(Icons.share_outlined),
+            title: const Text('Share'),
+            onTap: () => Navigator.of(context).pop(NowPlayingMoreAction.share),
+          ),
+          ListTile(
+            leading: const Icon(Icons.speed),
+            title: const Text('Playback speed'),
+            onTap: () =>
+                Navigator.of(context).pop(NowPlayingMoreAction.playbackSpeed),
+          ),
+          ListTile(
             leading: const Icon(Icons.edit_outlined),
             title: const Text('Edit tags'),
             onTap: () =>
@@ -55,7 +73,10 @@ class NowPlayingMoreSheet extends StatelessWidget {
             ),
           ListTile(
             leading: Icon(Icons.delete_outline, color: scheme.error),
-            title: Text('Delete from library', style: TextStyle(color: scheme.error)),
+            title: Text(
+              'Delete from library',
+              style: TextStyle(color: scheme.error),
+            ),
             onTap: () => Navigator.of(context).pop(NowPlayingMoreAction.delete),
           ),
         ],

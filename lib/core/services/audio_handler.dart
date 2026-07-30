@@ -2,7 +2,8 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/song.dart';
-import '../../features/playback/application/playback_controller.dart' as playback;
+import '../../features/playback/application/playback_controller.dart'
+    as playback;
 
 /// Bridges [playback.PlaybackController] to `audio_service` so playback
 /// keeps running in the background/lock screen with a system media
@@ -13,7 +14,8 @@ import '../../features/playback/application/playback_controller.dart' as playbac
 /// [playbackState]) and routes system-initiated commands (notification
 /// taps, lock-screen buttons, headset buttons) straight back into the same
 /// controller the in-app UI drives, so the two surfaces never disagree.
-class ZivybbAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
+class ZivybbAudioHandler extends BaseAudioHandler
+    with QueueHandler, SeekHandler {
   ZivybbAudioHandler(this._ref) {
     _ref.listen<playback.PlaybackState>(
       playback.playbackControllerProvider,

@@ -51,12 +51,14 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.palette_outlined,
                   title: 'Theme',
-                  description: 'Adaptive dark mode, appearance, and theme colors',
+                  description:
+                      'Adaptive dark mode, appearance, and theme colors',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => SettingsSectionScreen(
                         title: 'Theme',
-                        description: 'Adjust the app theme, automatic dark mode, and visual accents.',
+                        description:
+                            'Adjust the app theme, automatic dark mode, and visual accents.',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -68,7 +70,8 @@ class SettingsScreen extends ConsumerWidget {
                               value: settings.adaptiveDarkModeEnabled,
                               onChanged: settings.manualThemeOverride != null
                                   ? null
-                                  : (enabled) => controller.setAdaptiveDarkModeEnabled(enabled),
+                                  : (enabled) => controller
+                                        .setAdaptiveDarkModeEnabled(enabled),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -80,10 +83,14 @@ class SettingsScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             RadioGroup<ThemeOverride?>(
                               groupValue: settings.manualThemeOverride,
-                              onChanged: (value) => controller.setManualThemeOverride(value),
+                              onChanged: (value) =>
+                                  controller.setManualThemeOverride(value),
                               child: const Column(
                                 children: [
-                                  RadioListTile<ThemeOverride?>(title: Text('Auto'), value: null),
+                                  RadioListTile<ThemeOverride?>(
+                                    title: Text('Auto'),
+                                    value: null,
+                                  ),
                                   RadioListTile<ThemeOverride?>(
                                     title: Text('Light'),
                                     value: ThemeOverride.light,
@@ -99,11 +106,14 @@ class SettingsScreen extends ConsumerWidget {
                             ListTile(
                               leading: const Icon(Icons.palette_outlined),
                               title: const Text('Theme Customization'),
-                              subtitle: const Text('App color, visualizer color, and style'),
+                              subtitle: const Text(
+                                'App color, visualizer color, and style',
+                              ),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => const ThemeCustomizationScreen(),
+                                  builder: (_) =>
+                                      const ThemeCustomizationScreen(),
                                 ),
                               ),
                             ),
@@ -122,15 +132,19 @@ class SettingsScreen extends ConsumerWidget {
                     MaterialPageRoute(
                       builder: (_) => SettingsSectionScreen(
                         title: 'Playback',
-                        description: 'Adjust how tracks transition and how audio is shaped.',
+                        description:
+                            'Adjust how tracks transition and how audio is shaped.',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SwitchListTile(
                               title: const Text('Crossfade'),
-                              subtitle: const Text('Fade out/in between tracks'),
+                              subtitle: const Text(
+                                'Fade out/in between tracks',
+                              ),
                               value: settings.crossfadeEnabled,
-                              onChanged: (enabled) => controller.setCrossfadeEnabled(enabled),
+                              onChanged: (enabled) =>
+                                  controller.setCrossfadeEnabled(enabled),
                             ),
                             ListTile(
                               title: const Text('Crossfade duration'),
@@ -145,7 +159,9 @@ class SettingsScreen extends ConsumerWidget {
                               title: const Text('Equalizer'),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const EqualizerScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const EqualizerScreen(),
+                                ),
                               ),
                             ),
                           ],
@@ -163,17 +179,21 @@ class SettingsScreen extends ConsumerWidget {
                     MaterialPageRoute(
                       builder: (_) => SettingsSectionScreen(
                         title: 'Library',
-                        description: 'Manage your music library and keep your data safe.',
+                        description:
+                            'Manage your music library and keep your data safe.',
                         child: Column(
                           children: [
                             ListTile(
                               leading: const Icon(Icons.mood_outlined),
                               title: const Text('Manage Moods'),
-                              subtitle: const Text('Add, rename, recolor, or remove mood tags'),
+                              subtitle: const Text(
+                                'Add, rename, recolor, or remove mood tags',
+                              ),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => const MoodTagManagementScreen(),
+                                  builder: (_) =>
+                                      const MoodTagManagementScreen(),
                                 ),
                               ),
                             ),
@@ -182,7 +202,9 @@ class SettingsScreen extends ConsumerWidget {
                               title: const Text('Backup & Restore'),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const BackupRestoreScreen(),
+                                ),
                               ),
                             ),
                           ],
@@ -195,12 +217,14 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.dashboard_customize_outlined,
                   title: 'Display',
-                  description: 'Album art and visualizer in the mini player and Now Playing',
+                  description:
+                      'Album art and visualizer in the mini player and Now Playing',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => SettingsSectionScreen(
                         title: 'Display',
-                        description: 'Choose what shows up while music is playing.',
+                        description:
+                            'Choose what shows up while music is playing.',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -213,14 +237,16 @@ class SettingsScreen extends ConsumerWidget {
                             SwitchListTile(
                               title: const Text('Show album art'),
                               value: settings.showAlbumArtInMiniPlayer,
-                              onChanged: (enabled) =>
-                                  controller.setShowAlbumArtInMiniPlayer(enabled),
+                              onChanged: (enabled) => controller
+                                  .setShowAlbumArtInMiniPlayer(enabled),
                             ),
                             SwitchListTile(
-                              title: const Text('Show visualizer behind mini player'),
+                              title: const Text(
+                                'Show visualizer behind mini player',
+                              ),
                               value: settings.showVisualizerInMiniPlayer,
-                              onChanged: (enabled) =>
-                                  controller.setShowVisualizerInMiniPlayer(enabled),
+                              onChanged: (enabled) => controller
+                                  .setShowVisualizerInMiniPlayer(enabled),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -232,14 +258,14 @@ class SettingsScreen extends ConsumerWidget {
                             SwitchListTile(
                               title: const Text('Show album art'),
                               value: settings.showAlbumArtInNowPlaying,
-                              onChanged: (enabled) =>
-                                  controller.setShowAlbumArtInNowPlaying(enabled),
+                              onChanged: (enabled) => controller
+                                  .setShowAlbumArtInNowPlaying(enabled),
                             ),
                             SwitchListTile(
                               title: const Text('Show visualizer'),
                               value: settings.showVisualizerInNowPlaying,
-                              onChanged: (enabled) =>
-                                  controller.setShowVisualizerInNowPlaying(enabled),
+                              onChanged: (enabled) => controller
+                                  .setShowVisualizerInNowPlaying(enabled),
                             ),
                           ],
                         ),
@@ -275,7 +301,9 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
                   child: Icon(
                     icon,
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -288,9 +316,8 @@ class SettingsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 4),
                       Text(

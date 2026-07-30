@@ -84,7 +84,8 @@ class AudioPlayerService {
   final _durationController = StreamController<Duration?>.broadcast();
   final _playingController = StreamController<bool>.broadcast();
   final _currentIndexController = StreamController<int?>.broadcast();
-  final _processingStateController = StreamController<ProcessingState>.broadcast();
+  final _processingStateController =
+      StreamController<ProcessingState>.broadcast();
   final _errorIndexController = StreamController<int>.broadcast();
 
   StreamSubscription<Duration>? _fwdPosition;
@@ -115,7 +116,9 @@ class AudioPlayerService {
     if (gains != null) {
       unawaited(_applyBandGainsTo(equalizer, gains));
     }
-    return AudioPlayer(audioPipeline: AudioPipeline(androidAudioEffects: [equalizer]));
+    return AudioPlayer(
+      audioPipeline: AudioPipeline(androidAudioEffects: [equalizer]),
+    );
   }
 
   void _onGaplessError(PlayerException error) {
@@ -144,8 +147,12 @@ class AudioPlayerService {
 
   void _bindGaplessForwarding() {
     _cancelForwarding();
-    _fwdPosition = _gaplessPlayer.positionStream.listen(_positionController.add);
-    _fwdDuration = _gaplessPlayer.durationStream.listen(_durationController.add);
+    _fwdPosition = _gaplessPlayer.positionStream.listen(
+      _positionController.add,
+    );
+    _fwdDuration = _gaplessPlayer.durationStream.listen(
+      _durationController.add,
+    );
     _fwdPlaying = _gaplessPlayer.playingStream.listen(_playingController.add);
     _fwdCurrentIndex = _gaplessPlayer.currentIndexStream.listen(
       _currentIndexController.add,
@@ -371,7 +378,9 @@ class AudioPlayerService {
     _standbyIndex = null;
     await _fadeB!.pause();
     await _fadeB!.setVolume(1);
-    await _fadeA!.setAudioSource(AudioSource.uri(Uri.file(_queue[index].filePath)));
+    await _fadeA!.setAudioSource(
+      AudioSource.uri(Uri.file(_queue[index].filePath)),
+    );
     await _fadeA!.seek(position);
     await _fadeA!.setVolume(1);
     _bindCrossfadeActiveForwarding();
@@ -432,9 +441,7 @@ class AudioPlayerService {
 
     final rampMs = _crossfadeDuration.inMilliseconds;
     final stopwatch = Stopwatch()..start();
-    _fadeRampTimer = Timer.periodic(const Duration(milliseconds: 100), (
-      timer,
-    ) {
+    _fadeRampTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       final t = (stopwatch.elapsedMilliseconds / rampMs).clamp(0.0, 1.0);
       active.setVolume(1 - t);
       standby.setVolume(t);
@@ -513,7 +520,8 @@ class AudioPlayerService {
     _lastEqualizerBandGains = bandGains;
     if (bandGains.isEmpty) return;
     await Future.wait([
-      for (final equalizer in _equalizers) _applyBandGainsTo(equalizer, bandGains),
+      for (final equalizer in _equalizers)
+        _applyBandGainsTo(equalizer, bandGains),
     ]);
   }
 
@@ -539,7 +547,9 @@ class AudioPlayerService {
 
   Future<void> disableEqualizer() async {
     _lastEqualizerBandGains = null;
-    await Future.wait([for (final equalizer in _equalizers) equalizer.setEnabled(false)]);
+    await Future.wait([
+      for (final equalizer in _equalizers) equalizer.setEnabled(false),
+    ]);
   }
 
   Future<void> dispose() async {

@@ -84,7 +84,8 @@ class PlaylistRepository {
     // Clear out any previous cover for this playlist first — the extension
     // may differ from the new one, so a plain overwrite wouldn't remove it.
     await for (final entity in coversDir.list()) {
-      if (entity is File && p.basenameWithoutExtension(entity.path) == playlistId) {
+      if (entity is File &&
+          p.basenameWithoutExtension(entity.path) == playlistId) {
         await entity.delete();
       }
     }
