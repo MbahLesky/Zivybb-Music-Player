@@ -48,6 +48,7 @@ dependencies:
   share_plus: ^13.3.0
   wakelock_plus: ^1.7.0
   ringtone_set_plus: ^0.0.2+2
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

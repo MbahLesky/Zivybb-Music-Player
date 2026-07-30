@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../datasources/app_database.dart';
@@ -55,10 +59,50 @@ class PlaylistRepository {
         .write(PlaylistsCompanion(name: Value(newName)));
   }
 
-  Future<void> deletePlaylist(String playlistId) {
-    return (_database.delete(
+  Future<void> deletePlaylist(String playlistId) async {
+    final row = await (_database.select(
+      _database.playlists,
+    )..where((t) => t.id.equals(playlistId))).getSingleOrNull();
+
+    await (_database.delete(
       _database.playlists,
     )..where((t) => t.id.equals(playlistId))).go();
+
+    final coverPath = row?.coverImagePath;
+    if (coverPath != null) {
+      final coverFile = File(coverPath);
+      if (await coverFile.exists()) await coverFile.delete();
+    }
+  }
+
+  /// Copies [sourceImagePath] (e.g. from an image picker, whose path can be
+  /// revoked by the OS) into a durable app-owned directory and stores that
+  /// stable path as the playlist's cover — mirrors the pattern
+  /// `BackupRepository` uses for backup files.
+  Future<void> setCoverImage(String playlistId, String sourceImagePath) async {
+    final coversDir = await _coversDirectory();
+    // Clear out any previous cover for this playlist first — the extension
+    // may differ from the new one, so a plain overwrite wouldn't remove it.
+    await for (final entity in coversDir.list()) {
+      if (entity is File && p.basenameWithoutExtension(entity.path) == playlistId) {
+        await entity.delete();
+      }
+    }
+
+    final extension = p.extension(sourceImagePath);
+    final destination = File(p.join(coversDir.path, '$playlistId$extension'));
+    await File(sourceImagePath).copy(destination.path);
+
+    await (_database.update(_database.playlists)
+          ..where((t) => t.id.equals(playlistId)))
+        .write(PlaylistsCompanion(coverImagePath: Value(destination.path)));
+  }
+
+  Future<Directory> _coversDirectory() async {
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final coversDir = Directory(p.join(documentsDir.path, 'playlist_covers'));
+    await coversDir.create(recursive: true);
+    return coversDir;
   }
 
   Future<void> addSong(String playlistId, String songId) async {
