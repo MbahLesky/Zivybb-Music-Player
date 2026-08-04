@@ -31,6 +31,8 @@ import '../../visualizer/presentation/fullscreen_visualizer_screen.dart';
 import '../../visualizer/presentation/wave_visualizer.dart';
 import '../application/playback_controller.dart';
 import 'now_playing_more_sheet.dart';
+import 'queue_screen.dart';
+import 'sleep_timer_sheet.dart';
 
 const _speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
@@ -79,6 +81,16 @@ class NowPlayingScreen extends ConsumerWidget {
             onPressed: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+          ),
+          AppBarIconAction(
+            icon: const Icon(Icons.queue_music),
+            tooltip: 'Queue',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                settings: const RouteSettings(name: AppRoutes.queue),
+                builder: (_) => const QueueScreen(),
+              ),
+            ),
           ),
           AppBarIconAction(
             icon: const Icon(Icons.fullscreen),
@@ -340,6 +352,8 @@ class NowPlayingScreen extends ConsumerWidget {
     if (!context.mounted || action == null) return;
 
     switch (action) {
+      case NowPlayingMoreAction.sleepTimer:
+        await SleepTimerSheet.show(context);
       case NowPlayingMoreAction.share:
         await SharePlus.instance.share(
           ShareParams(text: 'Listening to "${song.title}" by ${song.artist}'),

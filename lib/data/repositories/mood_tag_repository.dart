@@ -82,10 +82,21 @@ class MoodTagRepository {
   /// Deletes the tag. Songs tagged with it fall back to untagged; see
   /// `MoodPlaylistGenerator.deleteMoodTag` for the full cleanup including
   /// its auto-generated playlist.
+  /// Untags every song first, then drops the tag.
+  ///
+  /// Databases created before foreign keys were declared have no
+  /// `ON DELETE SET NULL` to fall back on, and a stale `mood_tag_id` is not
+  /// harmless: the built-in presets use fixed IDs, so re-seeding them later
+  /// would silently re-tag those songs.
   Future<void> deleteMoodTag(String id) {
-    return (_database.delete(
-      _database.moodTags,
-    )..where((t) => t.id.equals(id))).go();
+    return _database.transaction(() async {
+      await (_database.update(_database.songs)
+            ..where((t) => t.moodTagId.equals(id)))
+          .write(const SongsCompanion(moodTagId: Value(null)));
+      await (_database.delete(
+        _database.moodTags,
+      )..where((t) => t.id.equals(id))).go();
+    });
   }
 
   /// Persists a full reorder: [orderedIds] must contain every mood tag, in

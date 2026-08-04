@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Zivybb">
+  <title>Zivybb</title>
+  <!--
+    A single unbroken stroke read two ways: the top bar plus the long
+    descending diagonal spell a Z, while that same diagonal and the
+    kicked-up tail meet in a sharp point that reads as a V. The whole mark
+    is tilted 8 degrees so the tail lifts off the baseline.
+
+    Geometry is baked into the coordinates (not applied via `transform`)
+    so tools/zivybb_logo.py can rasterize the identical shape.
+  -->
+  <defs>
+    <linearGradient id="zivybbStroke" x1="100" y1="110" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.45" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#F43F8E"/>
+    </linearGradient>
+  </defs>
+  <path d="M116.9 164.5 L350.6 131.6 L230.4 382.8 L385.9 282.2"
+        fill="none"
+        stroke="url(#zivybbStroke)"
+        stroke-width="62"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

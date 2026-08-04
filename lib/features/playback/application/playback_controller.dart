@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/audio_player_service.dart';
 import '../../../data/models/song.dart';
+import '../../../data/repositories/playback_session_repository.dart';
 import '../../../data/repositories/song_repository.dart';
 import '../../settings/application/equalizer_controller.dart';
 import '../../settings/application/settings_controller.dart';
@@ -98,6 +99,12 @@ class PlaybackController extends Notifier<PlaybackState> {
   /// track actually changes.
   bool _previewSkipPending = false;
 
+  /// Rate-limits session writes. Position updates arrive many times a
+  /// second; persisting each one would hammer the database for no benefit,
+  /// so the saved position is at most this stale.
+  Timer? _sessionSaveTimer;
+  static const _sessionSaveInterval = Duration(seconds: 5);
+
   @override
   PlaybackState build() {
     _player = ref.read(audioPlayerServiceProvider);
@@ -127,6 +134,7 @@ class PlaybackController extends Notifier<PlaybackState> {
       for (final subscription in subscriptions) {
         subscription.cancel();
       }
+      _sessionSaveTimer?.cancel();
     });
 
     // Keep the engine's crossfade config in sync with the persisted setting.
@@ -154,11 +162,87 @@ class PlaybackController extends Notifier<PlaybackState> {
 
   void _onPosition(Duration position) {
     state = state.copyWith(position: position);
+    _scheduleSessionSave();
     if (state.previewModeEnabled &&
         !_previewSkipPending &&
         position >= previewClipDuration) {
       _previewSkipPending = true;
       _player.seekToNext();
+    }
+  }
+
+  /// Persists the session at most once per [_sessionSaveInterval].
+  void _scheduleSessionSave() {
+    if (_sessionSaveTimer?.isActive ?? false) return;
+    _sessionSaveTimer = Timer(_sessionSaveInterval, saveSession);
+  }
+
+  /// Writes the current queue and transport settings so the next launch can
+  /// resume them. Safe to call at any time; a no-op for an empty queue.
+  Future<void> saveSession() async {
+    final current = state;
+    if (current.queue.isEmpty) return;
+    await ref
+        .read(playbackSessionRepositoryProvider)
+        .save(
+          PlaybackSession(
+            songIds: [for (final song in current.queue) song.id],
+            currentIndex: current.currentIndex ?? 0,
+            position: current.position,
+            shuffleEnabled: current.shuffleEnabled,
+            repeatMode: current.repeatMode,
+            speed: current.speed,
+            sourcePlaylistId: current.sourcePlaylistId,
+          ),
+        );
+  }
+
+  /// Reloads the last session's queue, paused and seeked to where it left
+  /// off, and reapplies shuffle/repeat/speed.
+  ///
+  /// Never starts playback — the user opened the app, they did not press
+  /// play. Songs that have since left the library are dropped, and the
+  /// resume point follows the song that was playing rather than its old
+  /// index, so removals don't land the user on an unrelated track.
+  Future<void> restoreSession() async {
+    if (state.queue.isNotEmpty) return;
+
+    final session = await ref.read(playbackSessionRepositoryProvider).load();
+    if (session == null || session.songIds.isEmpty) return;
+
+    final library = await ref.read(songRepositoryProvider).allSongs();
+    final byId = {for (final song in library) song.id: song};
+    final queue = [
+      for (final id in session.songIds)
+        if (byId[id] != null) byId[id]!,
+    ];
+    if (queue.isEmpty) return;
+
+    final resumeSongId = session.currentSongId;
+    final resumeIndex = resumeSongId == null
+        ? 0
+        : queue.indexWhere((song) => song.id == resumeSongId);
+    final index = resumeIndex < 0 ? 0 : resumeIndex;
+
+    state = state.copyWith(
+      queue: queue,
+      currentIndex: index,
+      shuffleEnabled: session.shuffleEnabled,
+      repeatMode: session.repeatMode,
+      speed: session.speed,
+      position: session.position,
+      sourcePlaylistId: session.sourcePlaylistId,
+    );
+
+    await _player.loadQueue(queue, initialIndex: index);
+    await _player.setRepeatMode(session.repeatMode);
+    await _player.setSpeed(session.speed);
+    if (session.shuffleEnabled) {
+      await _player.setShuffleModeEnabled(true);
+    }
+    // Only meaningful once the source is loaded, hence last.
+    if (session.position > Duration.zero) {
+      await _player.seek(session.position);
     }
   }
 
@@ -193,6 +277,7 @@ class PlaybackController extends Notifier<PlaybackState> {
     );
     await _player.loadQueue(queue, initialIndex: startIndex);
     await _player.play();
+    unawaited(saveSession());
   }
 
   /// Shuffles [queue] and plays it from the start, enabling shuffle mode
@@ -204,6 +289,50 @@ class PlaybackController extends Notifier<PlaybackState> {
     }
     final shuffled = List<Song>.of(queue)..shuffle();
     await playQueue(shuffled, startIndex: 0);
+  }
+
+  /// Jumps to [index] in the current queue (Queue screen tap-to-play).
+  Future<void> skipToIndex(int index) async {
+    if (index < 0 || index >= state.queue.length) return;
+    await _player.skipToIndex(index);
+    state = state.copyWith(currentIndex: index);
+  }
+
+  /// Removes the track at [index] from the queue. Playback continues
+  /// uninterrupted unless the removed track is the one playing.
+  Future<void> removeFromQueue(int index) async {
+    if (index < 0 || index >= state.queue.length) return;
+    final current = state.currentIndex;
+    await _player.removeFromQueue(index);
+    state = state.copyWith(
+      queue: [...state.queue]..removeAt(index),
+      currentIndex: current != null && index < current ? current - 1 : current,
+    );
+    unawaited(saveSession());
+  }
+
+  /// Reorders the queue, keeping the currently-playing track playing.
+  Future<void> reorderQueue(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    if (oldIndex < 0 || oldIndex >= state.queue.length) return;
+    if (newIndex < 0 || newIndex >= state.queue.length) return;
+
+    await _player.moveInQueue(oldIndex, newIndex);
+    final reordered = [...state.queue];
+    reordered.insert(newIndex, reordered.removeAt(oldIndex));
+
+    var current = state.currentIndex;
+    if (current != null) {
+      if (current == oldIndex) {
+        current = newIndex;
+      } else if (oldIndex < current && newIndex >= current) {
+        current--;
+      } else if (oldIndex > current && newIndex <= current) {
+        current++;
+      }
+    }
+    state = state.copyWith(queue: reordered, currentIndex: current);
+    unawaited(saveSession());
   }
 
   Future<void> togglePlayPause() => state.isPlaying ? pause() : play();
@@ -222,6 +351,7 @@ class PlaybackController extends Notifier<PlaybackState> {
     final enabled = !state.shuffleEnabled;
     await _player.setShuffleModeEnabled(enabled);
     state = state.copyWith(shuffleEnabled: enabled);
+    unawaited(saveSession());
   }
 
   void togglePreviewMode() {
@@ -238,11 +368,13 @@ class PlaybackController extends Notifier<PlaybackState> {
     };
     await _player.setRepeatMode(next);
     state = state.copyWith(repeatMode: next);
+    unawaited(saveSession());
   }
 
   Future<void> setSpeed(double speed) async {
     await _player.setSpeed(speed);
     state = state.copyWith(speed: speed);
+    unawaited(saveSession());
   }
 }
 

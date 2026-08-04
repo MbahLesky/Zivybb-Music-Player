@@ -4,6 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'app_database.g.dart';
 
+// Every table below that references another one also spells its foreign key
+// out in `customConstraints`. That is not belt-and-braces: the bundled
+// `drift_dev` cannot resolve the table argument of a `.references()` call
+// against the analyzer version the Flutter SDK pins ("This parameter should
+// be a simple class name"), and silently emits no `REFERENCES` clause at
+// all — so every `onDelete:` here was dead code until the explicit
+// constraints were added. The `.references(...)` calls are kept because
+// drift still uses them to order `createAll` and they document intent at the
+// column.
+//
+// This only fixes databases created from here on: SQLite cannot add a
+// foreign key to an existing table, so installs predating this keep
+// unconstrained tables. Every repository that deletes a referenced row
+// therefore cleans up its own dependents rather than trusting the database
+// to cascade.
+
 /// A mood/energy label a song can be tagged with (SRS F-2.6). Starts out
 /// with a handful of built-in presets, but is fully user-manageable.
 @DataClassName('MoodTagRow')
@@ -41,6 +57,11 @@ class Songs extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (mood_tag_id) REFERENCES mood_tags (id) ON DELETE SET NULL',
+  ];
 }
 
 /// A user-created or auto-generated collection of songs.
@@ -60,6 +81,12 @@ class Playlists extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (source_mood_tag_id) REFERENCES mood_tags (id) '
+        'ON DELETE SET NULL',
+  ];
 }
 
 /// Join entity between [Playlists] and [Songs], preserving manual ordering.
@@ -73,6 +100,12 @@ class PlaylistSongs extends Table {
 
   @override
   Set<Column> get primaryKey => {playlistId, songId};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (playlist_id) REFERENCES playlists (id) ON DELETE CASCADE',
+    'FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE',
+  ];
 }
 
 /// A named set of equalizer band gains the user can select (SRS F-1.6).
@@ -98,6 +131,43 @@ class Backups extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Single-row snapshot of what was playing when the app was last closed, so
+/// launching it can pick up where the user left off.
+///
+/// Deliberately separate from [Settings]: this is transient session state,
+/// not configuration, and it is intentionally left out of backups — restoring
+/// a months-old backup should not yank the user back to whatever track was
+/// playing when it was taken.
+@DataClassName('PlaybackSessionRow')
+class PlaybackSessions extends Table {
+  static const singletonId = 'default';
+
+  TextColumn get id => text()();
+
+  /// JSON-encoded `List<String>` of song IDs, in queue order.
+  TextColumn get songIdsJson => text().withDefault(const Constant('[]'))();
+  IntColumn get currentIndex => integer().withDefault(const Constant(0))();
+  IntColumn get positionMs => integer().withDefault(const Constant(0))();
+  BoolColumn get shuffleEnabled =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get repeatMode => text().withDefault(const Constant('off'))();
+  RealColumn get speed => real().withDefault(const Constant(1.0))();
+  TextColumn get sourcePlaylistId => text().nullable().references(
+    Playlists,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (source_playlist_id) REFERENCES playlists (id) '
+        'ON DELETE SET NULL',
+  ];
 }
 
 /// Single-row app configuration. [id] is always [Settings.singletonId].
@@ -135,6 +205,12 @@ class Settings extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (current_equalizer_preset_id) REFERENCES '
+        'equalizer_presets (id) ON DELETE SET NULL',
+  ];
 }
 
 @DriftDatabase(
@@ -146,6 +222,7 @@ class Settings extends Table {
     Settings,
     EqualizerPresets,
     Backups,
+    PlaybackSessions,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -155,7 +232,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -203,8 +280,46 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(songs, songs.lastPlayedAt);
         }
       }
+      if (from < 8) {
+        await m.createTable(playbackSessions);
+        await _purgeOrphanedRows();
+      }
+    },
+    beforeOpen: (details) async {
+      // SQLite enforces foreign keys only when this pragma is on, and it
+      // defaults to *off* — every `onDelete:` in the table definitions above
+      // was silently inert until this was added. Without it, deleting a
+      // playlist left its playlist_songs rows behind, and deleting a mood tag
+      // left songs pointing at a tag that no longer existed (which resurfaced
+      // as phantom tags once the built-in presets were re-seeded under their
+      // fixed IDs). It has to be set per connection, not once at creation.
+      await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Clears rows left dangling by the years the foreign keys weren't being
+  /// enforced. Turning the pragma on doesn't retroactively validate existing
+  /// data, so without this the old orphans would linger indefinitely.
+  Future<void> _purgeOrphanedRows() async {
+    await customStatement(
+      'DELETE FROM playlist_songs WHERE playlist_id NOT IN '
+      '(SELECT id FROM playlists) OR song_id NOT IN (SELECT id FROM songs)',
+    );
+    await customStatement(
+      'UPDATE songs SET mood_tag_id = NULL WHERE mood_tag_id IS NOT NULL '
+      'AND mood_tag_id NOT IN (SELECT id FROM mood_tags)',
+    );
+    await customStatement(
+      'UPDATE playlists SET source_mood_tag_id = NULL '
+      'WHERE source_mood_tag_id IS NOT NULL AND source_mood_tag_id NOT IN '
+      '(SELECT id FROM mood_tags)',
+    );
+    await customStatement(
+      'UPDATE settings SET current_equalizer_preset_id = NULL '
+      'WHERE current_equalizer_preset_id IS NOT NULL AND '
+      'current_equalizer_preset_id NOT IN (SELECT id FROM equalizer_presets)',
+    );
+  }
 
   static Future<bool> _hasColumn(
     Migrator m,

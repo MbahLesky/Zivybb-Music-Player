@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Zivybb app icon">
+  <title>Zivybb app icon</title>
+  <!-- Launcher-icon variant: the same mark from zivybb_logo.svg on a deep
+       indigo squircle, so the gradient stroke keeps its contrast at small
+       sizes instead of being knocked out to flat white. -->
+  <defs>
+    <linearGradient id="zivybbBackdrop" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A1730"/>
+      <stop offset="1" stop-color="#0E0C18"/>
+    </linearGradient>
+    <linearGradient id="zivybbIconStroke" x1="100" y1="110" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.45" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#F43F8E"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="114" ry="114" fill="url(#zivybbBackdrop)"/>
+  <path d="M116.9 164.5 L350.6 131.6 L230.4 382.8 L385.9 282.2"
+        fill="none"
+        stroke="url(#zivybbIconStroke)"
+        stroke-width="62"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

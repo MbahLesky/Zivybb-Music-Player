@@ -115,11 +115,21 @@ class SongRepository {
   }
 
   /// Removes a song from the library entirely (Screens.md #14: "remove from
-  /// library").
+  /// library"), along with any playlist entries pointing at it.
+  ///
+  /// The playlist-entry delete is explicit rather than left to `ON DELETE
+  /// CASCADE`, because databases created before foreign keys were declared
+  /// have no cascade — and a leftover entry would reappear inside a playlist
+  /// the moment a device rescan reused that media-store ID.
   Future<void> deleteFromLibrary(String songId) {
-    return (_database.delete(
-      _database.songs,
-    )..where((t) => t.id.equals(songId))).go();
+    return _database.transaction(() async {
+      await (_database.delete(
+        _database.playlistSongs,
+      )..where((t) => t.songId.equals(songId))).go();
+      await (_database.delete(
+        _database.songs,
+      )..where((t) => t.id.equals(songId))).go();
+    });
   }
 
   /// Bumps a song's play count and last-played timestamp (SRS F-4.3), so

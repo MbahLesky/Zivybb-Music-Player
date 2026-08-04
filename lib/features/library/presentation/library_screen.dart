@@ -11,12 +11,14 @@ import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/song_list_tile.dart';
+import '../../../shared/widgets/zivybb_logo.dart';
 import '../../discovery/presentation/song_discovery_screen.dart';
 import '../../playback/application/playback_controller.dart';
 import '../../playlists/application/mood_playlist_generator.dart';
 import '../../playlists/presentation/playlist_list_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../application/library_controller.dart';
+import '../application/library_view_controller.dart';
 import 'folder_browser_tab.dart';
 import 'missing_files_screen.dart';
 
@@ -34,6 +36,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Restored first, and from the cached library rather than a fresh
+      // device scan, so the mini player is back within a frame or two
+      // instead of after a full rescan.
+      await ref.read(playbackControllerProvider.notifier).restoreSession();
       await ref.read(libraryControllerProvider.notifier).refresh();
       await ref.read(songRepositoryProvider).detectMissingFiles();
       await ref.read(moodTagRepositoryProvider).ensureSeeded();
@@ -47,12 +53,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final missingCount =
         ref.watch(missingSongsStreamProvider).value?.length ?? 0;
     final library = ref.watch(libraryStreamProvider).value ?? const [];
+    // The shuffle button honours whatever the user has filtered down to, so
+    // "shuffle all" never silently reaches past a search they can see.
+    final shuffleable = applyLibraryView(
+      library,
+      query: ref.watch(librarySearchQueryProvider),
+      sort: ref.watch(librarySortProvider),
+    );
 
     return DefaultTabController(
       length: 4,
       child: Scaffold(
         appBar: GradientAppBar(
-          title: const Text('Zivybb'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ZivybbLogo(size: 28),
+              const SizedBox(width: 10),
+              const Text('Zivybb'),
+            ],
+          ),
           actions: [
             AppBarIconAction(
               icon: const Icon(Icons.auto_awesome),
@@ -153,14 +173,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             );
           },
         ),
-        floatingActionButton: library.isEmpty
+        floatingActionButton: shuffleable.isEmpty
             ? null
             : GradientFab(
                 icon: Icons.shuffle,
                 tooltip: 'Shuffle play all',
                 onPressed: () => ref
                     .read(playbackControllerProvider.notifier)
-                    .shuffleAndPlay(library),
+                    .shuffleAndPlay(shuffleable),
               ),
         bottomNavigationBar: const MiniPlayer(),
       ),
@@ -212,38 +232,139 @@ class _LikedSongsTab extends ConsumerWidget {
   }
 }
 
+/// A searchable, sortable song list — the shared body of the Songs and Liked
+/// tabs. Both share one search query and sort order, so switching tabs keeps
+/// whatever view the user set up.
 class _SongList extends ConsumerWidget {
   const _SongList({required this.songs, required this.emptyMessage});
 
+  /// The unfiltered list; search and sort are applied here.
   final List<Song> songs;
+
+  /// Shown when [songs] itself is empty (as opposed to being filtered empty,
+  /// which gets a "no matches" message instead).
   final String emptyMessage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (songs.isEmpty) {
-      return ListView(
+    final query = ref.watch(librarySearchQueryProvider);
+    final sort = ref.watch(librarySortProvider);
+    final visible = applyLibraryView(songs, query: query, sort: sort);
+
+    return Column(
+      children: [
+        const _LibraryViewControls(),
+        Expanded(
+          child: visible.isEmpty
+              ? ListView(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Center(
+                        child: Text(
+                          songs.isEmpty
+                              ? emptyMessage
+                              : 'No songs match "${query.trim()}".',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : ListView.builder(
+                  itemCount: visible.length,
+                  itemBuilder: (context, index) {
+                    final song = visible[index];
+                    return SongListTile(
+                      song: song,
+                      onTap: () => ref
+                          .read(playbackControllerProvider.notifier)
+                          .playQueue(visible, startIndex: index),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Search field plus sort menu, sitting above the song lists.
+class _LibraryViewControls extends ConsumerStatefulWidget {
+  const _LibraryViewControls();
+
+  @override
+  ConsumerState<_LibraryViewControls> createState() =>
+      _LibraryViewControlsState();
+}
+
+class _LibraryViewControlsState extends ConsumerState<_LibraryViewControls> {
+  late final _controller = TextEditingController(
+    text: ref.read(librarySearchQueryProvider),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final query = ref.watch(librarySearchQueryProvider);
+    final sort = ref.watch(librarySortProvider);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Text(emptyMessage, textAlign: TextAlign.center),
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              textInputAction: TextInputAction.search,
+              onChanged: (value) =>
+                  ref.read(librarySearchQueryProvider.notifier).state = value,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'Search title, artist, album',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        tooltip: 'Clear search',
+                        onPressed: () {
+                          _controller.clear();
+                          ref.read(librarySearchQueryProvider.notifier).state =
+                              '';
+                        },
+                      ),
+                filled: true,
+                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.6,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ),
+          PopupMenuButton<LibrarySort>(
+            icon: const Icon(Icons.sort),
+            tooltip: 'Sort: ${sort.label}',
+            initialValue: sort,
+            onSelected: (value) =>
+                ref.read(librarySortProvider.notifier).state = value,
+            itemBuilder: (_) => [
+              for (final option in LibrarySort.values)
+                PopupMenuItem(value: option, child: Text(option.label)),
+            ],
+          ),
         ],
-      );
-    }
-
-    return ListView.builder(
-      itemCount: songs.length,
-      itemBuilder: (context, index) {
-        final song = songs[index];
-        return SongListTile(
-          song: song,
-          onTap: () => ref
-              .read(playbackControllerProvider.notifier)
-              .playQueue(songs, startIndex: index),
-        );
-      },
+      ),
     );
   }
 }

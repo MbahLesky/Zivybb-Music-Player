@@ -154,9 +154,14 @@ class AudioPlayerService {
       _durationController.add,
     );
     _fwdPlaying = _gaplessPlayer.playingStream.listen(_playingController.add);
-    _fwdCurrentIndex = _gaplessPlayer.currentIndexStream.listen(
-      _currentIndexController.add,
-    );
+    _fwdCurrentIndex = _gaplessPlayer.currentIndexStream.listen((index) {
+      // Mirrored into [_currentIndex] (not just forwarded) because the
+      // queue-mutation helpers need to know where playback currently is in
+      // order to keep pointing at the same song after a move or removal —
+      // and in gapless mode just_audio, not this class, advances the track.
+      if (index != null) _currentIndex = index;
+      _currentIndexController.add(index);
+    });
     _fwdProcessingState = _gaplessPlayer.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
@@ -246,6 +251,59 @@ class AudioPlayerService {
     } else {
       await _gaplessPlayer.seek(position);
     }
+  }
+
+  /// Jumps straight to [index] in the queue, for the Queue screen's
+  /// tap-to-play.
+  Future<void> skipToIndex(int index) async {
+    if (index < 0 || index >= _queue.length) return;
+    if (_crossfadeEnabled) {
+      await _hardSwapTo(index);
+      _orderPos = _order.indexOf(index);
+    } else {
+      await _gaplessPlayer.seek(Duration.zero, index: index);
+    }
+  }
+
+  /// Drops the track at [index] from the queue without interrupting whatever
+  /// is currently playing (unless the removed track *is* the current one, in
+  /// which case the engine advances on its own).
+  Future<void> removeFromQueue(int index) async {
+    if (index < 0 || index >= _queue.length) return;
+    _queue = [..._queue]..removeAt(index);
+    if (!_crossfadeEnabled) {
+      await _gaplessPlayer.removeAudioSourceAt(index);
+    }
+    // Indices at or past the removal point shift down by one.
+    if (index < _currentIndex) _currentIndex--;
+    _rebuildOrder();
+    if (_crossfadeEnabled) _currentIndexController.add(_currentIndex);
+  }
+
+  /// Moves the track at [oldIndex] to [newIndex], again without interrupting
+  /// playback.
+  Future<void> moveInQueue(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    if (oldIndex < 0 || oldIndex >= _queue.length) return;
+    if (newIndex < 0 || newIndex >= _queue.length) return;
+
+    final reordered = [..._queue];
+    reordered.insert(newIndex, reordered.removeAt(oldIndex));
+    _queue = reordered;
+    if (!_crossfadeEnabled) {
+      await _gaplessPlayer.moveAudioSource(oldIndex, newIndex);
+    }
+
+    // Track where the currently-playing song ended up.
+    if (_currentIndex == oldIndex) {
+      _currentIndex = newIndex;
+    } else if (oldIndex < _currentIndex && newIndex >= _currentIndex) {
+      _currentIndex--;
+    } else if (oldIndex > _currentIndex && newIndex <= _currentIndex) {
+      _currentIndex++;
+    }
+    _rebuildOrder();
+    if (_crossfadeEnabled) _currentIndexController.add(_currentIndex);
   }
 
   Future<void> setShuffleModeEnabled(bool enabled) async {

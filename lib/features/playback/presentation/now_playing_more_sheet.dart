@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../application/sleep_timer_controller.dart';
 
 /// The action the user picked from [NowPlayingMoreSheet].
 enum NowPlayingMoreAction {
+  sleepTimer,
   share,
   playbackSpeed,
   editTags,
@@ -17,7 +21,7 @@ enum NowPlayingMoreAction {
 /// `null` if dismissed) rather than performing the action itself, so the
 /// caller can act using its own long-lived `BuildContext`/`WidgetRef`
 /// instead of the sheet's, which is gone as soon as it closes.
-class NowPlayingMoreSheet extends StatelessWidget {
+class NowPlayingMoreSheet extends ConsumerWidget {
   const NowPlayingMoreSheet({super.key, required this.canRemoveFromPlaylist});
 
   final bool canRemoveFromPlaylist;
@@ -34,12 +38,24 @@ class NowPlayingMoreSheet extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final sleepTimer = ref.watch(sleepTimerControllerProvider);
+
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          ListTile(
+            leading: Icon(
+              Icons.bedtime_outlined,
+              color: sleepTimer.isActive ? scheme.primary : null,
+            ),
+            title: const Text('Sleep timer'),
+            subtitle: sleepTimer.isActive ? Text(_describe(sleepTimer)) : null,
+            onTap: () =>
+                Navigator.of(context).pop(NowPlayingMoreAction.sleepTimer),
+          ),
           ListTile(
             leading: const Icon(Icons.share_outlined),
             title: const Text('Share'),
@@ -82,5 +98,14 @@ class NowPlayingMoreSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _describe(SleepTimerState timer) {
+    final remaining = timer.remaining!;
+    if (remaining == Duration.zero) return 'Pausing when this track ends';
+    final minutes = remaining.inMinutes;
+    return minutes >= 1
+        ? 'Pausing in $minutes min'
+        : 'Pausing in ${remaining.inSeconds} sec';
   }
 }

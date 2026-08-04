@@ -1672,6 +1672,276 @@ class PlaylistSongsCompanion extends UpdateCompanion<PlaylistSongRow> {
   }
 }
 
+class $EqualizerPresetsTable extends EqualizerPresets
+    with TableInfo<$EqualizerPresetsTable, EqualizerPresetRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EqualizerPresetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bandLevelsJsonMeta = const VerificationMeta(
+    'bandLevelsJson',
+  );
+  @override
+  late final GeneratedColumn<String> bandLevelsJson = GeneratedColumn<String>(
+    'band_levels_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, bandLevelsJson];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'equalizer_presets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EqualizerPresetRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('band_levels_json')) {
+      context.handle(
+        _bandLevelsJsonMeta,
+        bandLevelsJson.isAcceptableOrUnknown(
+          data['band_levels_json']!,
+          _bandLevelsJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bandLevelsJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EqualizerPresetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EqualizerPresetRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      bandLevelsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}band_levels_json'],
+      )!,
+    );
+  }
+
+  @override
+  $EqualizerPresetsTable createAlias(String alias) {
+    return $EqualizerPresetsTable(attachedDatabase, alias);
+  }
+}
+
+class EqualizerPresetRow extends DataClass
+    implements Insertable<EqualizerPresetRow> {
+  final String id;
+  final String name;
+
+  /// JSON-encoded `List<double>` of gains in decibels, one per band.
+  final String bandLevelsJson;
+  const EqualizerPresetRow({
+    required this.id,
+    required this.name,
+    required this.bandLevelsJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['band_levels_json'] = Variable<String>(bandLevelsJson);
+    return map;
+  }
+
+  EqualizerPresetsCompanion toCompanion(bool nullToAbsent) {
+    return EqualizerPresetsCompanion(
+      id: Value(id),
+      name: Value(name),
+      bandLevelsJson: Value(bandLevelsJson),
+    );
+  }
+
+  factory EqualizerPresetRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EqualizerPresetRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      bandLevelsJson: serializer.fromJson<String>(json['bandLevelsJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'bandLevelsJson': serializer.toJson<String>(bandLevelsJson),
+    };
+  }
+
+  EqualizerPresetRow copyWith({
+    String? id,
+    String? name,
+    String? bandLevelsJson,
+  }) => EqualizerPresetRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    bandLevelsJson: bandLevelsJson ?? this.bandLevelsJson,
+  );
+  EqualizerPresetRow copyWithCompanion(EqualizerPresetsCompanion data) {
+    return EqualizerPresetRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      bandLevelsJson: data.bandLevelsJson.present
+          ? data.bandLevelsJson.value
+          : this.bandLevelsJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EqualizerPresetRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('bandLevelsJson: $bandLevelsJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, bandLevelsJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EqualizerPresetRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.bandLevelsJson == this.bandLevelsJson);
+}
+
+class EqualizerPresetsCompanion extends UpdateCompanion<EqualizerPresetRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> bandLevelsJson;
+  final Value<int> rowid;
+  const EqualizerPresetsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.bandLevelsJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EqualizerPresetsCompanion.insert({
+    required String id,
+    required String name,
+    required String bandLevelsJson,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       bandLevelsJson = Value(bandLevelsJson);
+  static Insertable<EqualizerPresetRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? bandLevelsJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (bandLevelsJson != null) 'band_levels_json': bandLevelsJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EqualizerPresetsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? bandLevelsJson,
+    Value<int>? rowid,
+  }) {
+    return EqualizerPresetsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      bandLevelsJson: bandLevelsJson ?? this.bandLevelsJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (bandLevelsJson.present) {
+      map['band_levels_json'] = Variable<String>(bandLevelsJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EqualizerPresetsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('bandLevelsJson: $bandLevelsJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SettingsTable extends Settings
     with TableInfo<$SettingsTable, SettingsRow> {
   @override
@@ -2562,276 +2832,6 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   }
 }
 
-class $EqualizerPresetsTable extends EqualizerPresets
-    with TableInfo<$EqualizerPresetsTable, EqualizerPresetRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $EqualizerPresetsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _bandLevelsJsonMeta = const VerificationMeta(
-    'bandLevelsJson',
-  );
-  @override
-  late final GeneratedColumn<String> bandLevelsJson = GeneratedColumn<String>(
-    'band_levels_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [id, name, bandLevelsJson];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'equalizer_presets';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<EqualizerPresetRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('band_levels_json')) {
-      context.handle(
-        _bandLevelsJsonMeta,
-        bandLevelsJson.isAcceptableOrUnknown(
-          data['band_levels_json']!,
-          _bandLevelsJsonMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_bandLevelsJsonMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  EqualizerPresetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return EqualizerPresetRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      bandLevelsJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}band_levels_json'],
-      )!,
-    );
-  }
-
-  @override
-  $EqualizerPresetsTable createAlias(String alias) {
-    return $EqualizerPresetsTable(attachedDatabase, alias);
-  }
-}
-
-class EqualizerPresetRow extends DataClass
-    implements Insertable<EqualizerPresetRow> {
-  final String id;
-  final String name;
-
-  /// JSON-encoded `List<double>` of gains in decibels, one per band.
-  final String bandLevelsJson;
-  const EqualizerPresetRow({
-    required this.id,
-    required this.name,
-    required this.bandLevelsJson,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    map['band_levels_json'] = Variable<String>(bandLevelsJson);
-    return map;
-  }
-
-  EqualizerPresetsCompanion toCompanion(bool nullToAbsent) {
-    return EqualizerPresetsCompanion(
-      id: Value(id),
-      name: Value(name),
-      bandLevelsJson: Value(bandLevelsJson),
-    );
-  }
-
-  factory EqualizerPresetRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return EqualizerPresetRow(
-      id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      bandLevelsJson: serializer.fromJson<String>(json['bandLevelsJson']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'bandLevelsJson': serializer.toJson<String>(bandLevelsJson),
-    };
-  }
-
-  EqualizerPresetRow copyWith({
-    String? id,
-    String? name,
-    String? bandLevelsJson,
-  }) => EqualizerPresetRow(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    bandLevelsJson: bandLevelsJson ?? this.bandLevelsJson,
-  );
-  EqualizerPresetRow copyWithCompanion(EqualizerPresetsCompanion data) {
-    return EqualizerPresetRow(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      bandLevelsJson: data.bandLevelsJson.present
-          ? data.bandLevelsJson.value
-          : this.bandLevelsJson,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('EqualizerPresetRow(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('bandLevelsJson: $bandLevelsJson')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, name, bandLevelsJson);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is EqualizerPresetRow &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.bandLevelsJson == this.bandLevelsJson);
-}
-
-class EqualizerPresetsCompanion extends UpdateCompanion<EqualizerPresetRow> {
-  final Value<String> id;
-  final Value<String> name;
-  final Value<String> bandLevelsJson;
-  final Value<int> rowid;
-  const EqualizerPresetsCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.bandLevelsJson = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  EqualizerPresetsCompanion.insert({
-    required String id,
-    required String name,
-    required String bandLevelsJson,
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       name = Value(name),
-       bandLevelsJson = Value(bandLevelsJson);
-  static Insertable<EqualizerPresetRow> custom({
-    Expression<String>? id,
-    Expression<String>? name,
-    Expression<String>? bandLevelsJson,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (bandLevelsJson != null) 'band_levels_json': bandLevelsJson,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  EqualizerPresetsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? name,
-    Value<String>? bandLevelsJson,
-    Value<int>? rowid,
-  }) {
-    return EqualizerPresetsCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      bandLevelsJson: bandLevelsJson ?? this.bandLevelsJson,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (bandLevelsJson.present) {
-      map['band_levels_json'] = Variable<String>(bandLevelsJson.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('EqualizerPresetsCompanion(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('bandLevelsJson: $bandLevelsJson, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $BackupsTable extends Backups with TableInfo<$BackupsTable, BackupRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -3092,6 +3092,537 @@ class BackupsCompanion extends UpdateCompanion<BackupRow> {
   }
 }
 
+class $PlaybackSessionsTable extends PlaybackSessions
+    with TableInfo<$PlaybackSessionsTable, PlaybackSessionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaybackSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _songIdsJsonMeta = const VerificationMeta(
+    'songIdsJson',
+  );
+  @override
+  late final GeneratedColumn<String> songIdsJson = GeneratedColumn<String>(
+    'song_ids_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _currentIndexMeta = const VerificationMeta(
+    'currentIndex',
+  );
+  @override
+  late final GeneratedColumn<int> currentIndex = GeneratedColumn<int>(
+    'current_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _positionMsMeta = const VerificationMeta(
+    'positionMs',
+  );
+  @override
+  late final GeneratedColumn<int> positionMs = GeneratedColumn<int>(
+    'position_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _shuffleEnabledMeta = const VerificationMeta(
+    'shuffleEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> shuffleEnabled = GeneratedColumn<bool>(
+    'shuffle_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("shuffle_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _repeatModeMeta = const VerificationMeta(
+    'repeatMode',
+  );
+  @override
+  late final GeneratedColumn<String> repeatMode = GeneratedColumn<String>(
+    'repeat_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('off'),
+  );
+  static const VerificationMeta _speedMeta = const VerificationMeta('speed');
+  @override
+  late final GeneratedColumn<double> speed = GeneratedColumn<double>(
+    'speed',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _sourcePlaylistIdMeta = const VerificationMeta(
+    'sourcePlaylistId',
+  );
+  @override
+  late final GeneratedColumn<String> sourcePlaylistId = GeneratedColumn<String>(
+    'source_playlist_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    songIdsJson,
+    currentIndex,
+    positionMs,
+    shuffleEnabled,
+    repeatMode,
+    speed,
+    sourcePlaylistId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'playback_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaybackSessionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('song_ids_json')) {
+      context.handle(
+        _songIdsJsonMeta,
+        songIdsJson.isAcceptableOrUnknown(
+          data['song_ids_json']!,
+          _songIdsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_index')) {
+      context.handle(
+        _currentIndexMeta,
+        currentIndex.isAcceptableOrUnknown(
+          data['current_index']!,
+          _currentIndexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('position_ms')) {
+      context.handle(
+        _positionMsMeta,
+        positionMs.isAcceptableOrUnknown(data['position_ms']!, _positionMsMeta),
+      );
+    }
+    if (data.containsKey('shuffle_enabled')) {
+      context.handle(
+        _shuffleEnabledMeta,
+        shuffleEnabled.isAcceptableOrUnknown(
+          data['shuffle_enabled']!,
+          _shuffleEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('repeat_mode')) {
+      context.handle(
+        _repeatModeMeta,
+        repeatMode.isAcceptableOrUnknown(data['repeat_mode']!, _repeatModeMeta),
+      );
+    }
+    if (data.containsKey('speed')) {
+      context.handle(
+        _speedMeta,
+        speed.isAcceptableOrUnknown(data['speed']!, _speedMeta),
+      );
+    }
+    if (data.containsKey('source_playlist_id')) {
+      context.handle(
+        _sourcePlaylistIdMeta,
+        sourcePlaylistId.isAcceptableOrUnknown(
+          data['source_playlist_id']!,
+          _sourcePlaylistIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlaybackSessionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaybackSessionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      songIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}song_ids_json'],
+      )!,
+      currentIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current_index'],
+      )!,
+      positionMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position_ms'],
+      )!,
+      shuffleEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}shuffle_enabled'],
+      )!,
+      repeatMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repeat_mode'],
+      )!,
+      speed: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}speed'],
+      )!,
+      sourcePlaylistId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_playlist_id'],
+      ),
+    );
+  }
+
+  @override
+  $PlaybackSessionsTable createAlias(String alias) {
+    return $PlaybackSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class PlaybackSessionRow extends DataClass
+    implements Insertable<PlaybackSessionRow> {
+  final String id;
+
+  /// JSON-encoded `List<String>` of song IDs, in queue order.
+  final String songIdsJson;
+  final int currentIndex;
+  final int positionMs;
+  final bool shuffleEnabled;
+  final String repeatMode;
+  final double speed;
+  final String? sourcePlaylistId;
+  const PlaybackSessionRow({
+    required this.id,
+    required this.songIdsJson,
+    required this.currentIndex,
+    required this.positionMs,
+    required this.shuffleEnabled,
+    required this.repeatMode,
+    required this.speed,
+    this.sourcePlaylistId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['song_ids_json'] = Variable<String>(songIdsJson);
+    map['current_index'] = Variable<int>(currentIndex);
+    map['position_ms'] = Variable<int>(positionMs);
+    map['shuffle_enabled'] = Variable<bool>(shuffleEnabled);
+    map['repeat_mode'] = Variable<String>(repeatMode);
+    map['speed'] = Variable<double>(speed);
+    if (!nullToAbsent || sourcePlaylistId != null) {
+      map['source_playlist_id'] = Variable<String>(sourcePlaylistId);
+    }
+    return map;
+  }
+
+  PlaybackSessionsCompanion toCompanion(bool nullToAbsent) {
+    return PlaybackSessionsCompanion(
+      id: Value(id),
+      songIdsJson: Value(songIdsJson),
+      currentIndex: Value(currentIndex),
+      positionMs: Value(positionMs),
+      shuffleEnabled: Value(shuffleEnabled),
+      repeatMode: Value(repeatMode),
+      speed: Value(speed),
+      sourcePlaylistId: sourcePlaylistId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourcePlaylistId),
+    );
+  }
+
+  factory PlaybackSessionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaybackSessionRow(
+      id: serializer.fromJson<String>(json['id']),
+      songIdsJson: serializer.fromJson<String>(json['songIdsJson']),
+      currentIndex: serializer.fromJson<int>(json['currentIndex']),
+      positionMs: serializer.fromJson<int>(json['positionMs']),
+      shuffleEnabled: serializer.fromJson<bool>(json['shuffleEnabled']),
+      repeatMode: serializer.fromJson<String>(json['repeatMode']),
+      speed: serializer.fromJson<double>(json['speed']),
+      sourcePlaylistId: serializer.fromJson<String?>(json['sourcePlaylistId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'songIdsJson': serializer.toJson<String>(songIdsJson),
+      'currentIndex': serializer.toJson<int>(currentIndex),
+      'positionMs': serializer.toJson<int>(positionMs),
+      'shuffleEnabled': serializer.toJson<bool>(shuffleEnabled),
+      'repeatMode': serializer.toJson<String>(repeatMode),
+      'speed': serializer.toJson<double>(speed),
+      'sourcePlaylistId': serializer.toJson<String?>(sourcePlaylistId),
+    };
+  }
+
+  PlaybackSessionRow copyWith({
+    String? id,
+    String? songIdsJson,
+    int? currentIndex,
+    int? positionMs,
+    bool? shuffleEnabled,
+    String? repeatMode,
+    double? speed,
+    Value<String?> sourcePlaylistId = const Value.absent(),
+  }) => PlaybackSessionRow(
+    id: id ?? this.id,
+    songIdsJson: songIdsJson ?? this.songIdsJson,
+    currentIndex: currentIndex ?? this.currentIndex,
+    positionMs: positionMs ?? this.positionMs,
+    shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
+    repeatMode: repeatMode ?? this.repeatMode,
+    speed: speed ?? this.speed,
+    sourcePlaylistId: sourcePlaylistId.present
+        ? sourcePlaylistId.value
+        : this.sourcePlaylistId,
+  );
+  PlaybackSessionRow copyWithCompanion(PlaybackSessionsCompanion data) {
+    return PlaybackSessionRow(
+      id: data.id.present ? data.id.value : this.id,
+      songIdsJson: data.songIdsJson.present
+          ? data.songIdsJson.value
+          : this.songIdsJson,
+      currentIndex: data.currentIndex.present
+          ? data.currentIndex.value
+          : this.currentIndex,
+      positionMs: data.positionMs.present
+          ? data.positionMs.value
+          : this.positionMs,
+      shuffleEnabled: data.shuffleEnabled.present
+          ? data.shuffleEnabled.value
+          : this.shuffleEnabled,
+      repeatMode: data.repeatMode.present
+          ? data.repeatMode.value
+          : this.repeatMode,
+      speed: data.speed.present ? data.speed.value : this.speed,
+      sourcePlaylistId: data.sourcePlaylistId.present
+          ? data.sourcePlaylistId.value
+          : this.sourcePlaylistId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaybackSessionRow(')
+          ..write('id: $id, ')
+          ..write('songIdsJson: $songIdsJson, ')
+          ..write('currentIndex: $currentIndex, ')
+          ..write('positionMs: $positionMs, ')
+          ..write('shuffleEnabled: $shuffleEnabled, ')
+          ..write('repeatMode: $repeatMode, ')
+          ..write('speed: $speed, ')
+          ..write('sourcePlaylistId: $sourcePlaylistId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    songIdsJson,
+    currentIndex,
+    positionMs,
+    shuffleEnabled,
+    repeatMode,
+    speed,
+    sourcePlaylistId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaybackSessionRow &&
+          other.id == this.id &&
+          other.songIdsJson == this.songIdsJson &&
+          other.currentIndex == this.currentIndex &&
+          other.positionMs == this.positionMs &&
+          other.shuffleEnabled == this.shuffleEnabled &&
+          other.repeatMode == this.repeatMode &&
+          other.speed == this.speed &&
+          other.sourcePlaylistId == this.sourcePlaylistId);
+}
+
+class PlaybackSessionsCompanion extends UpdateCompanion<PlaybackSessionRow> {
+  final Value<String> id;
+  final Value<String> songIdsJson;
+  final Value<int> currentIndex;
+  final Value<int> positionMs;
+  final Value<bool> shuffleEnabled;
+  final Value<String> repeatMode;
+  final Value<double> speed;
+  final Value<String?> sourcePlaylistId;
+  final Value<int> rowid;
+  const PlaybackSessionsCompanion({
+    this.id = const Value.absent(),
+    this.songIdsJson = const Value.absent(),
+    this.currentIndex = const Value.absent(),
+    this.positionMs = const Value.absent(),
+    this.shuffleEnabled = const Value.absent(),
+    this.repeatMode = const Value.absent(),
+    this.speed = const Value.absent(),
+    this.sourcePlaylistId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlaybackSessionsCompanion.insert({
+    required String id,
+    this.songIdsJson = const Value.absent(),
+    this.currentIndex = const Value.absent(),
+    this.positionMs = const Value.absent(),
+    this.shuffleEnabled = const Value.absent(),
+    this.repeatMode = const Value.absent(),
+    this.speed = const Value.absent(),
+    this.sourcePlaylistId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<PlaybackSessionRow> custom({
+    Expression<String>? id,
+    Expression<String>? songIdsJson,
+    Expression<int>? currentIndex,
+    Expression<int>? positionMs,
+    Expression<bool>? shuffleEnabled,
+    Expression<String>? repeatMode,
+    Expression<double>? speed,
+    Expression<String>? sourcePlaylistId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (songIdsJson != null) 'song_ids_json': songIdsJson,
+      if (currentIndex != null) 'current_index': currentIndex,
+      if (positionMs != null) 'position_ms': positionMs,
+      if (shuffleEnabled != null) 'shuffle_enabled': shuffleEnabled,
+      if (repeatMode != null) 'repeat_mode': repeatMode,
+      if (speed != null) 'speed': speed,
+      if (sourcePlaylistId != null) 'source_playlist_id': sourcePlaylistId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlaybackSessionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? songIdsJson,
+    Value<int>? currentIndex,
+    Value<int>? positionMs,
+    Value<bool>? shuffleEnabled,
+    Value<String>? repeatMode,
+    Value<double>? speed,
+    Value<String?>? sourcePlaylistId,
+    Value<int>? rowid,
+  }) {
+    return PlaybackSessionsCompanion(
+      id: id ?? this.id,
+      songIdsJson: songIdsJson ?? this.songIdsJson,
+      currentIndex: currentIndex ?? this.currentIndex,
+      positionMs: positionMs ?? this.positionMs,
+      shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
+      repeatMode: repeatMode ?? this.repeatMode,
+      speed: speed ?? this.speed,
+      sourcePlaylistId: sourcePlaylistId ?? this.sourcePlaylistId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (songIdsJson.present) {
+      map['song_ids_json'] = Variable<String>(songIdsJson.value);
+    }
+    if (currentIndex.present) {
+      map['current_index'] = Variable<int>(currentIndex.value);
+    }
+    if (positionMs.present) {
+      map['position_ms'] = Variable<int>(positionMs.value);
+    }
+    if (shuffleEnabled.present) {
+      map['shuffle_enabled'] = Variable<bool>(shuffleEnabled.value);
+    }
+    if (repeatMode.present) {
+      map['repeat_mode'] = Variable<String>(repeatMode.value);
+    }
+    if (speed.present) {
+      map['speed'] = Variable<double>(speed.value);
+    }
+    if (sourcePlaylistId.present) {
+      map['source_playlist_id'] = Variable<String>(sourcePlaylistId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaybackSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('songIdsJson: $songIdsJson, ')
+          ..write('currentIndex: $currentIndex, ')
+          ..write('positionMs: $positionMs, ')
+          ..write('shuffleEnabled: $shuffleEnabled, ')
+          ..write('repeatMode: $repeatMode, ')
+          ..write('speed: $speed, ')
+          ..write('sourcePlaylistId: $sourcePlaylistId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3099,11 +3630,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SongsTable songs = $SongsTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
-  late final $SettingsTable settings = $SettingsTable(this);
   late final $EqualizerPresetsTable equalizerPresets = $EqualizerPresetsTable(
     this,
   );
+  late final $SettingsTable settings = $SettingsTable(this);
   late final $BackupsTable backups = $BackupsTable(this);
+  late final $PlaybackSessionsTable playbackSessions = $PlaybackSessionsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3113,9 +3647,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     songs,
     playlists,
     playlistSongs,
-    settings,
     equalizerPresets,
+    settings,
     backups,
+    playbackSessions,
   ];
 }
 
@@ -3997,6 +4532,180 @@ typedef $$PlaylistSongsTableProcessedTableManager =
       PlaylistSongRow,
       PrefetchHooks Function()
     >;
+typedef $$EqualizerPresetsTableCreateCompanionBuilder =
+    EqualizerPresetsCompanion Function({
+      required String id,
+      required String name,
+      required String bandLevelsJson,
+      Value<int> rowid,
+    });
+typedef $$EqualizerPresetsTableUpdateCompanionBuilder =
+    EqualizerPresetsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> bandLevelsJson,
+      Value<int> rowid,
+    });
+
+class $$EqualizerPresetsTableFilterComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EqualizerPresetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EqualizerPresetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
+  $$EqualizerPresetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get bandLevelsJson => $composableBuilder(
+    column: $table.bandLevelsJson,
+    builder: (column) => column,
+  );
+}
+
+class $$EqualizerPresetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EqualizerPresetsTable,
+          EqualizerPresetRow,
+          $$EqualizerPresetsTableFilterComposer,
+          $$EqualizerPresetsTableOrderingComposer,
+          $$EqualizerPresetsTableAnnotationComposer,
+          $$EqualizerPresetsTableCreateCompanionBuilder,
+          $$EqualizerPresetsTableUpdateCompanionBuilder,
+          (
+            EqualizerPresetRow,
+            BaseReferences<
+              _$AppDatabase,
+              $EqualizerPresetsTable,
+              EqualizerPresetRow
+            >,
+          ),
+          EqualizerPresetRow,
+          PrefetchHooks Function()
+        > {
+  $$EqualizerPresetsTableTableManager(
+    _$AppDatabase db,
+    $EqualizerPresetsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EqualizerPresetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EqualizerPresetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EqualizerPresetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> bandLevelsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EqualizerPresetsCompanion(
+                id: id,
+                name: name,
+                bandLevelsJson: bandLevelsJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String bandLevelsJson,
+                Value<int> rowid = const Value.absent(),
+              }) => EqualizerPresetsCompanion.insert(
+                id: id,
+                name: name,
+                bandLevelsJson: bandLevelsJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EqualizerPresetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EqualizerPresetsTable,
+      EqualizerPresetRow,
+      $$EqualizerPresetsTableFilterComposer,
+      $$EqualizerPresetsTableOrderingComposer,
+      $$EqualizerPresetsTableAnnotationComposer,
+      $$EqualizerPresetsTableCreateCompanionBuilder,
+      $$EqualizerPresetsTableUpdateCompanionBuilder,
+      (
+        EqualizerPresetRow,
+        BaseReferences<
+          _$AppDatabase,
+          $EqualizerPresetsTable,
+          EqualizerPresetRow
+        >,
+      ),
+      EqualizerPresetRow,
+      PrefetchHooks Function()
+    >;
 typedef $$SettingsTableCreateCompanionBuilder =
     SettingsCompanion Function({
       required String id,
@@ -4370,180 +5079,6 @@ typedef $$SettingsTableProcessedTableManager =
       SettingsRow,
       PrefetchHooks Function()
     >;
-typedef $$EqualizerPresetsTableCreateCompanionBuilder =
-    EqualizerPresetsCompanion Function({
-      required String id,
-      required String name,
-      required String bandLevelsJson,
-      Value<int> rowid,
-    });
-typedef $$EqualizerPresetsTableUpdateCompanionBuilder =
-    EqualizerPresetsCompanion Function({
-      Value<String> id,
-      Value<String> name,
-      Value<String> bandLevelsJson,
-      Value<int> rowid,
-    });
-
-class $$EqualizerPresetsTableFilterComposer
-    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
-  $$EqualizerPresetsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get bandLevelsJson => $composableBuilder(
-    column: $table.bandLevelsJson,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$EqualizerPresetsTableOrderingComposer
-    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
-  $$EqualizerPresetsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get bandLevelsJson => $composableBuilder(
-    column: $table.bandLevelsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$EqualizerPresetsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $EqualizerPresetsTable> {
-  $$EqualizerPresetsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get bandLevelsJson => $composableBuilder(
-    column: $table.bandLevelsJson,
-    builder: (column) => column,
-  );
-}
-
-class $$EqualizerPresetsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $EqualizerPresetsTable,
-          EqualizerPresetRow,
-          $$EqualizerPresetsTableFilterComposer,
-          $$EqualizerPresetsTableOrderingComposer,
-          $$EqualizerPresetsTableAnnotationComposer,
-          $$EqualizerPresetsTableCreateCompanionBuilder,
-          $$EqualizerPresetsTableUpdateCompanionBuilder,
-          (
-            EqualizerPresetRow,
-            BaseReferences<
-              _$AppDatabase,
-              $EqualizerPresetsTable,
-              EqualizerPresetRow
-            >,
-          ),
-          EqualizerPresetRow,
-          PrefetchHooks Function()
-        > {
-  $$EqualizerPresetsTableTableManager(
-    _$AppDatabase db,
-    $EqualizerPresetsTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$EqualizerPresetsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$EqualizerPresetsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$EqualizerPresetsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> bandLevelsJson = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => EqualizerPresetsCompanion(
-                id: id,
-                name: name,
-                bandLevelsJson: bandLevelsJson,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String name,
-                required String bandLevelsJson,
-                Value<int> rowid = const Value.absent(),
-              }) => EqualizerPresetsCompanion.insert(
-                id: id,
-                name: name,
-                bandLevelsJson: bandLevelsJson,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$EqualizerPresetsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $EqualizerPresetsTable,
-      EqualizerPresetRow,
-      $$EqualizerPresetsTableFilterComposer,
-      $$EqualizerPresetsTableOrderingComposer,
-      $$EqualizerPresetsTableAnnotationComposer,
-      $$EqualizerPresetsTableCreateCompanionBuilder,
-      $$EqualizerPresetsTableUpdateCompanionBuilder,
-      (
-        EqualizerPresetRow,
-        BaseReferences<
-          _$AppDatabase,
-          $EqualizerPresetsTable,
-          EqualizerPresetRow
-        >,
-      ),
-      EqualizerPresetRow,
-      PrefetchHooks Function()
-    >;
 typedef $$BackupsTableCreateCompanionBuilder =
     BackupsCompanion Function({
       required String id,
@@ -4700,6 +5235,285 @@ typedef $$BackupsTableProcessedTableManager =
       BackupRow,
       PrefetchHooks Function()
     >;
+typedef $$PlaybackSessionsTableCreateCompanionBuilder =
+    PlaybackSessionsCompanion Function({
+      required String id,
+      Value<String> songIdsJson,
+      Value<int> currentIndex,
+      Value<int> positionMs,
+      Value<bool> shuffleEnabled,
+      Value<String> repeatMode,
+      Value<double> speed,
+      Value<String?> sourcePlaylistId,
+      Value<int> rowid,
+    });
+typedef $$PlaybackSessionsTableUpdateCompanionBuilder =
+    PlaybackSessionsCompanion Function({
+      Value<String> id,
+      Value<String> songIdsJson,
+      Value<int> currentIndex,
+      Value<int> positionMs,
+      Value<bool> shuffleEnabled,
+      Value<String> repeatMode,
+      Value<double> speed,
+      Value<String?> sourcePlaylistId,
+      Value<int> rowid,
+    });
+
+class $$PlaybackSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaybackSessionsTable> {
+  $$PlaybackSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get songIdsJson => $composableBuilder(
+    column: $table.songIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentIndex => $composableBuilder(
+    column: $table.currentIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get shuffleEnabled => $composableBuilder(
+    column: $table.shuffleEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeatMode => $composableBuilder(
+    column: $table.repeatMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get speed => $composableBuilder(
+    column: $table.speed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourcePlaylistId => $composableBuilder(
+    column: $table.sourcePlaylistId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlaybackSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaybackSessionsTable> {
+  $$PlaybackSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get songIdsJson => $composableBuilder(
+    column: $table.songIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currentIndex => $composableBuilder(
+    column: $table.currentIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get shuffleEnabled => $composableBuilder(
+    column: $table.shuffleEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get repeatMode => $composableBuilder(
+    column: $table.repeatMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get speed => $composableBuilder(
+    column: $table.speed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourcePlaylistId => $composableBuilder(
+    column: $table.sourcePlaylistId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlaybackSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaybackSessionsTable> {
+  $$PlaybackSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get songIdsJson => $composableBuilder(
+    column: $table.songIdsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get currentIndex => $composableBuilder(
+    column: $table.currentIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get shuffleEnabled => $composableBuilder(
+    column: $table.shuffleEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get repeatMode => $composableBuilder(
+    column: $table.repeatMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get speed =>
+      $composableBuilder(column: $table.speed, builder: (column) => column);
+
+  GeneratedColumn<String> get sourcePlaylistId => $composableBuilder(
+    column: $table.sourcePlaylistId,
+    builder: (column) => column,
+  );
+}
+
+class $$PlaybackSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaybackSessionsTable,
+          PlaybackSessionRow,
+          $$PlaybackSessionsTableFilterComposer,
+          $$PlaybackSessionsTableOrderingComposer,
+          $$PlaybackSessionsTableAnnotationComposer,
+          $$PlaybackSessionsTableCreateCompanionBuilder,
+          $$PlaybackSessionsTableUpdateCompanionBuilder,
+          (
+            PlaybackSessionRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PlaybackSessionsTable,
+              PlaybackSessionRow
+            >,
+          ),
+          PlaybackSessionRow,
+          PrefetchHooks Function()
+        > {
+  $$PlaybackSessionsTableTableManager(
+    _$AppDatabase db,
+    $PlaybackSessionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaybackSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaybackSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaybackSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> songIdsJson = const Value.absent(),
+                Value<int> currentIndex = const Value.absent(),
+                Value<int> positionMs = const Value.absent(),
+                Value<bool> shuffleEnabled = const Value.absent(),
+                Value<String> repeatMode = const Value.absent(),
+                Value<double> speed = const Value.absent(),
+                Value<String?> sourcePlaylistId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaybackSessionsCompanion(
+                id: id,
+                songIdsJson: songIdsJson,
+                currentIndex: currentIndex,
+                positionMs: positionMs,
+                shuffleEnabled: shuffleEnabled,
+                repeatMode: repeatMode,
+                speed: speed,
+                sourcePlaylistId: sourcePlaylistId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> songIdsJson = const Value.absent(),
+                Value<int> currentIndex = const Value.absent(),
+                Value<int> positionMs = const Value.absent(),
+                Value<bool> shuffleEnabled = const Value.absent(),
+                Value<String> repeatMode = const Value.absent(),
+                Value<double> speed = const Value.absent(),
+                Value<String?> sourcePlaylistId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaybackSessionsCompanion.insert(
+                id: id,
+                songIdsJson: songIdsJson,
+                currentIndex: currentIndex,
+                positionMs: positionMs,
+                shuffleEnabled: shuffleEnabled,
+                repeatMode: repeatMode,
+                speed: speed,
+                sourcePlaylistId: sourcePlaylistId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlaybackSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaybackSessionsTable,
+      PlaybackSessionRow,
+      $$PlaybackSessionsTableFilterComposer,
+      $$PlaybackSessionsTableOrderingComposer,
+      $$PlaybackSessionsTableAnnotationComposer,
+      $$PlaybackSessionsTableCreateCompanionBuilder,
+      $$PlaybackSessionsTableUpdateCompanionBuilder,
+      (
+        PlaybackSessionRow,
+        BaseReferences<
+          _$AppDatabase,
+          $PlaybackSessionsTable,
+          PlaybackSessionRow
+        >,
+      ),
+      PlaybackSessionRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4712,10 +5526,12 @@ class $AppDatabaseManager {
       $$PlaylistsTableTableManager(_db, _db.playlists);
   $$PlaylistSongsTableTableManager get playlistSongs =>
       $$PlaylistSongsTableTableManager(_db, _db.playlistSongs);
-  $$SettingsTableTableManager get settings =>
-      $$SettingsTableTableManager(_db, _db.settings);
   $$EqualizerPresetsTableTableManager get equalizerPresets =>
       $$EqualizerPresetsTableTableManager(_db, _db.equalizerPresets);
+  $$SettingsTableTableManager get settings =>
+      $$SettingsTableTableManager(_db, _db.settings);
   $$BackupsTableTableManager get backups =>
       $$BackupsTableTableManager(_db, _db.backups);
+  $$PlaybackSessionsTableTableManager get playbackSessions =>
+      $$PlaybackSessionsTableTableManager(_db, _db.playbackSessions);
 }

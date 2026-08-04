@@ -59,14 +59,25 @@ class PlaylistRepository {
         .write(PlaylistsCompanion(name: Value(newName)));
   }
 
+  /// Drops the playlist, its membership rows, and its cover image.
+  ///
+  /// The membership delete is explicit rather than left to `ON DELETE
+  /// CASCADE`: databases created before foreign keys were declared have no
+  /// cascade, and the orphaned rows they'd leave behind resurface as phantom
+  /// playlist entries if a media-store song ID is reused after a rescan.
   Future<void> deletePlaylist(String playlistId) async {
     final row = await (_database.select(
       _database.playlists,
     )..where((t) => t.id.equals(playlistId))).getSingleOrNull();
 
-    await (_database.delete(
-      _database.playlists,
-    )..where((t) => t.id.equals(playlistId))).go();
+    await _database.transaction(() async {
+      await (_database.delete(
+        _database.playlistSongs,
+      )..where((t) => t.playlistId.equals(playlistId))).go();
+      await (_database.delete(
+        _database.playlists,
+      )..where((t) => t.id.equals(playlistId))).go();
+    });
 
     final coverPath = row?.coverImagePath;
     if (coverPath != null) {
