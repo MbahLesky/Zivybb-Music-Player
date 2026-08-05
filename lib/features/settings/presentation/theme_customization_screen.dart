@@ -7,6 +7,7 @@ import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../visualizer/application/visualizer_source_controller.dart';
 import '../application/settings_controller.dart';
 
 /// Choose the app's color theme, the wave visualizer's color and style,
@@ -153,6 +154,8 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
+              const _RealVisualizerCard(),
+              const SizedBox(height: 16),
               GlassCard(
                 child: Row(
                   children: [
@@ -172,6 +175,88 @@ class ThemeCustomizationScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// The opt-in for driving the visualizer from real audio.
+///
+/// Kept explicit about the permission rather than hiding it behind a bare
+/// switch: Android only exposes the audio it is playing through an API it
+/// gates behind RECORD_AUDIO, which reads alarmingly on a music player that
+/// never touches the microphone.
+class _RealVisualizerCard extends ConsumerWidget {
+  const _RealVisualizerCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final theme = Theme.of(context);
+    final isLive = ref.watch(realVisualizerActiveProvider);
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('React to real audio'),
+            subtitle: const Text(
+              'Needs microphone permission — Android only exposes playing '
+              'audio through an API behind it. Zivybb never records.',
+            ),
+            isThreeLine: true,
+            value: settings.realVisualizerEnabled,
+            onChanged: (enabled) => _toggle(context, ref, enabled),
+          ),
+          if (settings.realVisualizerEnabled) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  isLive ? Icons.graphic_eq : Icons.hourglass_empty,
+                  size: 16,
+                  color: isLive
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isLive
+                        ? 'Live — reading the audio now playing.'
+                        : 'Waiting for playback. Falls back to the simulated '
+                              'waveform if your device refuses the capture.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    bool enabled,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final applied = await ref
+        .read(settingsControllerProvider.notifier)
+        .setRealVisualizerEnabled(enabled);
+
+    if (enabled && !applied) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Permission denied, so the visualizer stays simulated.',
+          ),
+        ),
+      );
+    }
   }
 }
 

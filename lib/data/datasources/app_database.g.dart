@@ -2117,6 +2117,21 @@ class $SettingsTable extends Settings
         ),
         defaultValue: const Constant(true),
       );
+  static const VerificationMeta _realVisualizerEnabledMeta =
+      const VerificationMeta('realVisualizerEnabled');
+  @override
+  late final GeneratedColumn<bool> realVisualizerEnabled =
+      GeneratedColumn<bool>(
+        'real_visualizer_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("real_visualizer_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2132,6 +2147,7 @@ class $SettingsTable extends Settings
     showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying,
     showVisualizerInNowPlaying,
+    realVisualizerEnabled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2258,6 +2274,15 @@ class $SettingsTable extends Settings
         ),
       );
     }
+    if (data.containsKey('real_visualizer_enabled')) {
+      context.handle(
+        _realVisualizerEnabledMeta,
+        realVisualizerEnabled.isAcceptableOrUnknown(
+          data['real_visualizer_enabled']!,
+          _realVisualizerEnabledMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2319,6 +2344,10 @@ class $SettingsTable extends Settings
         DriftSqlType.bool,
         data['${effectivePrefix}show_visualizer_in_now_playing'],
       )!,
+      realVisualizerEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}real_visualizer_enabled'],
+      )!,
     );
   }
 
@@ -2342,6 +2371,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   final bool showVisualizerInMiniPlayer;
   final bool showAlbumArtInNowPlaying;
   final bool showVisualizerInNowPlaying;
+
+  /// Opt-in: drive the visualizer from the real audio signal rather than the
+  /// simulated waveform. Off by default because it needs RECORD_AUDIO.
+  final bool realVisualizerEnabled;
   const SettingsRow({
     required this.id,
     required this.adaptiveDarkModeEnabled,
@@ -2356,6 +2389,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     required this.showVisualizerInMiniPlayer,
     required this.showAlbumArtInNowPlaying,
     required this.showVisualizerInNowPlaying,
+    required this.realVisualizerEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2387,6 +2421,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     map['show_visualizer_in_now_playing'] = Variable<bool>(
       showVisualizerInNowPlaying,
     );
+    map['real_visualizer_enabled'] = Variable<bool>(realVisualizerEnabled);
     return map;
   }
 
@@ -2409,6 +2444,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showVisualizerInMiniPlayer: Value(showVisualizerInMiniPlayer),
       showAlbumArtInNowPlaying: Value(showAlbumArtInNowPlaying),
       showVisualizerInNowPlaying: Value(showVisualizerInNowPlaying),
+      realVisualizerEnabled: Value(realVisualizerEnabled),
     );
   }
 
@@ -2449,6 +2485,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showVisualizerInNowPlaying: serializer.fromJson<bool>(
         json['showVisualizerInNowPlaying'],
       ),
+      realVisualizerEnabled: serializer.fromJson<bool>(
+        json['realVisualizerEnabled'],
+      ),
     );
   }
   @override
@@ -2480,6 +2519,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       'showVisualizerInNowPlaying': serializer.toJson<bool>(
         showVisualizerInNowPlaying,
       ),
+      'realVisualizerEnabled': serializer.toJson<bool>(realVisualizerEnabled),
     };
   }
 
@@ -2497,6 +2537,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     bool? showVisualizerInMiniPlayer,
     bool? showAlbumArtInNowPlaying,
     bool? showVisualizerInNowPlaying,
+    bool? realVisualizerEnabled,
   }) => SettingsRow(
     id: id ?? this.id,
     adaptiveDarkModeEnabled:
@@ -2520,6 +2561,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
         showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
     showVisualizerInNowPlaying:
         showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+    realVisualizerEnabled: realVisualizerEnabled ?? this.realVisualizerEnabled,
   );
   SettingsRow copyWithCompanion(SettingsCompanion data) {
     return SettingsRow(
@@ -2560,6 +2602,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showVisualizerInNowPlaying: data.showVisualizerInNowPlaying.present
           ? data.showVisualizerInNowPlaying.value
           : this.showVisualizerInNowPlaying,
+      realVisualizerEnabled: data.realVisualizerEnabled.present
+          ? data.realVisualizerEnabled.value
+          : this.realVisualizerEnabled,
     );
   }
 
@@ -2578,7 +2623,8 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
           ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
           ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
-          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying')
+          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('realVisualizerEnabled: $realVisualizerEnabled')
           ..write(')'))
         .toString();
   }
@@ -2598,6 +2644,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying,
     showVisualizerInNowPlaying,
+    realVisualizerEnabled,
   );
   @override
   bool operator ==(Object other) =>
@@ -2615,7 +2662,8 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           other.showAlbumArtInMiniPlayer == this.showAlbumArtInMiniPlayer &&
           other.showVisualizerInMiniPlayer == this.showVisualizerInMiniPlayer &&
           other.showAlbumArtInNowPlaying == this.showAlbumArtInNowPlaying &&
-          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying);
+          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying &&
+          other.realVisualizerEnabled == this.realVisualizerEnabled);
 }
 
 class SettingsCompanion extends UpdateCompanion<SettingsRow> {
@@ -2632,6 +2680,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   final Value<bool> showVisualizerInMiniPlayer;
   final Value<bool> showAlbumArtInNowPlaying;
   final Value<bool> showVisualizerInNowPlaying;
+  final Value<bool> realVisualizerEnabled;
   final Value<int> rowid;
   const SettingsCompanion({
     this.id = const Value.absent(),
@@ -2647,6 +2696,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.showVisualizerInMiniPlayer = const Value.absent(),
     this.showAlbumArtInNowPlaying = const Value.absent(),
     this.showVisualizerInNowPlaying = const Value.absent(),
+    this.realVisualizerEnabled = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsCompanion.insert({
@@ -2663,6 +2713,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.showVisualizerInMiniPlayer = const Value.absent(),
     this.showAlbumArtInNowPlaying = const Value.absent(),
     this.showVisualizerInNowPlaying = const Value.absent(),
+    this.realVisualizerEnabled = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<SettingsRow> custom({
@@ -2679,6 +2730,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Expression<bool>? showVisualizerInMiniPlayer,
     Expression<bool>? showAlbumArtInNowPlaying,
     Expression<bool>? showVisualizerInNowPlaying,
+    Expression<bool>? realVisualizerEnabled,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2704,6 +2756,8 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         'show_album_art_in_now_playing': showAlbumArtInNowPlaying,
       if (showVisualizerInNowPlaying != null)
         'show_visualizer_in_now_playing': showVisualizerInNowPlaying,
+      if (realVisualizerEnabled != null)
+        'real_visualizer_enabled': realVisualizerEnabled,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2722,6 +2776,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Value<bool>? showVisualizerInMiniPlayer,
     Value<bool>? showAlbumArtInNowPlaying,
     Value<bool>? showVisualizerInNowPlaying,
+    Value<bool>? realVisualizerEnabled,
     Value<int>? rowid,
   }) {
     return SettingsCompanion(
@@ -2744,6 +2799,8 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
       showVisualizerInNowPlaying:
           showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+      realVisualizerEnabled:
+          realVisualizerEnabled ?? this.realVisualizerEnabled,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2804,6 +2861,11 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         showVisualizerInNowPlaying.value,
       );
     }
+    if (realVisualizerEnabled.present) {
+      map['real_visualizer_enabled'] = Variable<bool>(
+        realVisualizerEnabled.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2826,6 +2888,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
           ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
           ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('realVisualizerEnabled: $realVisualizerEnabled, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4721,6 +4784,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<bool> showVisualizerInMiniPlayer,
       Value<bool> showAlbumArtInNowPlaying,
       Value<bool> showVisualizerInNowPlaying,
+      Value<bool> realVisualizerEnabled,
       Value<int> rowid,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
@@ -4738,6 +4802,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<bool> showVisualizerInMiniPlayer,
       Value<bool> showAlbumArtInNowPlaying,
       Value<bool> showVisualizerInNowPlaying,
+      Value<bool> realVisualizerEnabled,
       Value<int> rowid,
     });
 
@@ -4812,6 +4877,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get showVisualizerInNowPlaying => $composableBuilder(
     column: $table.showVisualizerInNowPlaying,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get realVisualizerEnabled => $composableBuilder(
+    column: $table.realVisualizerEnabled,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4889,6 +4959,11 @@ class $$SettingsTableOrderingComposer
     column: $table.showVisualizerInNowPlaying,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get realVisualizerEnabled => $composableBuilder(
+    column: $table.realVisualizerEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -4962,6 +5037,11 @@ class $$SettingsTableAnnotationComposer
     column: $table.showVisualizerInNowPlaying,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get realVisualizerEnabled => $composableBuilder(
+    column: $table.realVisualizerEnabled,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -5008,6 +5088,7 @@ class $$SettingsTableTableManager
                 Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
                 Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
                 Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<bool> realVisualizerEnabled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
@@ -5023,6 +5104,7 @@ class $$SettingsTableTableManager
                 showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
                 showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
                 showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                realVisualizerEnabled: realVisualizerEnabled,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5040,6 +5122,7 @@ class $$SettingsTableTableManager
                 Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
                 Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
                 Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<bool> realVisualizerEnabled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
@@ -5055,6 +5138,7 @@ class $$SettingsTableTableManager
                 showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
                 showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
                 showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                realVisualizerEnabled: realVisualizerEnabled,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

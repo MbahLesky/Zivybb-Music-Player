@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
-/// Produces simulated per-bar amplitudes for the wave visualizer.
+/// Produces the per-bar amplitudes the wave visualizer draws.
 ///
-/// This app has no cross-platform access to a real-time audio-amplitude or
-/// FFT feed from the playback engine (`just_audio` doesn't expose one), so
-/// the "beat-reactive" effect is a deterministic pseudo-random waveform
-/// seeded by the track — not an analysis of the actual audio signal.
-/// Swapping in real amplitude data later (e.g. via a platform Visualizer
-/// API) only requires replacing [amplitudesAt].
+/// Two sources feed this. When the user has opted into real-audio
+/// visualization and the platform capture is running, bands arrive from
+/// `VisualizerSourceController`. Otherwise [amplitudesAt] synthesizes a
+/// deterministic pseudo-waveform seeded by the track — an animation, not an
+/// analysis of the audio. Either way the values reaching the painters are
+/// smoothed by [smoothTowards] so the picture never jumps.
 class VisualizerMath {
   const VisualizerMath._();
 
@@ -18,8 +18,8 @@ class VisualizerMath {
     return List.generate(barCount, (_) => random.nextDouble() * math.pi * 2);
   }
 
-  /// Bar heights in `[0.15, 1.0]` at [elapsedSeconds], given [barPhases]
-  /// from [barPhasesFor].
+  /// Simulated bar heights in `[0.15, 1.0]` at [elapsedSeconds], given
+  /// [barPhases] from [barPhasesFor].
   static List<double> amplitudesAt({
     required double elapsedSeconds,
     required List<double> barPhases,
@@ -32,5 +32,49 @@ class VisualizerMath {
     final fast = math.sin(t * 5.7 + phase * 1.7);
     final value = (slow * 0.6 + fast * 0.4 + 1) / 2;
     return value.clamp(0.15, 1.0);
+  }
+
+  /// Eases [current] towards [target], resampling if their lengths differ.
+  ///
+  /// Real capture arrives at roughly 20Hz while the visualizer paints at 60,
+  /// so drawing raw frames would visibly step. Rising fast and falling slow
+  /// (a much larger [attack] than [decay]) is what makes a level meter feel
+  /// percussive rather than mushy: transients snap up, then bleed away.
+  static List<double> smoothTowards({
+    required List<double> current,
+    required List<double> target,
+    required double attack,
+    required double decay,
+  }) {
+    if (target.isEmpty) return current;
+    return [
+      for (var i = 0; i < current.length; i++)
+        _ease(
+          current[i],
+          _sampleAt(target, i / math.max(current.length - 1, 1)),
+          attack: attack,
+          decay: decay,
+        ),
+    ];
+  }
+
+  static double _ease(
+    double from,
+    double to, {
+    required double attack,
+    required double decay,
+  }) {
+    final rate = to > from ? attack : decay;
+    return (from + (to - from) * rate).clamp(0.0, 1.0);
+  }
+
+  /// Linearly interpolated read of [values] at [position] in `[0, 1]`, so a
+  /// 32-band capture can drive any number of bars.
+  static double _sampleAt(List<double> values, double position) {
+    if (values.length == 1) return values.first;
+    final scaled = position.clamp(0.0, 1.0) * (values.length - 1);
+    final low = scaled.floor();
+    final high = math.min(low + 1, values.length - 1);
+    return values[low] + (values[high] - values[low]) * (scaled - low);
   }
 }

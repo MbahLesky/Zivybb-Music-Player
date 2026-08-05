@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/theme/adaptive_theme.dart';
 import '../../../core/theme/app_theme.dart';
@@ -149,6 +150,30 @@ class SettingsController extends Notifier<AsyncValue<void>> {
           .read(settingsRepositoryProvider)
           .setShowAlbumArtInNowPlaying(enabled),
     );
+  }
+
+  /// Turns real-audio visualization on or off.
+  ///
+  /// Enabling it requires RECORD_AUDIO — Android gates the `Visualizer`
+  /// effect behind that permission because it observes the output mix, even
+  /// though Zivybb never touches the microphone. If the user declines, the
+  /// setting stays off rather than silently persisting a preference that
+  /// can't take effect; the caller can tell from the returned value.
+  Future<bool> setRealVisualizerEnabled(bool enabled) async {
+    if (enabled) {
+      final status = await Permission.microphone.request();
+      if (!status.isGranted) {
+        state = const AsyncValue.data(null);
+        return false;
+      }
+    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setRealVisualizerEnabled(enabled),
+    );
+    return enabled;
   }
 
   Future<void> setShowVisualizerInNowPlaying(bool enabled) async {

@@ -88,11 +88,19 @@ class AudioPlayerService {
       StreamController<ProcessingState>.broadcast();
   final _errorIndexController = StreamController<int>.broadcast();
 
+  /// Android audio session of whichever player is currently producing sound.
+  ///
+  /// Followed rather than captured once because the crossfade engine hands
+  /// off between two players, each with its own session — the visualizer has
+  /// to re-attach to the one actually playing.
+  final _sessionIdController = StreamController<int?>.broadcast();
+
   StreamSubscription<Duration>? _fwdPosition;
   StreamSubscription<Duration?>? _fwdDuration;
   StreamSubscription<bool>? _fwdPlaying;
   StreamSubscription<int?>? _fwdCurrentIndex;
   StreamSubscription<ProcessingState>? _fwdProcessingState;
+  StreamSubscription<int?>? _fwdSessionId;
 
   Stream<Duration> get positionStream => _positionController.stream;
   Stream<Duration?> get durationStream => _durationController.stream;
@@ -100,6 +108,10 @@ class AudioPlayerService {
   Stream<int?> get currentIndexStream => _currentIndexController.stream;
   Stream<ProcessingState> get processingStateStream =>
       _processingStateController.stream;
+
+  /// Emits the Android audio session ID of the active player, or `null` off
+  /// Android and before one is assigned. Drives the real-audio visualizer.
+  Stream<int?> get androidAudioSessionIdStream => _sessionIdController.stream;
 
   /// Emits the queue index of a track that failed to play (SRS F-5.3), e.g.
   /// because its file was deleted.
@@ -143,6 +155,7 @@ class AudioPlayerService {
     _fwdPlaying?.cancel();
     _fwdCurrentIndex?.cancel();
     _fwdProcessingState?.cancel();
+    _fwdSessionId?.cancel();
   }
 
   void _bindGaplessForwarding() {
@@ -165,6 +178,9 @@ class AudioPlayerService {
     _fwdProcessingState = _gaplessPlayer.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
+    _fwdSessionId = _gaplessPlayer.androidAudioSessionIdStream.listen(
+      _sessionIdController.add,
+    );
   }
 
   void _bindCrossfadeActiveForwarding() {
@@ -179,6 +195,9 @@ class AudioPlayerService {
     _fwdProcessingState = active.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
+    _fwdSessionId = active.androidAudioSessionIdStream.listen(
+      _sessionIdController.add,
+    );
     // currentIndexStream is driven manually (_currentIndexController.add)
     // in crossfade mode — there's no single playlist to report it from.
   }
@@ -622,6 +641,7 @@ class AudioPlayerService {
     await _playingController.close();
     await _currentIndexController.close();
     await _processingStateController.close();
+    await _sessionIdController.close();
     await _gaplessPlayer.dispose();
     await _fadeA?.dispose();
     await _fadeB?.dispose();

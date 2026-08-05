@@ -154,6 +154,17 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setRealVisualizerEnabled(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        realVisualizerEnabled: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(realVisualizerEnabled: Value(enabled)),
+    );
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -180,6 +191,7 @@ class SettingsRepository {
       showVisualizerInMiniPlayer: row.showVisualizerInMiniPlayer,
       showAlbumArtInNowPlaying: row.showAlbumArtInNowPlaying,
       showVisualizerInNowPlaying: row.showVisualizerInNowPlaying,
+      realVisualizerEnabled: row.realVisualizerEnabled,
     );
   }
 }

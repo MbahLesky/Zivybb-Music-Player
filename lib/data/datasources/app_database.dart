@@ -203,6 +203,11 @@ class Settings extends Table {
   BoolColumn get showVisualizerInNowPlaying =>
       boolean().withDefault(const Constant(true))();
 
+  /// Opt-in: drive the visualizer from the real audio signal rather than the
+  /// simulated waveform. Off by default because it needs RECORD_AUDIO.
+  BoolColumn get realVisualizerEnabled =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 
@@ -232,7 +237,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -283,6 +288,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) {
         await m.createTable(playbackSessions);
         await _purgeOrphanedRows();
+      }
+      if (from < 9) {
+        await m.addColumn(settings, settings.realVisualizerEnabled);
       }
     },
     beforeOpen: (details) async {

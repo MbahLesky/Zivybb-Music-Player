@@ -6,16 +6,28 @@ enum ThemeOverride { light, dark }
 /// The wave visualizer's rendering style, user-selectable in Settings.
 enum VisualizerStyle {
   bars,
+  mirror,
   radial,
+  bloom,
   particles,
-  line;
+  line,
+  ribbon;
 
   String get label => switch (this) {
     VisualizerStyle.bars => 'Bars',
+    VisualizerStyle.mirror => 'Mirror',
     VisualizerStyle.radial => 'Radial',
+    VisualizerStyle.bloom => 'Bloom',
     VisualizerStyle.particles => 'Particles',
     VisualizerStyle.line => 'Line',
+    VisualizerStyle.ribbon => 'Ribbon',
   };
+
+  /// Circular styles need a squarer box than the wide, short bar styles.
+  bool get isRadial =>
+      this == VisualizerStyle.radial ||
+      this == VisualizerStyle.bloom ||
+      this == VisualizerStyle.particles;
 }
 
 const _unset = Object();
@@ -36,6 +48,7 @@ class AppSettings {
     this.showVisualizerInMiniPlayer = false,
     this.showAlbumArtInNowPlaying = true,
     this.showVisualizerInNowPlaying = true,
+    this.realVisualizerEnabled = false,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -51,6 +64,10 @@ class AppSettings {
   final bool showVisualizerInMiniPlayer;
   final bool showAlbumArtInNowPlaying;
   final bool showVisualizerInNowPlaying;
+
+  /// Drive the visualizer from the real audio signal instead of the
+  /// simulated waveform. Opt-in: it needs the RECORD_AUDIO permission.
+  final bool realVisualizerEnabled;
 
   /// Pass [manualThemeOverride] or [currentEqualizerPresetId] to change
   /// them, including to `null`. Omit either to leave it untouched.
@@ -68,6 +85,7 @@ class AppSettings {
     bool? showVisualizerInMiniPlayer,
     bool? showAlbumArtInNowPlaying,
     bool? showVisualizerInNowPlaying,
+    bool? realVisualizerEnabled,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -92,6 +110,8 @@ class AppSettings {
           showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
       showVisualizerInNowPlaying:
           showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+      realVisualizerEnabled:
+          realVisualizerEnabled ?? this.realVisualizerEnabled,
     );
   }
 }
