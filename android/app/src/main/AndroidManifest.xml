@@ -7,9 +7,17 @@
          images on Android 13+, and it crashes any query if either is missing. -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Only needed when "Include video files" is on; requested at that
+         point rather than at first launch. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
+    <!-- Android's Visualizer effect is treated as audio capture, so it needs
+         RECORD_AUDIO even though Zivybb only ever reads its own playback
+         session and never the microphone. Requested only when the user turns
+         the real-time visualizer on. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Background playback + the media notification (audio_service). -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>

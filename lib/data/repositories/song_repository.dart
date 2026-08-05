@@ -46,8 +46,8 @@ class SongRepository {
   }
 
   /// Emits a single song's live state, e.g. so a screen holding a snapshot
-  /// (like the playback queue) can reflect like/mood-tag changes made
-  /// elsewhere. Emits `null` if the song is removed from the cache.
+  /// (like the playback queue) can reflect like changes made elsewhere.
+  /// Emits `null` if the song is removed from the cache.
   Stream<Song?> watchSong(String songId) {
     final query = _database.select(_database.songs)
       ..where((t) => t.id.equals(songId));
@@ -58,12 +58,16 @@ class SongRepository {
 
   /// Re-scans the device library and upserts the results into the cache.
   ///
-  /// Preserves user-assigned state (liked, mood tag, and any Tag Editor
+  /// Preserves user-assigned state (liked, vibes, and any Tag Editor
   /// edits to title/artist/album) for songs that already existed in the
   /// cache; only file path, duration, and missing status are refreshed from
   /// the device.
-  Future<List<Song>> refreshFromDevice() async {
-    final songs = await _scanner.scanLibrary();
+  ///
+  /// With [includeVideos] off, any video previously scanned in is dropped
+  /// from the library — otherwise turning the setting back off would leave
+  /// the videos behind with no way to clear them.
+  Future<List<Song>> refreshFromDevice({bool includeVideos = false}) async {
+    final songs = await _scanner.scanLibrary(includeVideos: includeVideos);
     await _database.batch((batch) {
       batch.insertAll(
         _database.songs,
@@ -77,7 +81,30 @@ class SongRepository {
         ),
       );
     });
+    if (!includeVideos) await _removeVideos();
     return songs;
+  }
+
+  /// Clears out video entries and everything referencing them, so a library
+  /// that no longer includes videos doesn't keep them in playlists, vibes,
+  /// or the Liked list.
+  Future<void> _removeVideos() async {
+    final videoIds = await (_database.select(
+      _database.songs,
+    )..where((t) => t.isVideo.equals(true))).map((row) => row.id).get();
+    if (videoIds.isEmpty) return;
+
+    await _database.transaction(() async {
+      await (_database.delete(
+        _database.songVibes,
+      )..where((t) => t.songId.isIn(videoIds))).go();
+      await (_database.delete(
+        _database.playlistSongs,
+      )..where((t) => t.songId.isIn(videoIds))).go();
+      await (_database.delete(
+        _database.songs,
+      )..where((t) => t.isVideo.equals(true))).go();
+    });
   }
 
   /// Checks every cached song's file for existence and updates [isMissing]
@@ -114,12 +141,21 @@ class SongRepository {
     );
   }
 
-  /// Removes a song from the library entirely (Screens.md #14: "remove from
+  /// Removes a song from the library entirely, along with its vibe
+  /// assignments and playlist memberships (Screens.md #14: "remove from
   /// library").
-  Future<void> deleteFromLibrary(String songId) {
-    return (_database.delete(
-      _database.songs,
-    )..where((t) => t.id.equals(songId))).go();
+  Future<void> deleteFromLibrary(String songId) async {
+    await _database.transaction(() async {
+      await (_database.delete(
+        _database.songVibes,
+      )..where((t) => t.songId.equals(songId))).go();
+      await (_database.delete(
+        _database.playlistSongs,
+      )..where((t) => t.songId.equals(songId))).go();
+      await (_database.delete(
+        _database.songs,
+      )..where((t) => t.id.equals(songId))).go();
+    });
   }
 
   /// Bumps a song's play count and last-played timestamp (SRS F-4.3), so
@@ -139,12 +175,6 @@ class SongRepository {
     return (_database.update(_database.songs)
           ..where((t) => t.id.equals(songId)))
         .write(SongsCompanion(isLiked: Value(isLiked)));
-  }
-
-  Future<void> setMoodTag(String songId, String? moodTagId) {
-    return (_database.update(_database.songs)
-          ..where((t) => t.id.equals(songId)))
-        .write(SongsCompanion(moodTagId: Value(moodTagId)));
   }
 
   /// Edits a song's metadata (SRS F-6.1). This updates Zivybb's cache only,
@@ -167,15 +197,6 @@ class SongRepository {
     );
   }
 
-  /// One-off (non-reactive) lookup used to regenerate auto-generated mood
-  /// playlists (SRS F-4.2).
-  Future<List<Song>> songsWithMoodTag(String moodTagId) async {
-    final query = _database.select(_database.songs)
-      ..where((t) => t.moodTagId.equals(moodTagId));
-    final rows = await query.get();
-    return rows.map(Song.fromRow).toList(growable: false);
-  }
-
   /// One-off (non-reactive) lookup used by [MissingFileService].
   Future<List<Song>> missingSongs() async {
     final query = _database.select(_database.songs)
@@ -193,10 +214,10 @@ class SongRepository {
   }
 
   /// One-off (non-reactive) fetch of songs with backup-worthy state (liked
-  /// or mood-tagged), used by `BackupRepository`.
-  Future<List<Song>> taggedOrLikedSongs() async {
+  /// or vibe-tagged), used by `BackupRepository`.
+  Future<List<Song>> taggedOrLikedSongs(Set<String> vibeTaggedSongIds) async {
     final query = _database.select(_database.songs)
-      ..where((t) => t.isLiked.equals(true) | t.moodTagId.isNotNull());
+      ..where((t) => t.isLiked.equals(true) | t.id.isIn(vibeTaggedSongIds));
     final rows = await query.get();
     return rows.map(Song.fromRow).toList(growable: false);
   }

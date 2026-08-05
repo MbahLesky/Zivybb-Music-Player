@@ -154,6 +154,38 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setSeekStep(Duration step) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        seekStepSeconds: Value(step.inSeconds),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(seekStepSeconds: Value(step.inSeconds)),
+    );
+  }
+
+  Future<void> setIncludeVideos(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        includeVideos: Value(enabled),
+      ),
+      onConflict: (_) => SettingsCompanion(includeVideos: Value(enabled)),
+    );
+  }
+
+  Future<void> setRealtimeVisualizerEnabled(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        realtimeVisualizerEnabled: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(realtimeVisualizerEnabled: Value(enabled)),
+    );
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -180,6 +212,9 @@ class SettingsRepository {
       showVisualizerInMiniPlayer: row.showVisualizerInMiniPlayer,
       showAlbumArtInNowPlaying: row.showAlbumArtInNowPlaying,
       showVisualizerInNowPlaying: row.showVisualizerInNowPlaying,
+      seekStep: Duration(seconds: row.seekStepSeconds),
+      includeVideos: row.includeVideos,
+      realtimeVisualizerEnabled: row.realtimeVisualizerEnabled,
     );
   }
 }

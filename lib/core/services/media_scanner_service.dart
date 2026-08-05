@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:on_audio_query_pluse/on_audio_query.dart';
 
 import '../../data/models/song.dart';
+import 'video_query_service.dart';
 
 /// Thrown when the device's media library can't be read because the user
 /// hasn't granted the required media permissions.
@@ -19,10 +20,12 @@ class MediaPermissionDeniedException implements Exception {
 /// ever deals in [Song]. Only Android is supported for Version 1 (SRS 2.3);
 /// other platforms return an empty library rather than crashing.
 class MediaScannerService {
-  MediaScannerService({OnAudioQuery? audioQuery})
-    : _audioQuery = audioQuery ?? OnAudioQuery();
+  MediaScannerService({OnAudioQuery? audioQuery, VideoQueryService? videoQuery})
+    : _audioQuery = audioQuery ?? OnAudioQuery(),
+      _videoQuery = videoQuery ?? VideoQueryService();
 
   final OnAudioQuery _audioQuery;
+  final VideoQueryService _videoQuery;
 
   /// Requests (if needed) and reports whether media-library access is granted.
   ///
@@ -33,12 +36,13 @@ class MediaScannerService {
   /// gate must return true before [scanLibrary] is allowed to query.
   Future<bool> hasLibraryAccess() => _audioQuery.checkAndRequest();
 
-  /// Scans the device for local audio tracks.
+  /// Scans the device for local audio tracks, plus video files when
+  /// [includeVideos] is on (they play as audio).
   ///
   /// Throws [MediaPermissionDeniedException] if access hasn't been granted, so
   /// the query — which would otherwise crash the app without both media
   /// permissions — is never reached until it's safe.
-  Future<List<Song>> scanLibrary() async {
+  Future<List<Song>> scanLibrary({bool includeVideos = false}) async {
     if (!await hasLibraryAccess()) {
       throw const MediaPermissionDeniedException();
     }
@@ -48,10 +52,18 @@ class MediaScannerService {
       ignoreCase: true,
     );
 
-    return songs
+    final audioTracks = songs
         .where((song) => song.isMusic ?? true)
         .map(_toSong)
-        .toList(growable: false);
+        .toList();
+    if (!includeVideos) return List.unmodifiable(audioTracks);
+
+    // Videos sort in among the audio tracks rather than into a section of
+    // their own — the badge on each tile is what tells them apart.
+    final videos = await _videoQuery.queryVideos();
+    final combined = [...audioTracks, ...videos]
+      ..sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    return List.unmodifiable(combined);
   }
 
   Song _toSong(SongModel model) {

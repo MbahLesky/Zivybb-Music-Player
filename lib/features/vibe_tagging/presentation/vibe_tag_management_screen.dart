@@ -3,32 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme_palette.dart';
 import '../../../core/utils/color_hex.dart';
-import '../../../data/models/mood_tag.dart';
-import '../../../data/repositories/mood_tag_repository.dart';
+import '../../../data/models/vibe_tag.dart';
+import '../../../data/repositories/vibe_tag_repository.dart';
 import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
-import '../../playlists/application/mood_playlist_generator.dart';
-import '../application/mood_tagging_controller.dart';
+import '../../playlists/application/vibe_playlist_generator.dart';
+import '../application/vibe_tagging_controller.dart';
 
-/// Add, rename, recolor, delete, and reorder mood tags. Full management —
-/// including the built-in presets, which are just regular tags once seeded.
-class MoodTagManagementScreen extends ConsumerWidget {
-  const MoodTagManagementScreen({super.key});
+/// Add, rename, recolor, delete, and reorder vibes. Full management —
+/// including the built-in presets, which are just regular vibes once seeded.
+class VibeTagManagementScreen extends ConsumerWidget {
+  const VibeTagManagementScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tags = ref.watch(moodTagsStreamProvider);
+    final tags = ref.watch(vibeTagsStreamProvider);
 
     return Scaffold(
       appBar: GradientAppBar(
-        title: const Text('Manage Moods'),
+        title: const Text('Manage Vibes'),
         actions: [
           AppBarIconAction(
             icon: const Icon(Icons.add),
-            tooltip: 'Add mood',
-            onPressed: () => _createMood(context, ref),
+            tooltip: 'Add vibe',
+            onPressed: () => _createVibe(context, ref),
           ),
           const SizedBox(width: 4),
         ],
@@ -36,7 +36,7 @@ class MoodTagManagementScreen extends ConsumerWidget {
       body: tags.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('No mood tags yet.'));
+            return const Center(child: Text('No vibes yet.'));
           }
           return ReorderableListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -46,8 +46,8 @@ class MoodTagManagementScreen extends ConsumerWidget {
               final moved = reordered.removeAt(oldIndex);
               reordered.insert(newIndex, moved);
               ref
-                  .read(moodTagRepositoryProvider)
-                  .reorderMoodTags(reordered.map((tag) => tag.id).toList());
+                  .read(vibeTagRepositoryProvider)
+                  .reorderVibeTags(reordered.map((tag) => tag.id).toList());
             },
             itemBuilder: (context, index) {
               final tag = items[index];
@@ -82,58 +82,61 @@ class MoodTagManagementScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) =>
-            Center(child: Text('Failed to load mood tags: $error')),
+            Center(child: Text('Failed to load vibes: $error')),
       ),
     );
   }
 
-  Future<void> _createMood(BuildContext context, WidgetRef ref) async {
-    final result = await _showMoodDialog(context, title: 'New mood');
+  Future<void> _createVibe(BuildContext context, WidgetRef ref) async {
+    final result = await _showVibeDialog(context, title: 'New vibe');
     if (result == null) return;
     await ref
-        .read(moodTagRepositoryProvider)
-        .createMoodTag(result.label, colorToHex(result.color));
+        .read(vibeTagRepositoryProvider)
+        .createVibeTag(result.label, colorToHex(result.color));
   }
 
-  Future<void> _rename(BuildContext context, WidgetRef ref, MoodTag tag) async {
-    final result = await _showMoodDialog(
+  Future<void> _rename(BuildContext context, WidgetRef ref, VibeTag tag) async {
+    final result = await _showVibeDialog(
       context,
-      title: 'Rename mood',
+      title: 'Rename vibe',
       initialLabel: tag.label,
       initialColorHex: tag.colorHex,
       showColorPicker: false,
     );
     if (result == null) return;
     await ref
-        .read(moodTagRepositoryProvider)
-        .renameMoodTag(tag.id, result.label);
+        .read(vibeTagRepositoryProvider)
+        .renameVibeTag(tag.id, result.label);
+    // The auto-generated playlist is named after the vibe, so it has to
+    // follow the rename.
+    await ref.read(vibePlaylistGeneratorProvider).regenerateAll();
   }
 
   Future<void> _recolor(
     BuildContext context,
     WidgetRef ref,
-    MoodTag tag,
+    VibeTag tag,
   ) async {
-    final result = await _showMoodDialog(
+    final result = await _showVibeDialog(
       context,
-      title: 'Mood color',
+      title: 'Vibe color',
       initialLabel: tag.label,
       initialColorHex: tag.colorHex,
       showLabelField: false,
     );
     if (result == null) return;
     await ref
-        .read(moodTagRepositoryProvider)
-        .recolorMoodTag(tag.id, colorToHex(result.color));
+        .read(vibeTagRepositoryProvider)
+        .recolorVibeTag(tag.id, colorToHex(result.color));
   }
 
-  Future<void> _delete(BuildContext context, WidgetRef ref, MoodTag tag) async {
+  Future<void> _delete(BuildContext context, WidgetRef ref, VibeTag tag) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete "${tag.label}"?'),
         content: const Text(
-          'Songs tagged with this mood become untagged, and its '
+          'Songs lose this vibe (any others they carry stay), and its '
           'auto-generated playlist is removed.',
         ),
         actions: [
@@ -149,10 +152,10 @@ class MoodTagManagementScreen extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    await ref.read(moodPlaylistGeneratorProvider).deleteMoodTag(tag.id);
+    await ref.read(vibePlaylistGeneratorProvider).deleteVibeTag(tag.id);
   }
 
-  Future<_MoodDialogResult?> _showMoodDialog(
+  Future<_VibeDialogResult?> _showVibeDialog(
     BuildContext context, {
     required String title,
     String initialLabel = '',
@@ -160,9 +163,9 @@ class MoodTagManagementScreen extends ConsumerWidget {
     bool showLabelField = true,
     bool showColorPicker = true,
   }) {
-    return showDialog<_MoodDialogResult>(
+    return showDialog<_VibeDialogResult>(
       context: context,
-      builder: (context) => _MoodDialog(
+      builder: (context) => _VibeDialog(
         title: title,
         initialLabel: initialLabel,
         initialColorHex: initialColorHex,
@@ -173,15 +176,15 @@ class MoodTagManagementScreen extends ConsumerWidget {
   }
 }
 
-class _MoodDialogResult {
-  const _MoodDialogResult({required this.label, required this.color});
+class _VibeDialogResult {
+  const _VibeDialogResult({required this.label, required this.color});
 
   final String label;
   final Color color;
 }
 
-class _MoodDialog extends StatefulWidget {
-  const _MoodDialog({
+class _VibeDialog extends StatefulWidget {
+  const _VibeDialog({
     required this.title,
     required this.initialLabel,
     required this.initialColorHex,
@@ -196,10 +199,10 @@ class _MoodDialog extends StatefulWidget {
   final bool showColorPicker;
 
   @override
-  State<_MoodDialog> createState() => _MoodDialogState();
+  State<_VibeDialog> createState() => _VibeDialogState();
 }
 
-class _MoodDialogState extends State<_MoodDialog> {
+class _VibeDialogState extends State<_VibeDialog> {
   late final _labelController = TextEditingController(
     text: widget.initialLabel,
   );
@@ -223,14 +226,14 @@ class _MoodDialogState extends State<_MoodDialog> {
             TextField(
               controller: _labelController,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'Mood name'),
+              decoration: const InputDecoration(hintText: 'Vibe name'),
             ),
           if (widget.showLabelField && widget.showColorPicker)
             const SizedBox(height: 16),
           if (widget.showColorPicker)
             ColorSwatchPicker(
               selectedHex: _colorHex,
-              palette: moodColorPalette,
+              palette: vibeColorPalette,
               onSelected: (color) =>
                   setState(() => _colorHex = colorToHex(color)),
             ),
@@ -246,7 +249,7 @@ class _MoodDialogState extends State<_MoodDialog> {
             final label = _labelController.text.trim();
             if (widget.showLabelField && label.isEmpty) return;
             Navigator.of(context).pop(
-              _MoodDialogResult(
+              _VibeDialogResult(
                 label: label.isEmpty ? widget.initialLabel : label,
                 color: colorFromHex(_colorHex),
               ),

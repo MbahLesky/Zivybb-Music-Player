@@ -16,10 +16,10 @@ const themePalette = <Color>[
   Color(0xFF795548), // Brown
 ];
 
-/// Palette offered when picking a mood tag's color — brighter and more
-/// varied than [themePalette] since moods benefit from being visually
+/// Palette offered when picking a vibe's color — brighter and more
+/// varied than [themePalette] since vibes benefit from being visually
 /// distinct from one another at a glance.
-const moodColorPalette = <Color>[
+const vibeColorPalette = <Color>[
   Color(0xFFFF7043), // Energetic (orange)
   Color(0xFF4FC3F7), // Chill (light blue)
   Color(0xFFFFCA28), // Happy (yellow)

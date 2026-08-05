@@ -3,12 +3,12 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $MoodTagsTable extends MoodTags
-    with TableInfo<$MoodTagsTable, MoodTagRow> {
+class $VibeTagsTable extends VibeTags
+    with TableInfo<$VibeTagsTable, VibeTagRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $MoodTagsTable(this.attachedDatabase, [this._alias]);
+  $VibeTagsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -56,10 +56,10 @@ class $MoodTagsTable extends MoodTags
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'mood_tags';
+  static const String $name = 'vibe_tags';
   @override
   VerificationContext validateIntegrity(
-    Insertable<MoodTagRow> instance, {
+    Insertable<VibeTagRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -97,9 +97,9 @@ class $MoodTagsTable extends MoodTags
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  MoodTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+  VibeTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return MoodTagRow(
+    return VibeTagRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -120,17 +120,17 @@ class $MoodTagsTable extends MoodTags
   }
 
   @override
-  $MoodTagsTable createAlias(String alias) {
-    return $MoodTagsTable(attachedDatabase, alias);
+  $VibeTagsTable createAlias(String alias) {
+    return $VibeTagsTable(attachedDatabase, alias);
   }
 }
 
-class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
+class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
   final String id;
   final String label;
   final String colorHex;
   final int sortOrder;
-  const MoodTagRow({
+  const VibeTagRow({
     required this.id,
     required this.label,
     required this.colorHex,
@@ -146,8 +146,8 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
     return map;
   }
 
-  MoodTagsCompanion toCompanion(bool nullToAbsent) {
-    return MoodTagsCompanion(
+  VibeTagsCompanion toCompanion(bool nullToAbsent) {
+    return VibeTagsCompanion(
       id: Value(id),
       label: Value(label),
       colorHex: Value(colorHex),
@@ -155,12 +155,12 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
     );
   }
 
-  factory MoodTagRow.fromJson(
+  factory VibeTagRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return MoodTagRow(
+    return VibeTagRow(
       id: serializer.fromJson<String>(json['id']),
       label: serializer.fromJson<String>(json['label']),
       colorHex: serializer.fromJson<String>(json['colorHex']),
@@ -178,19 +178,19 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
     };
   }
 
-  MoodTagRow copyWith({
+  VibeTagRow copyWith({
     String? id,
     String? label,
     String? colorHex,
     int? sortOrder,
-  }) => MoodTagRow(
+  }) => VibeTagRow(
     id: id ?? this.id,
     label: label ?? this.label,
     colorHex: colorHex ?? this.colorHex,
     sortOrder: sortOrder ?? this.sortOrder,
   );
-  MoodTagRow copyWithCompanion(MoodTagsCompanion data) {
-    return MoodTagRow(
+  VibeTagRow copyWithCompanion(VibeTagsCompanion data) {
+    return VibeTagRow(
       id: data.id.present ? data.id.value : this.id,
       label: data.label.present ? data.label.value : this.label,
       colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
@@ -200,7 +200,7 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
 
   @override
   String toString() {
-    return (StringBuffer('MoodTagRow(')
+    return (StringBuffer('VibeTagRow(')
           ..write('id: $id, ')
           ..write('label: $label, ')
           ..write('colorHex: $colorHex, ')
@@ -214,27 +214,27 @@ class MoodTagRow extends DataClass implements Insertable<MoodTagRow> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is MoodTagRow &&
+      (other is VibeTagRow &&
           other.id == this.id &&
           other.label == this.label &&
           other.colorHex == this.colorHex &&
           other.sortOrder == this.sortOrder);
 }
 
-class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
+class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
   final Value<String> id;
   final Value<String> label;
   final Value<String> colorHex;
   final Value<int> sortOrder;
   final Value<int> rowid;
-  const MoodTagsCompanion({
+  const VibeTagsCompanion({
     this.id = const Value.absent(),
     this.label = const Value.absent(),
     this.colorHex = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  MoodTagsCompanion.insert({
+  VibeTagsCompanion.insert({
     required String id,
     required String label,
     required String colorHex,
@@ -243,7 +243,7 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
   }) : id = Value(id),
        label = Value(label),
        colorHex = Value(colorHex);
-  static Insertable<MoodTagRow> custom({
+  static Insertable<VibeTagRow> custom({
     Expression<String>? id,
     Expression<String>? label,
     Expression<String>? colorHex,
@@ -259,14 +259,14 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
     });
   }
 
-  MoodTagsCompanion copyWith({
+  VibeTagsCompanion copyWith({
     Value<String>? id,
     Value<String>? label,
     Value<String>? colorHex,
     Value<int>? sortOrder,
     Value<int>? rowid,
   }) {
-    return MoodTagsCompanion(
+    return VibeTagsCompanion(
       id: id ?? this.id,
       label: label ?? this.label,
       colorHex: colorHex ?? this.colorHex,
@@ -298,11 +298,226 @@ class MoodTagsCompanion extends UpdateCompanion<MoodTagRow> {
 
   @override
   String toString() {
-    return (StringBuffer('MoodTagsCompanion(')
+    return (StringBuffer('VibeTagsCompanion(')
           ..write('id: $id, ')
           ..write('label: $label, ')
           ..write('colorHex: $colorHex, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SongVibesTable extends SongVibes
+    with TableInfo<$SongVibesTable, SongVibeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SongVibesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _songIdMeta = const VerificationMeta('songId');
+  @override
+  late final GeneratedColumn<String> songId = GeneratedColumn<String>(
+    'song_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vibeTagIdMeta = const VerificationMeta(
+    'vibeTagId',
+  );
+  @override
+  late final GeneratedColumn<String> vibeTagId = GeneratedColumn<String>(
+    'vibe_tag_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [songId, vibeTagId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'song_vibes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SongVibeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('song_id')) {
+      context.handle(
+        _songIdMeta,
+        songId.isAcceptableOrUnknown(data['song_id']!, _songIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_songIdMeta);
+    }
+    if (data.containsKey('vibe_tag_id')) {
+      context.handle(
+        _vibeTagIdMeta,
+        vibeTagId.isAcceptableOrUnknown(data['vibe_tag_id']!, _vibeTagIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vibeTagIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {songId, vibeTagId};
+  @override
+  SongVibeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SongVibeRow(
+      songId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}song_id'],
+      )!,
+      vibeTagId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vibe_tag_id'],
+      )!,
+    );
+  }
+
+  @override
+  $SongVibesTable createAlias(String alias) {
+    return $SongVibesTable(attachedDatabase, alias);
+  }
+}
+
+class SongVibeRow extends DataClass implements Insertable<SongVibeRow> {
+  final String songId;
+  final String vibeTagId;
+  const SongVibeRow({required this.songId, required this.vibeTagId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['song_id'] = Variable<String>(songId);
+    map['vibe_tag_id'] = Variable<String>(vibeTagId);
+    return map;
+  }
+
+  SongVibesCompanion toCompanion(bool nullToAbsent) {
+    return SongVibesCompanion(
+      songId: Value(songId),
+      vibeTagId: Value(vibeTagId),
+    );
+  }
+
+  factory SongVibeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SongVibeRow(
+      songId: serializer.fromJson<String>(json['songId']),
+      vibeTagId: serializer.fromJson<String>(json['vibeTagId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'songId': serializer.toJson<String>(songId),
+      'vibeTagId': serializer.toJson<String>(vibeTagId),
+    };
+  }
+
+  SongVibeRow copyWith({String? songId, String? vibeTagId}) => SongVibeRow(
+    songId: songId ?? this.songId,
+    vibeTagId: vibeTagId ?? this.vibeTagId,
+  );
+  SongVibeRow copyWithCompanion(SongVibesCompanion data) {
+    return SongVibeRow(
+      songId: data.songId.present ? data.songId.value : this.songId,
+      vibeTagId: data.vibeTagId.present ? data.vibeTagId.value : this.vibeTagId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SongVibeRow(')
+          ..write('songId: $songId, ')
+          ..write('vibeTagId: $vibeTagId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(songId, vibeTagId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SongVibeRow &&
+          other.songId == this.songId &&
+          other.vibeTagId == this.vibeTagId);
+}
+
+class SongVibesCompanion extends UpdateCompanion<SongVibeRow> {
+  final Value<String> songId;
+  final Value<String> vibeTagId;
+  final Value<int> rowid;
+  const SongVibesCompanion({
+    this.songId = const Value.absent(),
+    this.vibeTagId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SongVibesCompanion.insert({
+    required String songId,
+    required String vibeTagId,
+    this.rowid = const Value.absent(),
+  }) : songId = Value(songId),
+       vibeTagId = Value(vibeTagId);
+  static Insertable<SongVibeRow> custom({
+    Expression<String>? songId,
+    Expression<String>? vibeTagId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (songId != null) 'song_id': songId,
+      if (vibeTagId != null) 'vibe_tag_id': vibeTagId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SongVibesCompanion copyWith({
+    Value<String>? songId,
+    Value<String>? vibeTagId,
+    Value<int>? rowid,
+  }) {
+    return SongVibesCompanion(
+      songId: songId ?? this.songId,
+      vibeTagId: vibeTagId ?? this.vibeTagId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (songId.present) {
+      map['song_id'] = Variable<String>(songId.value);
+    }
+    if (vibeTagId.present) {
+      map['vibe_tag_id'] = Variable<String>(vibeTagId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SongVibesCompanion(')
+          ..write('songId: $songId, ')
+          ..write('vibeTagId: $vibeTagId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -372,16 +587,20 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _moodTagIdMeta = const VerificationMeta(
-    'moodTagId',
+  static const VerificationMeta _isVideoMeta = const VerificationMeta(
+    'isVideo',
   );
   @override
-  late final GeneratedColumn<String> moodTagId = GeneratedColumn<String>(
-    'mood_tag_id',
+  late final GeneratedColumn<bool> isVideo = GeneratedColumn<bool>(
+    'is_video',
     aliasedName,
-    true,
-    type: DriftSqlType.string,
+    false,
+    type: DriftSqlType.bool,
     requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_video" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
   );
   static const VerificationMeta _isLikedMeta = const VerificationMeta(
     'isLiked',
@@ -444,7 +663,7 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     artist,
     album,
     durationMs,
-    moodTagId,
+    isVideo,
     isLiked,
     isMissing,
     playCount,
@@ -507,10 +726,10 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     } else if (isInserting) {
       context.missing(_durationMsMeta);
     }
-    if (data.containsKey('mood_tag_id')) {
+    if (data.containsKey('is_video')) {
       context.handle(
-        _moodTagIdMeta,
-        moodTagId.isAcceptableOrUnknown(data['mood_tag_id']!, _moodTagIdMeta),
+        _isVideoMeta,
+        isVideo.isAcceptableOrUnknown(data['is_video']!, _isVideoMeta),
       );
     }
     if (data.containsKey('is_liked')) {
@@ -573,10 +792,10 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
         DriftSqlType.int,
         data['${effectivePrefix}duration_ms'],
       )!,
-      moodTagId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mood_tag_id'],
-      ),
+      isVideo: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_video'],
+      )!,
       isLiked: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_liked'],
@@ -609,7 +828,11 @@ class SongRow extends DataClass implements Insertable<SongRow> {
   final String artist;
   final String album;
   final int durationMs;
-  final String? moodTagId;
+
+  /// Whether this entry is a video file played as music (SRS: audio-only
+  /// video playback). Video ids are namespaced — see `MediaScannerService` —
+  /// since MediaStore numbers audio and video rows independently.
+  final bool isVideo;
   final bool isLiked;
   final bool isMissing;
   final int playCount;
@@ -621,7 +844,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     required this.artist,
     required this.album,
     required this.durationMs,
-    this.moodTagId,
+    required this.isVideo,
     required this.isLiked,
     required this.isMissing,
     required this.playCount,
@@ -636,9 +859,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     map['artist'] = Variable<String>(artist);
     map['album'] = Variable<String>(album);
     map['duration_ms'] = Variable<int>(durationMs);
-    if (!nullToAbsent || moodTagId != null) {
-      map['mood_tag_id'] = Variable<String>(moodTagId);
-    }
+    map['is_video'] = Variable<bool>(isVideo);
     map['is_liked'] = Variable<bool>(isLiked);
     map['is_missing'] = Variable<bool>(isMissing);
     map['play_count'] = Variable<int>(playCount);
@@ -656,9 +877,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       artist: Value(artist),
       album: Value(album),
       durationMs: Value(durationMs),
-      moodTagId: moodTagId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(moodTagId),
+      isVideo: Value(isVideo),
       isLiked: Value(isLiked),
       isMissing: Value(isMissing),
       playCount: Value(playCount),
@@ -680,7 +899,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       artist: serializer.fromJson<String>(json['artist']),
       album: serializer.fromJson<String>(json['album']),
       durationMs: serializer.fromJson<int>(json['durationMs']),
-      moodTagId: serializer.fromJson<String?>(json['moodTagId']),
+      isVideo: serializer.fromJson<bool>(json['isVideo']),
       isLiked: serializer.fromJson<bool>(json['isLiked']),
       isMissing: serializer.fromJson<bool>(json['isMissing']),
       playCount: serializer.fromJson<int>(json['playCount']),
@@ -697,7 +916,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       'artist': serializer.toJson<String>(artist),
       'album': serializer.toJson<String>(album),
       'durationMs': serializer.toJson<int>(durationMs),
-      'moodTagId': serializer.toJson<String?>(moodTagId),
+      'isVideo': serializer.toJson<bool>(isVideo),
       'isLiked': serializer.toJson<bool>(isLiked),
       'isMissing': serializer.toJson<bool>(isMissing),
       'playCount': serializer.toJson<int>(playCount),
@@ -712,7 +931,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     String? artist,
     String? album,
     int? durationMs,
-    Value<String?> moodTagId = const Value.absent(),
+    bool? isVideo,
     bool? isLiked,
     bool? isMissing,
     int? playCount,
@@ -724,7 +943,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     artist: artist ?? this.artist,
     album: album ?? this.album,
     durationMs: durationMs ?? this.durationMs,
-    moodTagId: moodTagId.present ? moodTagId.value : this.moodTagId,
+    isVideo: isVideo ?? this.isVideo,
     isLiked: isLiked ?? this.isLiked,
     isMissing: isMissing ?? this.isMissing,
     playCount: playCount ?? this.playCount,
@@ -740,7 +959,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       durationMs: data.durationMs.present
           ? data.durationMs.value
           : this.durationMs,
-      moodTagId: data.moodTagId.present ? data.moodTagId.value : this.moodTagId,
+      isVideo: data.isVideo.present ? data.isVideo.value : this.isVideo,
       isLiked: data.isLiked.present ? data.isLiked.value : this.isLiked,
       isMissing: data.isMissing.present ? data.isMissing.value : this.isMissing,
       playCount: data.playCount.present ? data.playCount.value : this.playCount,
@@ -759,7 +978,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           ..write('artist: $artist, ')
           ..write('album: $album, ')
           ..write('durationMs: $durationMs, ')
-          ..write('moodTagId: $moodTagId, ')
+          ..write('isVideo: $isVideo, ')
           ..write('isLiked: $isLiked, ')
           ..write('isMissing: $isMissing, ')
           ..write('playCount: $playCount, ')
@@ -776,7 +995,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     artist,
     album,
     durationMs,
-    moodTagId,
+    isVideo,
     isLiked,
     isMissing,
     playCount,
@@ -792,7 +1011,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           other.artist == this.artist &&
           other.album == this.album &&
           other.durationMs == this.durationMs &&
-          other.moodTagId == this.moodTagId &&
+          other.isVideo == this.isVideo &&
           other.isLiked == this.isLiked &&
           other.isMissing == this.isMissing &&
           other.playCount == this.playCount &&
@@ -806,7 +1025,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
   final Value<String> artist;
   final Value<String> album;
   final Value<int> durationMs;
-  final Value<String?> moodTagId;
+  final Value<bool> isVideo;
   final Value<bool> isLiked;
   final Value<bool> isMissing;
   final Value<int> playCount;
@@ -819,7 +1038,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.artist = const Value.absent(),
     this.album = const Value.absent(),
     this.durationMs = const Value.absent(),
-    this.moodTagId = const Value.absent(),
+    this.isVideo = const Value.absent(),
     this.isLiked = const Value.absent(),
     this.isMissing = const Value.absent(),
     this.playCount = const Value.absent(),
@@ -833,7 +1052,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     required String artist,
     required String album,
     required int durationMs,
-    this.moodTagId = const Value.absent(),
+    this.isVideo = const Value.absent(),
     this.isLiked = const Value.absent(),
     this.isMissing = const Value.absent(),
     this.playCount = const Value.absent(),
@@ -852,7 +1071,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Expression<String>? artist,
     Expression<String>? album,
     Expression<int>? durationMs,
-    Expression<String>? moodTagId,
+    Expression<bool>? isVideo,
     Expression<bool>? isLiked,
     Expression<bool>? isMissing,
     Expression<int>? playCount,
@@ -866,7 +1085,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       if (artist != null) 'artist': artist,
       if (album != null) 'album': album,
       if (durationMs != null) 'duration_ms': durationMs,
-      if (moodTagId != null) 'mood_tag_id': moodTagId,
+      if (isVideo != null) 'is_video': isVideo,
       if (isLiked != null) 'is_liked': isLiked,
       if (isMissing != null) 'is_missing': isMissing,
       if (playCount != null) 'play_count': playCount,
@@ -882,7 +1101,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Value<String>? artist,
     Value<String>? album,
     Value<int>? durationMs,
-    Value<String?>? moodTagId,
+    Value<bool>? isVideo,
     Value<bool>? isLiked,
     Value<bool>? isMissing,
     Value<int>? playCount,
@@ -896,7 +1115,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       artist: artist ?? this.artist,
       album: album ?? this.album,
       durationMs: durationMs ?? this.durationMs,
-      moodTagId: moodTagId ?? this.moodTagId,
+      isVideo: isVideo ?? this.isVideo,
       isLiked: isLiked ?? this.isLiked,
       isMissing: isMissing ?? this.isMissing,
       playCount: playCount ?? this.playCount,
@@ -926,8 +1145,8 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     if (durationMs.present) {
       map['duration_ms'] = Variable<int>(durationMs.value);
     }
-    if (moodTagId.present) {
-      map['mood_tag_id'] = Variable<String>(moodTagId.value);
+    if (isVideo.present) {
+      map['is_video'] = Variable<bool>(isVideo.value);
     }
     if (isLiked.present) {
       map['is_liked'] = Variable<bool>(isLiked.value);
@@ -956,7 +1175,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
           ..write('artist: $artist, ')
           ..write('album: $album, ')
           ..write('durationMs: $durationMs, ')
-          ..write('moodTagId: $moodTagId, ')
+          ..write('isVideo: $isVideo, ')
           ..write('isLiked: $isLiked, ')
           ..write('isMissing: $isMissing, ')
           ..write('playCount: $playCount, ')
@@ -1006,12 +1225,12 @@ class $PlaylistsTable extends Playlists
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _sourceMoodTagIdMeta = const VerificationMeta(
-    'sourceMoodTagId',
+  static const VerificationMeta _sourceVibeTagIdMeta = const VerificationMeta(
+    'sourceVibeTagId',
   );
   @override
-  late final GeneratedColumn<String> sourceMoodTagId = GeneratedColumn<String>(
-    'source_mood_tag_id',
+  late final GeneratedColumn<String> sourceVibeTagId = GeneratedColumn<String>(
+    'source_vibe_tag_id',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -1044,7 +1263,7 @@ class $PlaylistsTable extends Playlists
     id,
     name,
     isAutoGenerated,
-    sourceMoodTagId,
+    sourceVibeTagId,
     createdAt,
     coverImagePath,
   ];
@@ -1082,12 +1301,12 @@ class $PlaylistsTable extends Playlists
         ),
       );
     }
-    if (data.containsKey('source_mood_tag_id')) {
+    if (data.containsKey('source_vibe_tag_id')) {
       context.handle(
-        _sourceMoodTagIdMeta,
-        sourceMoodTagId.isAcceptableOrUnknown(
-          data['source_mood_tag_id']!,
-          _sourceMoodTagIdMeta,
+        _sourceVibeTagIdMeta,
+        sourceVibeTagId.isAcceptableOrUnknown(
+          data['source_vibe_tag_id']!,
+          _sourceVibeTagIdMeta,
         ),
       );
     }
@@ -1129,9 +1348,9 @@ class $PlaylistsTable extends Playlists
         DriftSqlType.bool,
         data['${effectivePrefix}is_auto_generated'],
       )!,
-      sourceMoodTagId: attachedDatabase.typeMapping.read(
+      sourceVibeTagId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}source_mood_tag_id'],
+        data['${effectivePrefix}source_vibe_tag_id'],
       ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -1154,14 +1373,14 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
   final String id;
   final String name;
   final bool isAutoGenerated;
-  final String? sourceMoodTagId;
+  final String? sourceVibeTagId;
   final DateTime createdAt;
   final String? coverImagePath;
   const PlaylistRow({
     required this.id,
     required this.name,
     required this.isAutoGenerated,
-    this.sourceMoodTagId,
+    this.sourceVibeTagId,
     required this.createdAt,
     this.coverImagePath,
   });
@@ -1171,8 +1390,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['is_auto_generated'] = Variable<bool>(isAutoGenerated);
-    if (!nullToAbsent || sourceMoodTagId != null) {
-      map['source_mood_tag_id'] = Variable<String>(sourceMoodTagId);
+    if (!nullToAbsent || sourceVibeTagId != null) {
+      map['source_vibe_tag_id'] = Variable<String>(sourceVibeTagId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || coverImagePath != null) {
@@ -1186,9 +1405,9 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: Value(id),
       name: Value(name),
       isAutoGenerated: Value(isAutoGenerated),
-      sourceMoodTagId: sourceMoodTagId == null && nullToAbsent
+      sourceVibeTagId: sourceVibeTagId == null && nullToAbsent
           ? const Value.absent()
-          : Value(sourceMoodTagId),
+          : Value(sourceVibeTagId),
       createdAt: Value(createdAt),
       coverImagePath: coverImagePath == null && nullToAbsent
           ? const Value.absent()
@@ -1205,7 +1424,7 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       isAutoGenerated: serializer.fromJson<bool>(json['isAutoGenerated']),
-      sourceMoodTagId: serializer.fromJson<String?>(json['sourceMoodTagId']),
+      sourceVibeTagId: serializer.fromJson<String?>(json['sourceVibeTagId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       coverImagePath: serializer.fromJson<String?>(json['coverImagePath']),
     );
@@ -1217,7 +1436,7 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'isAutoGenerated': serializer.toJson<bool>(isAutoGenerated),
-      'sourceMoodTagId': serializer.toJson<String?>(sourceMoodTagId),
+      'sourceVibeTagId': serializer.toJson<String?>(sourceVibeTagId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'coverImagePath': serializer.toJson<String?>(coverImagePath),
     };
@@ -1227,16 +1446,16 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     String? id,
     String? name,
     bool? isAutoGenerated,
-    Value<String?> sourceMoodTagId = const Value.absent(),
+    Value<String?> sourceVibeTagId = const Value.absent(),
     DateTime? createdAt,
     Value<String?> coverImagePath = const Value.absent(),
   }) => PlaylistRow(
     id: id ?? this.id,
     name: name ?? this.name,
     isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
-    sourceMoodTagId: sourceMoodTagId.present
-        ? sourceMoodTagId.value
-        : this.sourceMoodTagId,
+    sourceVibeTagId: sourceVibeTagId.present
+        ? sourceVibeTagId.value
+        : this.sourceVibeTagId,
     createdAt: createdAt ?? this.createdAt,
     coverImagePath: coverImagePath.present
         ? coverImagePath.value
@@ -1249,9 +1468,9 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       isAutoGenerated: data.isAutoGenerated.present
           ? data.isAutoGenerated.value
           : this.isAutoGenerated,
-      sourceMoodTagId: data.sourceMoodTagId.present
-          ? data.sourceMoodTagId.value
-          : this.sourceMoodTagId,
+      sourceVibeTagId: data.sourceVibeTagId.present
+          ? data.sourceVibeTagId.value
+          : this.sourceVibeTagId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       coverImagePath: data.coverImagePath.present
           ? data.coverImagePath.value
@@ -1265,7 +1484,7 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('isAutoGenerated: $isAutoGenerated, ')
-          ..write('sourceMoodTagId: $sourceMoodTagId, ')
+          ..write('sourceVibeTagId: $sourceVibeTagId, ')
           ..write('createdAt: $createdAt, ')
           ..write('coverImagePath: $coverImagePath')
           ..write(')'))
@@ -1277,7 +1496,7 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     id,
     name,
     isAutoGenerated,
-    sourceMoodTagId,
+    sourceVibeTagId,
     createdAt,
     coverImagePath,
   );
@@ -1288,7 +1507,7 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.isAutoGenerated == this.isAutoGenerated &&
-          other.sourceMoodTagId == this.sourceMoodTagId &&
+          other.sourceVibeTagId == this.sourceVibeTagId &&
           other.createdAt == this.createdAt &&
           other.coverImagePath == this.coverImagePath);
 }
@@ -1297,7 +1516,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<bool> isAutoGenerated;
-  final Value<String?> sourceMoodTagId;
+  final Value<String?> sourceVibeTagId;
   final Value<DateTime> createdAt;
   final Value<String?> coverImagePath;
   final Value<int> rowid;
@@ -1305,7 +1524,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.isAutoGenerated = const Value.absent(),
-    this.sourceMoodTagId = const Value.absent(),
+    this.sourceVibeTagId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.coverImagePath = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1314,7 +1533,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     required String id,
     required String name,
     this.isAutoGenerated = const Value.absent(),
-    this.sourceMoodTagId = const Value.absent(),
+    this.sourceVibeTagId = const Value.absent(),
     required DateTime createdAt,
     this.coverImagePath = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1325,7 +1544,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<bool>? isAutoGenerated,
-    Expression<String>? sourceMoodTagId,
+    Expression<String>? sourceVibeTagId,
     Expression<DateTime>? createdAt,
     Expression<String>? coverImagePath,
     Expression<int>? rowid,
@@ -1334,7 +1553,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (isAutoGenerated != null) 'is_auto_generated': isAutoGenerated,
-      if (sourceMoodTagId != null) 'source_mood_tag_id': sourceMoodTagId,
+      if (sourceVibeTagId != null) 'source_vibe_tag_id': sourceVibeTagId,
       if (createdAt != null) 'created_at': createdAt,
       if (coverImagePath != null) 'cover_image_path': coverImagePath,
       if (rowid != null) 'rowid': rowid,
@@ -1345,7 +1564,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Value<String>? id,
     Value<String>? name,
     Value<bool>? isAutoGenerated,
-    Value<String?>? sourceMoodTagId,
+    Value<String?>? sourceVibeTagId,
     Value<DateTime>? createdAt,
     Value<String?>? coverImagePath,
     Value<int>? rowid,
@@ -1354,7 +1573,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
       id: id ?? this.id,
       name: name ?? this.name,
       isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
-      sourceMoodTagId: sourceMoodTagId ?? this.sourceMoodTagId,
+      sourceVibeTagId: sourceVibeTagId ?? this.sourceVibeTagId,
       createdAt: createdAt ?? this.createdAt,
       coverImagePath: coverImagePath ?? this.coverImagePath,
       rowid: rowid ?? this.rowid,
@@ -1373,8 +1592,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     if (isAutoGenerated.present) {
       map['is_auto_generated'] = Variable<bool>(isAutoGenerated.value);
     }
-    if (sourceMoodTagId.present) {
-      map['source_mood_tag_id'] = Variable<String>(sourceMoodTagId.value);
+    if (sourceVibeTagId.present) {
+      map['source_vibe_tag_id'] = Variable<String>(sourceVibeTagId.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1394,7 +1613,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('isAutoGenerated: $isAutoGenerated, ')
-          ..write('sourceMoodTagId: $sourceMoodTagId, ')
+          ..write('sourceVibeTagId: $sourceVibeTagId, ')
           ..write('createdAt: $createdAt, ')
           ..write('coverImagePath: $coverImagePath, ')
           ..write('rowid: $rowid')
@@ -1847,6 +2066,48 @@ class $SettingsTable extends Settings
         ),
         defaultValue: const Constant(true),
       );
+  static const VerificationMeta _seekStepSecondsMeta = const VerificationMeta(
+    'seekStepSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> seekStepSeconds = GeneratedColumn<int>(
+    'seek_step_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(10),
+  );
+  static const VerificationMeta _includeVideosMeta = const VerificationMeta(
+    'includeVideos',
+  );
+  @override
+  late final GeneratedColumn<bool> includeVideos = GeneratedColumn<bool>(
+    'include_videos',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("include_videos" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _realtimeVisualizerEnabledMeta =
+      const VerificationMeta('realtimeVisualizerEnabled');
+  @override
+  late final GeneratedColumn<bool> realtimeVisualizerEnabled =
+      GeneratedColumn<bool>(
+        'realtime_visualizer_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("realtime_visualizer_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1862,6 +2123,9 @@ class $SettingsTable extends Settings
     showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying,
     showVisualizerInNowPlaying,
+    seekStepSeconds,
+    includeVideos,
+    realtimeVisualizerEnabled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1988,6 +2252,33 @@ class $SettingsTable extends Settings
         ),
       );
     }
+    if (data.containsKey('seek_step_seconds')) {
+      context.handle(
+        _seekStepSecondsMeta,
+        seekStepSeconds.isAcceptableOrUnknown(
+          data['seek_step_seconds']!,
+          _seekStepSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('include_videos')) {
+      context.handle(
+        _includeVideosMeta,
+        includeVideos.isAcceptableOrUnknown(
+          data['include_videos']!,
+          _includeVideosMeta,
+        ),
+      );
+    }
+    if (data.containsKey('realtime_visualizer_enabled')) {
+      context.handle(
+        _realtimeVisualizerEnabledMeta,
+        realtimeVisualizerEnabled.isAcceptableOrUnknown(
+          data['realtime_visualizer_enabled']!,
+          _realtimeVisualizerEnabledMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2049,6 +2340,18 @@ class $SettingsTable extends Settings
         DriftSqlType.bool,
         data['${effectivePrefix}show_visualizer_in_now_playing'],
       )!,
+      seekStepSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seek_step_seconds'],
+      )!,
+      includeVideos: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}include_videos'],
+      )!,
+      realtimeVisualizerEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}realtime_visualizer_enabled'],
+      )!,
     );
   }
 
@@ -2072,6 +2375,17 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   final bool showVisualizerInMiniPlayer;
   final bool showAlbumArtInNowPlaying;
   final bool showVisualizerInNowPlaying;
+
+  /// How far Now Playing's seek-back/forward buttons jump, in seconds.
+  final int seekStepSeconds;
+
+  /// Whether the library scan also picks up video files, played as audio.
+  final bool includeVideos;
+
+  /// Whether the visualizer reacts to the real audio signal rather than a
+  /// simulated waveform. Off by default: it needs the microphone permission,
+  /// which shouldn't be requested unasked.
+  final bool realtimeVisualizerEnabled;
   const SettingsRow({
     required this.id,
     required this.adaptiveDarkModeEnabled,
@@ -2086,6 +2400,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     required this.showVisualizerInMiniPlayer,
     required this.showAlbumArtInNowPlaying,
     required this.showVisualizerInNowPlaying,
+    required this.seekStepSeconds,
+    required this.includeVideos,
+    required this.realtimeVisualizerEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2117,6 +2434,11 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     map['show_visualizer_in_now_playing'] = Variable<bool>(
       showVisualizerInNowPlaying,
     );
+    map['seek_step_seconds'] = Variable<int>(seekStepSeconds);
+    map['include_videos'] = Variable<bool>(includeVideos);
+    map['realtime_visualizer_enabled'] = Variable<bool>(
+      realtimeVisualizerEnabled,
+    );
     return map;
   }
 
@@ -2139,6 +2461,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showVisualizerInMiniPlayer: Value(showVisualizerInMiniPlayer),
       showAlbumArtInNowPlaying: Value(showAlbumArtInNowPlaying),
       showVisualizerInNowPlaying: Value(showVisualizerInNowPlaying),
+      seekStepSeconds: Value(seekStepSeconds),
+      includeVideos: Value(includeVideos),
+      realtimeVisualizerEnabled: Value(realtimeVisualizerEnabled),
     );
   }
 
@@ -2179,6 +2504,11 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showVisualizerInNowPlaying: serializer.fromJson<bool>(
         json['showVisualizerInNowPlaying'],
       ),
+      seekStepSeconds: serializer.fromJson<int>(json['seekStepSeconds']),
+      includeVideos: serializer.fromJson<bool>(json['includeVideos']),
+      realtimeVisualizerEnabled: serializer.fromJson<bool>(
+        json['realtimeVisualizerEnabled'],
+      ),
     );
   }
   @override
@@ -2210,6 +2540,11 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       'showVisualizerInNowPlaying': serializer.toJson<bool>(
         showVisualizerInNowPlaying,
       ),
+      'seekStepSeconds': serializer.toJson<int>(seekStepSeconds),
+      'includeVideos': serializer.toJson<bool>(includeVideos),
+      'realtimeVisualizerEnabled': serializer.toJson<bool>(
+        realtimeVisualizerEnabled,
+      ),
     };
   }
 
@@ -2227,6 +2562,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     bool? showVisualizerInMiniPlayer,
     bool? showAlbumArtInNowPlaying,
     bool? showVisualizerInNowPlaying,
+    int? seekStepSeconds,
+    bool? includeVideos,
+    bool? realtimeVisualizerEnabled,
   }) => SettingsRow(
     id: id ?? this.id,
     adaptiveDarkModeEnabled:
@@ -2250,6 +2588,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
         showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
     showVisualizerInNowPlaying:
         showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+    seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
+    includeVideos: includeVideos ?? this.includeVideos,
+    realtimeVisualizerEnabled:
+        realtimeVisualizerEnabled ?? this.realtimeVisualizerEnabled,
   );
   SettingsRow copyWithCompanion(SettingsCompanion data) {
     return SettingsRow(
@@ -2290,6 +2632,15 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showVisualizerInNowPlaying: data.showVisualizerInNowPlaying.present
           ? data.showVisualizerInNowPlaying.value
           : this.showVisualizerInNowPlaying,
+      seekStepSeconds: data.seekStepSeconds.present
+          ? data.seekStepSeconds.value
+          : this.seekStepSeconds,
+      includeVideos: data.includeVideos.present
+          ? data.includeVideos.value
+          : this.includeVideos,
+      realtimeVisualizerEnabled: data.realtimeVisualizerEnabled.present
+          ? data.realtimeVisualizerEnabled.value
+          : this.realtimeVisualizerEnabled,
     );
   }
 
@@ -2308,7 +2659,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
           ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
           ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
-          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying')
+          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('seekStepSeconds: $seekStepSeconds, ')
+          ..write('includeVideos: $includeVideos, ')
+          ..write('realtimeVisualizerEnabled: $realtimeVisualizerEnabled')
           ..write(')'))
         .toString();
   }
@@ -2328,6 +2682,9 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying,
     showVisualizerInNowPlaying,
+    seekStepSeconds,
+    includeVideos,
+    realtimeVisualizerEnabled,
   );
   @override
   bool operator ==(Object other) =>
@@ -2345,7 +2702,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           other.showAlbumArtInMiniPlayer == this.showAlbumArtInMiniPlayer &&
           other.showVisualizerInMiniPlayer == this.showVisualizerInMiniPlayer &&
           other.showAlbumArtInNowPlaying == this.showAlbumArtInNowPlaying &&
-          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying);
+          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying &&
+          other.seekStepSeconds == this.seekStepSeconds &&
+          other.includeVideos == this.includeVideos &&
+          other.realtimeVisualizerEnabled == this.realtimeVisualizerEnabled);
 }
 
 class SettingsCompanion extends UpdateCompanion<SettingsRow> {
@@ -2362,6 +2722,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   final Value<bool> showVisualizerInMiniPlayer;
   final Value<bool> showAlbumArtInNowPlaying;
   final Value<bool> showVisualizerInNowPlaying;
+  final Value<int> seekStepSeconds;
+  final Value<bool> includeVideos;
+  final Value<bool> realtimeVisualizerEnabled;
   final Value<int> rowid;
   const SettingsCompanion({
     this.id = const Value.absent(),
@@ -2377,6 +2740,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.showVisualizerInMiniPlayer = const Value.absent(),
     this.showAlbumArtInNowPlaying = const Value.absent(),
     this.showVisualizerInNowPlaying = const Value.absent(),
+    this.seekStepSeconds = const Value.absent(),
+    this.includeVideos = const Value.absent(),
+    this.realtimeVisualizerEnabled = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsCompanion.insert({
@@ -2393,6 +2759,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.showVisualizerInMiniPlayer = const Value.absent(),
     this.showAlbumArtInNowPlaying = const Value.absent(),
     this.showVisualizerInNowPlaying = const Value.absent(),
+    this.seekStepSeconds = const Value.absent(),
+    this.includeVideos = const Value.absent(),
+    this.realtimeVisualizerEnabled = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<SettingsRow> custom({
@@ -2409,6 +2778,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Expression<bool>? showVisualizerInMiniPlayer,
     Expression<bool>? showAlbumArtInNowPlaying,
     Expression<bool>? showVisualizerInNowPlaying,
+    Expression<int>? seekStepSeconds,
+    Expression<bool>? includeVideos,
+    Expression<bool>? realtimeVisualizerEnabled,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2434,6 +2806,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         'show_album_art_in_now_playing': showAlbumArtInNowPlaying,
       if (showVisualizerInNowPlaying != null)
         'show_visualizer_in_now_playing': showVisualizerInNowPlaying,
+      if (seekStepSeconds != null) 'seek_step_seconds': seekStepSeconds,
+      if (includeVideos != null) 'include_videos': includeVideos,
+      if (realtimeVisualizerEnabled != null)
+        'realtime_visualizer_enabled': realtimeVisualizerEnabled,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2452,6 +2828,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Value<bool>? showVisualizerInMiniPlayer,
     Value<bool>? showAlbumArtInNowPlaying,
     Value<bool>? showVisualizerInNowPlaying,
+    Value<int>? seekStepSeconds,
+    Value<bool>? includeVideos,
+    Value<bool>? realtimeVisualizerEnabled,
     Value<int>? rowid,
   }) {
     return SettingsCompanion(
@@ -2474,6 +2853,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
       showVisualizerInNowPlaying:
           showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+      seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
+      includeVideos: includeVideos ?? this.includeVideos,
+      realtimeVisualizerEnabled:
+          realtimeVisualizerEnabled ?? this.realtimeVisualizerEnabled,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2534,6 +2917,17 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         showVisualizerInNowPlaying.value,
       );
     }
+    if (seekStepSeconds.present) {
+      map['seek_step_seconds'] = Variable<int>(seekStepSeconds.value);
+    }
+    if (includeVideos.present) {
+      map['include_videos'] = Variable<bool>(includeVideos.value);
+    }
+    if (realtimeVisualizerEnabled.present) {
+      map['realtime_visualizer_enabled'] = Variable<bool>(
+        realtimeVisualizerEnabled.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2556,6 +2950,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
           ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
           ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('seekStepSeconds: $seekStepSeconds, ')
+          ..write('includeVideos: $includeVideos, ')
+          ..write('realtimeVisualizerEnabled: $realtimeVisualizerEnabled, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3095,7 +3492,8 @@ class BackupsCompanion extends UpdateCompanion<BackupRow> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
-  late final $MoodTagsTable moodTags = $MoodTagsTable(this);
+  late final $VibeTagsTable vibeTags = $VibeTagsTable(this);
+  late final $SongVibesTable songVibes = $SongVibesTable(this);
   late final $SongsTable songs = $SongsTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
@@ -3109,7 +3507,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    moodTags,
+    vibeTags,
+    songVibes,
     songs,
     playlists,
     playlistSongs,
@@ -3119,16 +3518,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
 }
 
-typedef $$MoodTagsTableCreateCompanionBuilder =
-    MoodTagsCompanion Function({
+typedef $$VibeTagsTableCreateCompanionBuilder =
+    VibeTagsCompanion Function({
       required String id,
       required String label,
       required String colorHex,
       Value<int> sortOrder,
       Value<int> rowid,
     });
-typedef $$MoodTagsTableUpdateCompanionBuilder =
-    MoodTagsCompanion Function({
+typedef $$VibeTagsTableUpdateCompanionBuilder =
+    VibeTagsCompanion Function({
       Value<String> id,
       Value<String> label,
       Value<String> colorHex,
@@ -3136,9 +3535,9 @@ typedef $$MoodTagsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$MoodTagsTableFilterComposer
-    extends Composer<_$AppDatabase, $MoodTagsTable> {
-  $$MoodTagsTableFilterComposer({
+class $$VibeTagsTableFilterComposer
+    extends Composer<_$AppDatabase, $VibeTagsTable> {
+  $$VibeTagsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3166,9 +3565,9 @@ class $$MoodTagsTableFilterComposer
   );
 }
 
-class $$MoodTagsTableOrderingComposer
-    extends Composer<_$AppDatabase, $MoodTagsTable> {
-  $$MoodTagsTableOrderingComposer({
+class $$VibeTagsTableOrderingComposer
+    extends Composer<_$AppDatabase, $VibeTagsTable> {
+  $$VibeTagsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3196,9 +3595,9 @@ class $$MoodTagsTableOrderingComposer
   );
 }
 
-class $$MoodTagsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $MoodTagsTable> {
-  $$MoodTagsTableAnnotationComposer({
+class $$VibeTagsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VibeTagsTable> {
+  $$VibeTagsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3218,35 +3617,35 @@ class $$MoodTagsTableAnnotationComposer
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 }
 
-class $$MoodTagsTableTableManager
+class $$VibeTagsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $MoodTagsTable,
-          MoodTagRow,
-          $$MoodTagsTableFilterComposer,
-          $$MoodTagsTableOrderingComposer,
-          $$MoodTagsTableAnnotationComposer,
-          $$MoodTagsTableCreateCompanionBuilder,
-          $$MoodTagsTableUpdateCompanionBuilder,
+          $VibeTagsTable,
+          VibeTagRow,
+          $$VibeTagsTableFilterComposer,
+          $$VibeTagsTableOrderingComposer,
+          $$VibeTagsTableAnnotationComposer,
+          $$VibeTagsTableCreateCompanionBuilder,
+          $$VibeTagsTableUpdateCompanionBuilder,
           (
-            MoodTagRow,
-            BaseReferences<_$AppDatabase, $MoodTagsTable, MoodTagRow>,
+            VibeTagRow,
+            BaseReferences<_$AppDatabase, $VibeTagsTable, VibeTagRow>,
           ),
-          MoodTagRow,
+          VibeTagRow,
           PrefetchHooks Function()
         > {
-  $$MoodTagsTableTableManager(_$AppDatabase db, $MoodTagsTable table)
+  $$VibeTagsTableTableManager(_$AppDatabase db, $VibeTagsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$MoodTagsTableFilterComposer($db: db, $table: table),
+              $$VibeTagsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$MoodTagsTableOrderingComposer($db: db, $table: table),
+              $$VibeTagsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$MoodTagsTableAnnotationComposer($db: db, $table: table),
+              $$VibeTagsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -3254,7 +3653,7 @@ class $$MoodTagsTableTableManager
                 Value<String> colorHex = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => MoodTagsCompanion(
+              }) => VibeTagsCompanion(
                 id: id,
                 label: label,
                 colorHex: colorHex,
@@ -3268,7 +3667,7 @@ class $$MoodTagsTableTableManager
                 required String colorHex,
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => MoodTagsCompanion.insert(
+              }) => VibeTagsCompanion.insert(
                 id: id,
                 label: label,
                 colorHex: colorHex,
@@ -3283,18 +3682,161 @@ class $$MoodTagsTableTableManager
       );
 }
 
-typedef $$MoodTagsTableProcessedTableManager =
+typedef $$VibeTagsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $MoodTagsTable,
-      MoodTagRow,
-      $$MoodTagsTableFilterComposer,
-      $$MoodTagsTableOrderingComposer,
-      $$MoodTagsTableAnnotationComposer,
-      $$MoodTagsTableCreateCompanionBuilder,
-      $$MoodTagsTableUpdateCompanionBuilder,
-      (MoodTagRow, BaseReferences<_$AppDatabase, $MoodTagsTable, MoodTagRow>),
-      MoodTagRow,
+      $VibeTagsTable,
+      VibeTagRow,
+      $$VibeTagsTableFilterComposer,
+      $$VibeTagsTableOrderingComposer,
+      $$VibeTagsTableAnnotationComposer,
+      $$VibeTagsTableCreateCompanionBuilder,
+      $$VibeTagsTableUpdateCompanionBuilder,
+      (VibeTagRow, BaseReferences<_$AppDatabase, $VibeTagsTable, VibeTagRow>),
+      VibeTagRow,
+      PrefetchHooks Function()
+    >;
+typedef $$SongVibesTableCreateCompanionBuilder =
+    SongVibesCompanion Function({
+      required String songId,
+      required String vibeTagId,
+      Value<int> rowid,
+    });
+typedef $$SongVibesTableUpdateCompanionBuilder =
+    SongVibesCompanion Function({
+      Value<String> songId,
+      Value<String> vibeTagId,
+      Value<int> rowid,
+    });
+
+class $$SongVibesTableFilterComposer
+    extends Composer<_$AppDatabase, $SongVibesTable> {
+  $$SongVibesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vibeTagId => $composableBuilder(
+    column: $table.vibeTagId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SongVibesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SongVibesTable> {
+  $$SongVibesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vibeTagId => $composableBuilder(
+    column: $table.vibeTagId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SongVibesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SongVibesTable> {
+  $$SongVibesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get songId =>
+      $composableBuilder(column: $table.songId, builder: (column) => column);
+
+  GeneratedColumn<String> get vibeTagId =>
+      $composableBuilder(column: $table.vibeTagId, builder: (column) => column);
+}
+
+class $$SongVibesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SongVibesTable,
+          SongVibeRow,
+          $$SongVibesTableFilterComposer,
+          $$SongVibesTableOrderingComposer,
+          $$SongVibesTableAnnotationComposer,
+          $$SongVibesTableCreateCompanionBuilder,
+          $$SongVibesTableUpdateCompanionBuilder,
+          (
+            SongVibeRow,
+            BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
+          ),
+          SongVibeRow,
+          PrefetchHooks Function()
+        > {
+  $$SongVibesTableTableManager(_$AppDatabase db, $SongVibesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SongVibesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SongVibesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SongVibesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> songId = const Value.absent(),
+                Value<String> vibeTagId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SongVibesCompanion(
+                songId: songId,
+                vibeTagId: vibeTagId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String songId,
+                required String vibeTagId,
+                Value<int> rowid = const Value.absent(),
+              }) => SongVibesCompanion.insert(
+                songId: songId,
+                vibeTagId: vibeTagId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SongVibesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SongVibesTable,
+      SongVibeRow,
+      $$SongVibesTableFilterComposer,
+      $$SongVibesTableOrderingComposer,
+      $$SongVibesTableAnnotationComposer,
+      $$SongVibesTableCreateCompanionBuilder,
+      $$SongVibesTableUpdateCompanionBuilder,
+      (
+        SongVibeRow,
+        BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
+      ),
+      SongVibeRow,
       PrefetchHooks Function()
     >;
 typedef $$SongsTableCreateCompanionBuilder =
@@ -3305,7 +3847,7 @@ typedef $$SongsTableCreateCompanionBuilder =
       required String artist,
       required String album,
       required int durationMs,
-      Value<String?> moodTagId,
+      Value<bool> isVideo,
       Value<bool> isLiked,
       Value<bool> isMissing,
       Value<int> playCount,
@@ -3320,7 +3862,7 @@ typedef $$SongsTableUpdateCompanionBuilder =
       Value<String> artist,
       Value<String> album,
       Value<int> durationMs,
-      Value<String?> moodTagId,
+      Value<bool> isVideo,
       Value<bool> isLiked,
       Value<bool> isMissing,
       Value<int> playCount,
@@ -3366,8 +3908,8 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get moodTagId => $composableBuilder(
-    column: $table.moodTagId,
+  ColumnFilters<bool> get isVideo => $composableBuilder(
+    column: $table.isVideo,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3431,8 +3973,8 @@ class $$SongsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get moodTagId => $composableBuilder(
-    column: $table.moodTagId,
+  ColumnOrderings<bool> get isVideo => $composableBuilder(
+    column: $table.isVideo,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3486,8 +4028,8 @@ class $$SongsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get moodTagId =>
-      $composableBuilder(column: $table.moodTagId, builder: (column) => column);
+  GeneratedColumn<bool> get isVideo =>
+      $composableBuilder(column: $table.isVideo, builder: (column) => column);
 
   GeneratedColumn<bool> get isLiked =>
       $composableBuilder(column: $table.isLiked, builder: (column) => column);
@@ -3538,7 +4080,7 @@ class $$SongsTableTableManager
                 Value<String> artist = const Value.absent(),
                 Value<String> album = const Value.absent(),
                 Value<int> durationMs = const Value.absent(),
-                Value<String?> moodTagId = const Value.absent(),
+                Value<bool> isVideo = const Value.absent(),
                 Value<bool> isLiked = const Value.absent(),
                 Value<bool> isMissing = const Value.absent(),
                 Value<int> playCount = const Value.absent(),
@@ -3551,7 +4093,7 @@ class $$SongsTableTableManager
                 artist: artist,
                 album: album,
                 durationMs: durationMs,
-                moodTagId: moodTagId,
+                isVideo: isVideo,
                 isLiked: isLiked,
                 isMissing: isMissing,
                 playCount: playCount,
@@ -3566,7 +4108,7 @@ class $$SongsTableTableManager
                 required String artist,
                 required String album,
                 required int durationMs,
-                Value<String?> moodTagId = const Value.absent(),
+                Value<bool> isVideo = const Value.absent(),
                 Value<bool> isLiked = const Value.absent(),
                 Value<bool> isMissing = const Value.absent(),
                 Value<int> playCount = const Value.absent(),
@@ -3579,7 +4121,7 @@ class $$SongsTableTableManager
                 artist: artist,
                 album: album,
                 durationMs: durationMs,
-                moodTagId: moodTagId,
+                isVideo: isVideo,
                 isLiked: isLiked,
                 isMissing: isMissing,
                 playCount: playCount,
@@ -3613,7 +4155,7 @@ typedef $$PlaylistsTableCreateCompanionBuilder =
       required String id,
       required String name,
       Value<bool> isAutoGenerated,
-      Value<String?> sourceMoodTagId,
+      Value<String?> sourceVibeTagId,
       required DateTime createdAt,
       Value<String?> coverImagePath,
       Value<int> rowid,
@@ -3623,7 +4165,7 @@ typedef $$PlaylistsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<bool> isAutoGenerated,
-      Value<String?> sourceMoodTagId,
+      Value<String?> sourceVibeTagId,
       Value<DateTime> createdAt,
       Value<String?> coverImagePath,
       Value<int> rowid,
@@ -3653,8 +4195,8 @@ class $$PlaylistsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get sourceMoodTagId => $composableBuilder(
-    column: $table.sourceMoodTagId,
+  ColumnFilters<String> get sourceVibeTagId => $composableBuilder(
+    column: $table.sourceVibeTagId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3693,8 +4235,8 @@ class $$PlaylistsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get sourceMoodTagId => $composableBuilder(
-    column: $table.sourceMoodTagId,
+  ColumnOrderings<String> get sourceVibeTagId => $composableBuilder(
+    column: $table.sourceVibeTagId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3729,8 +4271,8 @@ class $$PlaylistsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get sourceMoodTagId => $composableBuilder(
-    column: $table.sourceMoodTagId,
+  GeneratedColumn<String> get sourceVibeTagId => $composableBuilder(
+    column: $table.sourceVibeTagId,
     builder: (column) => column,
   );
 
@@ -3777,7 +4319,7 @@ class $$PlaylistsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<bool> isAutoGenerated = const Value.absent(),
-                Value<String?> sourceMoodTagId = const Value.absent(),
+                Value<String?> sourceVibeTagId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> coverImagePath = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3785,7 +4327,7 @@ class $$PlaylistsTableTableManager
                 id: id,
                 name: name,
                 isAutoGenerated: isAutoGenerated,
-                sourceMoodTagId: sourceMoodTagId,
+                sourceVibeTagId: sourceVibeTagId,
                 createdAt: createdAt,
                 coverImagePath: coverImagePath,
                 rowid: rowid,
@@ -3795,7 +4337,7 @@ class $$PlaylistsTableTableManager
                 required String id,
                 required String name,
                 Value<bool> isAutoGenerated = const Value.absent(),
-                Value<String?> sourceMoodTagId = const Value.absent(),
+                Value<String?> sourceVibeTagId = const Value.absent(),
                 required DateTime createdAt,
                 Value<String?> coverImagePath = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3803,7 +4345,7 @@ class $$PlaylistsTableTableManager
                 id: id,
                 name: name,
                 isAutoGenerated: isAutoGenerated,
-                sourceMoodTagId: sourceMoodTagId,
+                sourceVibeTagId: sourceVibeTagId,
                 createdAt: createdAt,
                 coverImagePath: coverImagePath,
                 rowid: rowid,
@@ -4012,6 +4554,9 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<bool> showVisualizerInMiniPlayer,
       Value<bool> showAlbumArtInNowPlaying,
       Value<bool> showVisualizerInNowPlaying,
+      Value<int> seekStepSeconds,
+      Value<bool> includeVideos,
+      Value<bool> realtimeVisualizerEnabled,
       Value<int> rowid,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
@@ -4029,6 +4574,9 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<bool> showVisualizerInMiniPlayer,
       Value<bool> showAlbumArtInNowPlaying,
       Value<bool> showVisualizerInNowPlaying,
+      Value<int> seekStepSeconds,
+      Value<bool> includeVideos,
+      Value<bool> realtimeVisualizerEnabled,
       Value<int> rowid,
     });
 
@@ -4103,6 +4651,21 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get showVisualizerInNowPlaying => $composableBuilder(
     column: $table.showVisualizerInNowPlaying,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seekStepSeconds => $composableBuilder(
+    column: $table.seekStepSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get includeVideos => $composableBuilder(
+    column: $table.includeVideos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get realtimeVisualizerEnabled => $composableBuilder(
+    column: $table.realtimeVisualizerEnabled,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4180,6 +4743,21 @@ class $$SettingsTableOrderingComposer
     column: $table.showVisualizerInNowPlaying,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get seekStepSeconds => $composableBuilder(
+    column: $table.seekStepSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get includeVideos => $composableBuilder(
+    column: $table.includeVideos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get realtimeVisualizerEnabled => $composableBuilder(
+    column: $table.realtimeVisualizerEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -4253,6 +4831,21 @@ class $$SettingsTableAnnotationComposer
     column: $table.showVisualizerInNowPlaying,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get seekStepSeconds => $composableBuilder(
+    column: $table.seekStepSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get includeVideos => $composableBuilder(
+    column: $table.includeVideos,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get realtimeVisualizerEnabled => $composableBuilder(
+    column: $table.realtimeVisualizerEnabled,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -4299,6 +4892,9 @@ class $$SettingsTableTableManager
                 Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
                 Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
                 Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<int> seekStepSeconds = const Value.absent(),
+                Value<bool> includeVideos = const Value.absent(),
+                Value<bool> realtimeVisualizerEnabled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
@@ -4314,6 +4910,9 @@ class $$SettingsTableTableManager
                 showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
                 showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
                 showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                seekStepSeconds: seekStepSeconds,
+                includeVideos: includeVideos,
+                realtimeVisualizerEnabled: realtimeVisualizerEnabled,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4331,6 +4930,9 @@ class $$SettingsTableTableManager
                 Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
                 Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
                 Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<int> seekStepSeconds = const Value.absent(),
+                Value<bool> includeVideos = const Value.absent(),
+                Value<bool> realtimeVisualizerEnabled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
@@ -4346,6 +4948,9 @@ class $$SettingsTableTableManager
                 showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
                 showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
                 showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                seekStepSeconds: seekStepSeconds,
+                includeVideos: includeVideos,
+                realtimeVisualizerEnabled: realtimeVisualizerEnabled,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4704,8 +5309,10 @@ typedef $$BackupsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$MoodTagsTableTableManager get moodTags =>
-      $$MoodTagsTableTableManager(_db, _db.moodTags);
+  $$VibeTagsTableTableManager get vibeTags =>
+      $$VibeTagsTableTableManager(_db, _db.vibeTags);
+  $$SongVibesTableTableManager get songVibes =>
+      $$SongVibesTableTableManager(_db, _db.songVibes);
   $$SongsTableTableManager get songs =>
       $$SongsTableTableManager(_db, _db.songs);
   $$PlaylistsTableTableManager get playlists =>

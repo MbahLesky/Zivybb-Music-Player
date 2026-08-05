@@ -4,7 +4,7 @@ import '../../core/theme/theme_palette.dart';
 import '../../core/utils/color_hex.dart';
 
 /// A grid of tappable color circles, used for theme/visualizer color choice
-/// and mood tag colors alike.
+/// and vibe colors alike.
 class ColorSwatchPicker extends StatelessWidget {
   const ColorSwatchPicker({
     super.key,

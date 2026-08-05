@@ -7,15 +7,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/app_settings.dart';
 import '../../playback/application/playback_controller.dart';
 import '../../settings/application/settings_controller.dart';
+import '../application/audio_capture_controller.dart';
 import '../application/visualizer_math.dart';
 
 /// Beat-reactive wave visualizer shown on the Now Playing screen.
 ///
-/// See [VisualizerMath] for an important caveat: the animation is a
-/// simulated waveform seeded by the track, not real audio analysis. The
-/// ticker only runs while a track is playing, and painting is isolated in
-/// its own [RepaintBoundary] so it can't force a repaint of the rest of the
-/// screen (SRS N-2 / Coding-Standards §11).
+/// Draws the real frequency spectrum when the real-time visualizer setting
+/// is on and the platform capture is running; otherwise it falls back to the
+/// simulated waveform in [VisualizerMath], seeded by the track. The ticker
+/// only runs while a track is playing, and painting is isolated in its own
+/// [RepaintBoundary] so it can't force a repaint of the rest of the screen
+/// (SRS N-2 / Coding-Standards §11).
 class WaveVisualizer extends ConsumerStatefulWidget {
   const WaveVisualizer({super.key, required this.color});
 
@@ -34,12 +36,33 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
   List<double> _amplitudes = List.filled(_barCount, 0.15);
   String? _lastSongId;
 
+  /// The most recent captured spectrum, smoothed. Capture arrives faster
+  /// than a frame and is jumpy bar-to-bar, so each new reading is eased
+  /// toward rather than snapped to — bars fall more slowly than they rise,
+  /// which is what makes a beat read as a beat instead of a flicker.
+  List<double>? _capturedAmplitudes;
+
+  void _onCapture(List<double> magnitudes) {
+    final previous = _capturedAmplitudes;
+    _capturedAmplitudes = [
+      for (var i = 0; i < _barCount; i++)
+        VisualizerMath.smoothTowards(
+          previous == null || i >= previous.length ? 0 : previous[i],
+          i < magnitudes.length ? magnitudes[i] : 0,
+        ),
+    ];
+  }
+
   void _onTick(Duration elapsed) {
     setState(() {
-      _amplitudes = VisualizerMath.amplitudesAt(
-        elapsedSeconds: elapsed.inMilliseconds / 1000,
-        barPhases: _barPhases,
-      );
+      // Captured data already updates on its own schedule; the ticker just
+      // drives repaints so both sources animate through the same path.
+      _amplitudes =
+          _capturedAmplitudes ??
+          VisualizerMath.amplitudesAt(
+            elapsedSeconds: elapsed.inMilliseconds / 1000,
+            barPhases: _barPhases,
+          );
     });
   }
 
@@ -54,6 +77,17 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
     final playback = ref.watch(playbackControllerProvider);
     final song = playback.currentSong;
     final style = ref.watch(visualizerStyleProvider);
+
+    ref.listen(audioMagnitudesProvider, (_, next) {
+      final magnitudes = next.value;
+      if (magnitudes != null) _onCapture(magnitudes);
+    });
+    // Capture stops feeding the moment the setting goes off or playback
+    // moves to a session it can't read; drop the stale spectrum so the
+    // simulated waveform takes over rather than freezing mid-bar.
+    if (!ref.watch(audioCaptureBindingProvider)) {
+      _capturedAmplitudes = null;
+    }
 
     if (song?.id != _lastSongId) {
       _lastSongId = song?.id;

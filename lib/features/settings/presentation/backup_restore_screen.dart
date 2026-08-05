@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/repositories/backup_repository.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
-import '../../playlists/application/mood_playlist_generator.dart';
+import '../../playlists/application/vibe_playlist_generator.dart';
 
-/// Back up or restore playlists, liked songs, mood tags, and settings
+/// Back up or restore playlists, liked songs, vibes, and settings
 /// (Screens.md #13, SRS F-5.1/F-5.2).
 class BackupRestoreScreen extends ConsumerStatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -34,7 +34,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Restore backup?'),
         content: const Text(
-          'This adds back the playlists, liked songs, and mood tags from '
+          'This adds back the playlists, liked songs, and vibes from '
           'this backup, and applies its settings. It won\'t remove anything '
           'you\'ve added since.',
         ),
@@ -55,7 +55,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     setState(() => _busy = true);
     try {
       await ref.read(backupRepositoryProvider).restoreBackup(backupId);
-      await ref.read(moodPlaylistGeneratorProvider).regenerateAll();
+      await ref.read(vibePlaylistGeneratorProvider).regenerateAll();
       if (mounted) {
         ScaffoldMessenger.of(
           context,

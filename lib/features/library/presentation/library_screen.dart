@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/song_search.dart';
 import '../../../data/models/song.dart';
 import '../../../data/repositories/equalizer_preset_repository.dart';
-import '../../../data/repositories/mood_tag_repository.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../../data/repositories/vibe_tag_repository.dart';
 import '../../../routes/app_routes.dart';
 import '../../../shared/widgets/app_bar_icon_action.dart';
+import '../../../shared/widgets/app_search_field.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../discovery/presentation/song_discovery_screen.dart';
 import '../../playback/application/playback_controller.dart';
-import '../../playlists/application/mood_playlist_generator.dart';
+import '../../playlists/application/vibe_playlist_generator.dart';
 import '../../playlists/presentation/playlist_list_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../application/library_controller.dart';
@@ -36,9 +38,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(libraryControllerProvider.notifier).refresh();
       await ref.read(songRepositoryProvider).detectMissingFiles();
-      await ref.read(moodTagRepositoryProvider).ensureSeeded();
+      await ref.read(vibeTagRepositoryProvider).ensureSeeded();
       await ref.read(equalizerPresetRepositoryProvider).ensureSeeded();
-      await ref.read(moodPlaylistGeneratorProvider).regenerateAll();
+      await ref.read(vibePlaylistGeneratorProvider).regenerateAll();
     });
   }
 
@@ -212,38 +214,72 @@ class _LikedSongsTab extends ConsumerWidget {
   }
 }
 
-class _SongList extends ConsumerWidget {
+class _SongList extends ConsumerStatefulWidget {
   const _SongList({required this.songs, required this.emptyMessage});
 
   final List<Song> songs;
   final String emptyMessage;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (songs.isEmpty) {
+  ConsumerState<_SongList> createState() => _SongListState();
+}
+
+class _SongListState extends ConsumerState<_SongList> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.songs.isEmpty) {
       return ListView(
         children: [
           Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
-              child: Text(emptyMessage, textAlign: TextAlign.center),
+              child: Text(widget.emptyMessage, textAlign: TextAlign.center),
             ),
           ),
         ],
       );
     }
 
-    return ListView.builder(
-      itemCount: songs.length,
-      itemBuilder: (context, index) {
-        final song = songs[index];
-        return SongListTile(
-          song: song,
-          onTap: () => ref
-              .read(playbackControllerProvider.notifier)
-              .playQueue(songs, startIndex: index),
-        );
-      },
+    final filtered = widget.songs
+        .where((song) => songMatchesQuery(song, _query))
+        .toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: AppSearchField(
+            hint: 'Search songs',
+            onChanged: (query) => setState(() => _query = query),
+          ),
+        ),
+        Expanded(
+          // Both branches stay scrollable so pull-to-refresh keeps working.
+          child: filtered.isEmpty
+              ? ListView(
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: Text('No songs match your search.')),
+                    ),
+                  ],
+                )
+              : ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final song = filtered[index];
+                    return SongListTile(
+                      song: song,
+                      onTap: () => ref
+                          .read(playbackControllerProvider.notifier)
+                          .playQueue(filtered, startIndex: index),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

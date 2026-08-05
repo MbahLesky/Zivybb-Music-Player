@@ -4,42 +4,81 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/utils/song_search.dart';
 import '../../../data/models/playlist.dart';
 import '../../../data/models/song.dart';
 import '../../../data/repositories/playlist_repository.dart';
 import '../../../shared/widgets/app_bar_icon_action.dart';
+import '../../../shared/widgets/app_search_field.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
-import '../../../shared/widgets/gradient_button.dart';
+import '../../../shared/widgets/mini_player.dart';
+import '../../../shared/widgets/play_shuffle_header.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
 import '../application/playlist_controller.dart';
 import 'add_songs_sheet.dart';
 import 'playlist_edit_dialog.dart';
 
-/// View and manage the songs within a specific playlist (Screens.md #5).
-class PlaylistDetailScreen extends ConsumerWidget {
+enum _PlaylistSort { playlistOrder, title, artist, duration }
+
+/// View and manage the songs within a specific playlist (Screens.md #5),
+/// with play/shuffle header actions, search, and view sorting. Drag
+/// reordering (which edits the stored order) is only available in the
+/// default playlist-order view with no search active.
+class PlaylistDetailScreen extends ConsumerStatefulWidget {
   const PlaylistDetailScreen({super.key, required this.playlistId});
 
   final String playlistId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detail = ref.watch(playlistDetailProvider(playlistId));
+  ConsumerState<PlaylistDetailScreen> createState() =>
+      _PlaylistDetailScreenState();
+}
+
+class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
+  String _query = '';
+  _PlaylistSort _sort = _PlaylistSort.playlistOrder;
+
+  bool get _isCustomView =>
+      _query.trim().isNotEmpty || _sort != _PlaylistSort.playlistOrder;
+
+  List<Song> _visibleSongs(List<Song> songs) {
+    final visible = songs
+        .where((song) => songMatchesQuery(song, _query))
+        .toList();
+    switch (_sort) {
+      case _PlaylistSort.playlistOrder:
+        break;
+      case _PlaylistSort.title:
+        visible.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
+      case _PlaylistSort.artist:
+        visible.sort(
+          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()),
+        );
+      case _PlaylistSort.duration:
+        visible.sort((a, b) => a.duration.compareTo(b.duration));
+    }
+    return visible;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detail = ref.watch(playlistDetailProvider(widget.playlistId));
     final playlist = detail.value?.playlist;
-    final songs = detail.value?.songs ?? const [];
+    final songs = detail.value?.songs ?? const <Song>[];
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: GradientAppBar(
         title: Text(playlist?.name ?? 'Playlist'),
         actions: [
           AppBarIconAction(
             icon: const Icon(Icons.playlist_add),
             tooltip: 'Add songs',
-            onPressed: () => AddSongsSheet.show(
-              context,
-              playlistId,
-              songs.map((song) => song.id).toSet(),
-            ),
+            onPressed: () => AddSongsSheet.show(context, widget.playlistId),
           ),
           if (playlist != null) ...[
             AppBarIconAction(
@@ -51,12 +90,12 @@ class PlaylistDetailScreen extends ConsumerWidget {
               AppBarIconAction(
                 icon: const Icon(Icons.edit_outlined),
                 tooltip: 'Edit',
-                onPressed: () => _editPlaylist(context, ref, playlist),
+                onPressed: () => _editPlaylist(context, playlist),
               ),
               AppBarIconAction(
                 icon: const Icon(Icons.delete_outline),
                 tooltip: 'Delete',
-                onPressed: () => _confirmDelete(context, ref, playlist),
+                onPressed: () => _confirmDelete(context, playlist),
               ),
             ],
           ],
@@ -68,10 +107,65 @@ class PlaylistDetailScreen extends ConsumerWidget {
           if (value == null) {
             return const Center(child: Text('Playlist not found.'));
           }
+          final visible = _visibleSongs(value.songs);
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: _PlaylistHeader(playlist: value.playlist),
+              ),
+              SliverToBoxAdapter(
+                child: PlayShuffleHeader(
+                  songs: value.songs,
+                  sourcePlaylistId: widget.playlistId,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AppSearchField(
+                          hint: 'Search in playlist',
+                          onChanged: (query) => setState(() => _query = query),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: scheme.surfaceContainerHighest.withValues(
+                            alpha: 0.6,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: PopupMenuButton<_PlaylistSort>(
+                          icon: Icon(Icons.sort, color: scheme.primary),
+                          tooltip: 'Sort',
+                          initialValue: _sort,
+                          onSelected: (value) => setState(() => _sort = value),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: _PlaylistSort.playlistOrder,
+                              child: Text('Playlist order'),
+                            ),
+                            PopupMenuItem(
+                              value: _PlaylistSort.title,
+                              child: Text('Title'),
+                            ),
+                            PopupMenuItem(
+                              value: _PlaylistSort.artist,
+                              child: Text('Artist'),
+                            ),
+                            PopupMenuItem(
+                              value: _PlaylistSort.duration,
+                              child: Text('Length'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               if (value.songs.isEmpty)
                 const SliverToBoxAdapter(
@@ -82,9 +176,21 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 )
+              else if (visible.isEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(child: Text('No songs match.')),
+                  ),
+                )
+              else if (_isCustomView)
+                SliverList.builder(
+                  itemCount: visible.length,
+                  itemBuilder: (context, index) => _songTile(visible, index),
+                )
               else
                 SliverReorderableList(
-                  itemCount: value.songs.length,
+                  itemCount: visible.length,
                   onReorderItem: (oldIndex, newIndex) {
                     final reordered = [...value.songs];
                     final moved = reordered.removeAt(oldIndex);
@@ -92,34 +198,16 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     ref
                         .read(playlistRepositoryProvider)
                         .reorderSongs(
-                          playlistId,
+                          widget.playlistId,
                           reordered.map((s) => s.id).toList(),
                         );
                   },
-                  itemBuilder: (context, index) {
-                    final song = value.songs[index];
-                    return ReorderableDelayedDragStartListener(
-                      key: ValueKey(song.id),
-                      index: index,
-                      child: SongListTile(
-                        song: song,
-                        onTap: () => ref
-                            .read(playbackControllerProvider.notifier)
-                            .playQueue(
-                              value.songs,
-                              startIndex: index,
-                              sourcePlaylistId: playlistId,
-                            ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          tooltip: 'Remove from playlist',
-                          onPressed: () => ref
-                              .read(playlistRepositoryProvider)
-                              .removeSong(playlistId, song.id),
-                        ),
+                  itemBuilder: (context, index) =>
+                      ReorderableDelayedDragStartListener(
+                        key: ValueKey(visible[index].id),
+                        index: index,
+                        child: _songTile(visible, index),
                       ),
-                    );
-                  },
                 ),
             ],
           );
@@ -128,19 +216,28 @@ class PlaylistDetailScreen extends ConsumerWidget {
         error: (error, _) =>
             Center(child: Text('Failed to load playlist: $error')),
       ),
-      floatingActionButton: songs.isEmpty
-          ? null
-          : GradientFab(
-              icon: Icons.play_arrow,
-              tooltip: 'Play all',
-              onPressed: () => ref
-                  .read(playbackControllerProvider.notifier)
-                  .playQueue(
-                    songs,
-                    startIndex: 0,
-                    sourcePlaylistId: playlistId,
-                  ),
-            ),
+    );
+  }
+
+  Widget _songTile(List<Song> queue, int index) {
+    final song = queue[index];
+    return SongListTile(
+      key: _isCustomView ? ValueKey(song.id) : null,
+      song: song,
+      onTap: () => ref
+          .read(playbackControllerProvider.notifier)
+          .playQueue(
+            queue,
+            startIndex: index,
+            sourcePlaylistId: widget.playlistId,
+          ),
+      trailing: IconButton(
+        icon: const Icon(Icons.remove_circle_outline),
+        tooltip: 'Remove from playlist',
+        onPressed: () => ref
+            .read(playlistRepositoryProvider)
+            .removeSong(widget.playlistId, song.id),
+      ),
     );
   }
 
@@ -155,11 +252,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _editPlaylist(
-    BuildContext context,
-    WidgetRef ref,
-    Playlist playlist,
-  ) async {
+  Future<void> _editPlaylist(BuildContext context, Playlist playlist) async {
     final result = await showPlaylistEditDialog(
       context,
       title: 'Edit playlist',
@@ -178,11 +271,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmDelete(
-    BuildContext context,
-    WidgetRef ref,
-    Playlist playlist,
-  ) async {
+  Future<void> _confirmDelete(BuildContext context, Playlist playlist) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

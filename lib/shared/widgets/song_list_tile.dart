@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/song.dart';
 import '../../data/repositories/song_repository.dart';
 import 'glass_card.dart';
+import 'vibe_chips.dart';
 
 /// A song row used across the Library, Liked Songs, Playlist Detail, and
 /// Folder Browser screens.
@@ -36,11 +37,41 @@ class SongListTile extends ConsumerWidget {
             vertical: 4,
           ),
           minLeadingWidth: 24,
-          title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            '${song.artist} — ${song.album}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          title: Row(
+            children: [
+              if (song.isVideo) ...[
+                Tooltip(
+                  message: 'Video file, played as audio',
+                  child: Icon(
+                    Icons.movie_outlined,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  song.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${song.artist} — ${song.album}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              // Collapses to nothing when the song has no vibes, so
+              // untagged rows keep their original height.
+              VibeChips(songId: song.id),
+            ],
           ),
           onTap: onTap,
           trailing:

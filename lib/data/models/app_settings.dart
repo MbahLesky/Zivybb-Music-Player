@@ -36,6 +36,9 @@ class AppSettings {
     this.showVisualizerInMiniPlayer = false,
     this.showAlbumArtInNowPlaying = true,
     this.showVisualizerInNowPlaying = true,
+    this.seekStep = const Duration(seconds: 10),
+    this.includeVideos = false,
+    this.realtimeVisualizerEnabled = false,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -51,6 +54,16 @@ class AppSettings {
   final bool showVisualizerInMiniPlayer;
   final bool showAlbumArtInNowPlaying;
   final bool showVisualizerInNowPlaying;
+
+  /// How far Now Playing's seek-back/forward buttons jump.
+  final Duration seekStep;
+
+  /// Whether the library scan also picks up video files, played as audio.
+  final bool includeVideos;
+
+  /// Whether the visualizer reacts to the real audio signal rather than a
+  /// simulated waveform.
+  final bool realtimeVisualizerEnabled;
 
   /// Pass [manualThemeOverride] or [currentEqualizerPresetId] to change
   /// them, including to `null`. Omit either to leave it untouched.
@@ -68,6 +81,9 @@ class AppSettings {
     bool? showVisualizerInMiniPlayer,
     bool? showAlbumArtInNowPlaying,
     bool? showVisualizerInNowPlaying,
+    Duration? seekStep,
+    bool? includeVideos,
+    bool? realtimeVisualizerEnabled,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -92,6 +108,10 @@ class AppSettings {
           showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
       showVisualizerInNowPlaying:
           showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+      seekStep: seekStep ?? this.seekStep,
+      includeVideos: includeVideos ?? this.includeVideos,
+      realtimeVisualizerEnabled:
+          realtimeVisualizerEnabled ?? this.realtimeVisualizerEnabled,
     );
   }
 }

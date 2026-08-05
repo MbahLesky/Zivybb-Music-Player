@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/song.dart';
 import '../../../data/repositories/song_repository.dart';
+import '../../settings/application/settings_controller.dart';
 
 /// The cached local library, updated live as the cache changes.
 final libraryStreamProvider = StreamProvider<List<Song>>((ref) {
@@ -20,8 +21,12 @@ class LibraryController extends Notifier<AsyncValue<void>> {
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
+    final includeVideos =
+        ref.read(settingsStreamProvider).value?.includeVideos ?? false;
     state = await AsyncValue.guard(
-      () => ref.read(songRepositoryProvider).refreshFromDevice(),
+      () => ref
+          .read(songRepositoryProvider)
+          .refreshFromDevice(includeVideos: includeVideos),
     );
   }
 }

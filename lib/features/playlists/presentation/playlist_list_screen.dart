@@ -5,65 +5,97 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/playlist.dart';
 import '../../../data/repositories/playlist_repository.dart';
+import '../../../shared/widgets/app_search_field.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../application/playlist_controller.dart';
 import 'playlist_detail_screen.dart';
 import 'playlist_edit_dialog.dart';
 
-/// Shows all user-created playlists plus auto-generated mood/energy
-/// playlists, as a grid of cover-art cards (Screens.md #4). Embedded as a
-/// tab within the Library shell.
-class PlaylistListScreen extends ConsumerWidget {
+/// Shows all user-created playlists plus auto-generated vibe playlists,
+/// as a grid of cover-art cards (Screens.md #4), searchable by
+/// name. Embedded as a tab within the Library shell.
+class PlaylistListScreen extends ConsumerStatefulWidget {
   const PlaylistListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlaylistListScreen> createState() => _PlaylistListScreenState();
+}
+
+class _PlaylistListScreenState extends ConsumerState<PlaylistListScreen> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
     final playlists = ref.watch(playlistsStreamProvider);
 
     return playlists.when(
-      data: (items) => CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(12),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.85,
-              ),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                if (index == 0) {
-                  return _CreatePlaylistCard(
-                    onTap: () => _createPlaylist(context, ref),
-                  );
-                }
-                final playlist = items[index - 1];
-                return _PlaylistCard(
-                  playlist: playlist,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          PlaylistDetailScreen(playlistId: playlist.id),
-                    ),
-                  ),
-                  onEdit: () => _editPlaylist(context, ref, playlist),
-                  onDelete: () => _confirmDelete(context, ref, playlist),
-                );
-              }, childCount: items.length + 1),
-            ),
-          ),
-          if (items.isEmpty)
-            const SliverToBoxAdapter(
+      data: (allItems) {
+        final normalizedQuery = _query.trim().toLowerCase();
+        final items = normalizedQuery.isEmpty
+            ? allItems
+            : allItems
+                  .where(
+                    (playlist) =>
+                        playlist.name.toLowerCase().contains(normalizedQuery),
+                  )
+                  .toList();
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Center(
-                  child: Text('No playlists yet — tap + to create one.'),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: AppSearchField(
+                  hint: 'Search playlists',
+                  onChanged: (query) => setState(() => _query = query),
                 ),
               ),
             ),
-        ],
-      ),
+            SliverPadding(
+              padding: const EdgeInsets.all(12),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.85,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index == 0) {
+                    return _CreatePlaylistCard(
+                      onTap: () => _createPlaylist(context, ref),
+                    );
+                  }
+                  final playlist = items[index - 1];
+                  return _PlaylistCard(
+                    playlist: playlist,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            PlaylistDetailScreen(playlistId: playlist.id),
+                      ),
+                    ),
+                    onEdit: () => _editPlaylist(context, ref, playlist),
+                    onDelete: () => _confirmDelete(context, ref, playlist),
+                  );
+                }, childCount: items.length + 1),
+              ),
+            ),
+            if (items.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: Text(
+                      allItems.isEmpty
+                          ? 'No playlists yet — tap + to create one.'
+                          : 'No playlists match your search.',
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) =>
           Center(child: Text('Failed to load playlists: $error')),

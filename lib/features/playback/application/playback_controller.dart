@@ -17,6 +17,9 @@ final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
 /// How long a preview clip plays before auto-advancing (SRS F-4.1).
 const previewClipDuration = Duration(seconds: 30);
 
+/// How the Queue screen can sort the play queue.
+enum QueueSort { title, artist, duration }
+
 const _unset = Object();
 
 /// Snapshot of the current playback queue and transport state.
@@ -196,14 +199,23 @@ class PlaybackController extends Notifier<PlaybackState> {
   }
 
   /// Shuffles [queue] and plays it from the start, enabling shuffle mode
-  /// if it isn't already on. Backs the home screen's "shuffle all" action.
-  Future<void> shuffleAndPlay(List<Song> queue) async {
+  /// if it isn't already on. Backs the home screen's "shuffle all" action
+  /// and the folder/playlist shuffle headers (which pass
+  /// [sourcePlaylistId] so "Remove from playlist" stays available).
+  Future<void> shuffleAndPlay(
+    List<Song> queue, {
+    String? sourcePlaylistId,
+  }) async {
     if (queue.isEmpty) return;
     if (!state.shuffleEnabled) {
       await toggleShuffle();
     }
     final shuffled = List<Song>.of(queue)..shuffle();
-    await playQueue(shuffled, startIndex: 0);
+    await playQueue(
+      shuffled,
+      startIndex: 0,
+      sourcePlaylistId: sourcePlaylistId,
+    );
   }
 
   Future<void> togglePlayPause() => state.isPlaying ? pause() : play();
@@ -217,6 +229,18 @@ class PlaybackController extends Notifier<PlaybackState> {
   Future<void> previous() => _player.seekToPrevious();
 
   Future<void> seek(Duration position) => _player.seek(position);
+
+  /// Seeks [offset] forward (or backward when negative) from the current
+  /// position, clamped to the track bounds (Now Playing's seek-step
+  /// buttons).
+  Future<void> seekBy(Duration offset) async {
+    var target = state.position + offset;
+    if (target < Duration.zero) target = Duration.zero;
+    if (state.duration > Duration.zero && target > state.duration) {
+      target = state.duration;
+    }
+    await _player.seek(target);
+  }
 
   Future<void> toggleShuffle() async {
     final enabled = !state.shuffleEnabled;
@@ -243,6 +267,63 @@ class PlaybackController extends Notifier<PlaybackState> {
   Future<void> setSpeed(double speed) async {
     await _player.setSpeed(speed);
     state = state.copyWith(speed: speed);
+  }
+
+  /// Jumps straight to [index] in the queue (Queue screen "play now").
+  Future<void> playAt(int index) async {
+    await _player.jumpTo(index);
+    await _player.play();
+  }
+
+  /// Moves the queue item at [oldIndex] to [newIndex] (Queue screen
+  /// reorder). [newIndex] follows `ReorderableListView.onReorderItem`'s
+  /// convention: already adjusted for the item's removal, usable directly.
+  Future<void> reorderQueue(int oldIndex, int newIndex) async {
+    final newQueue = [...state.queue];
+    final item = newQueue.removeAt(oldIndex);
+    newQueue.insert(newIndex, item);
+    state = state.copyWith(queue: newQueue);
+    await _player.moveQueueItem(oldIndex, newIndex);
+  }
+
+  /// Removes the queue item at [index] (Queue screen remove).
+  Future<void> removeFromQueue(int index) async {
+    final newQueue = [...state.queue]..removeAt(index);
+    state = state.copyWith(queue: newQueue);
+    await _player.removeQueueItem(index);
+  }
+
+  /// Scrambles the queue into a fresh random order and restarts playback
+  /// from the top of the new order (Queue screen shuffle).
+  Future<void> scrambleQueueAndPlay() async {
+    if (state.queue.isEmpty) return;
+    final scrambled = [...state.queue]..shuffle();
+    await playQueue(
+      scrambled,
+      startIndex: 0,
+      sourcePlaylistId: state.sourcePlaylistId,
+    );
+  }
+
+  /// Sorts the queue by [sort] without interrupting the current track.
+  Future<void> sortQueue(QueueSort sort) async {
+    if (state.queue.isEmpty) return;
+    final sorted = [...state.queue]
+      ..sort(switch (sort) {
+        QueueSort.title => (a, b) => a.title.toLowerCase().compareTo(
+          b.title.toLowerCase(),
+        ),
+        QueueSort.artist => (a, b) => a.artist.toLowerCase().compareTo(
+          b.artist.toLowerCase(),
+        ),
+        QueueSort.duration => (a, b) => a.duration.compareTo(b.duration),
+      });
+    final current = state.currentSong;
+    state = state.copyWith(
+      queue: sorted,
+      currentIndex: current == null ? null : sorted.indexOf(current),
+    );
+    await _player.setQueueOrder(sorted);
   }
 }
 

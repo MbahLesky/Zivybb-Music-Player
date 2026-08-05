@@ -87,12 +87,14 @@ class AudioPlayerService {
   final _processingStateController =
       StreamController<ProcessingState>.broadcast();
   final _errorIndexController = StreamController<int>.broadcast();
+  final _audioSessionIdController = StreamController<int?>.broadcast();
 
   StreamSubscription<Duration>? _fwdPosition;
   StreamSubscription<Duration?>? _fwdDuration;
   StreamSubscription<bool>? _fwdPlaying;
   StreamSubscription<int?>? _fwdCurrentIndex;
   StreamSubscription<ProcessingState>? _fwdProcessingState;
+  StreamSubscription<int?>? _fwdAudioSessionId;
 
   Stream<Duration> get positionStream => _positionController.stream;
   Stream<Duration?> get durationStream => _durationController.stream;
@@ -104,6 +106,14 @@ class AudioPlayerService {
   /// Emits the queue index of a track that failed to play (SRS F-5.3), e.g.
   /// because its file was deleted.
   Stream<int> get playbackErrorIndexStream => _errorIndexController.stream;
+
+  /// Emits the Android audio session id of whichever player is currently
+  /// producing sound, so the visualizer can attach a capture to it. Changes
+  /// whenever the active player changes — notably on every crossfade, which
+  /// hands over to the other player and so a different session.
+  ///
+  /// Always `null` off Android.
+  Stream<int?> get audioSessionIdStream => _audioSessionIdController.stream;
 
   bool get isShuffleModeEnabled =>
       _crossfadeEnabled ? _shuffleEnabled : _gaplessPlayer.shuffleModeEnabled;
@@ -143,6 +153,7 @@ class AudioPlayerService {
     _fwdPlaying?.cancel();
     _fwdCurrentIndex?.cancel();
     _fwdProcessingState?.cancel();
+    _fwdAudioSessionId?.cancel();
   }
 
   void _bindGaplessForwarding() {
@@ -154,12 +165,19 @@ class AudioPlayerService {
       _durationController.add,
     );
     _fwdPlaying = _gaplessPlayer.playingStream.listen(_playingController.add);
-    _fwdCurrentIndex = _gaplessPlayer.currentIndexStream.listen(
-      _currentIndexController.add,
-    );
+    _fwdCurrentIndex = _gaplessPlayer.currentIndexStream.listen((index) {
+      // Mirrored into _currentIndex so queue edits and a live switch to the
+      // crossfade engine start from the track actually playing, not the one
+      // the queue was originally loaded at.
+      if (index != null) _currentIndex = index;
+      _currentIndexController.add(index);
+    });
     _fwdProcessingState = _gaplessPlayer.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
+    _fwdAudioSessionId = _gaplessPlayer.androidAudioSessionIdStream.listen(
+      _audioSessionIdController.add,
+    );
   }
 
   void _bindCrossfadeActiveForwarding() {
@@ -174,6 +192,9 @@ class AudioPlayerService {
     _fwdProcessingState = active.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
+    _fwdAudioSessionId = active.androidAudioSessionIdStream.listen(
+      _audioSessionIdController.add,
+    );
     // currentIndexStream is driven manually (_currentIndexController.add)
     // in crossfade mode — there's no single playlist to report it from.
   }
@@ -208,6 +229,98 @@ class AudioPlayerService {
       if (_fadeRampInProgress) await _standbyFadePlayer?.pause();
     } else {
       await _gaplessPlayer.pause();
+    }
+  }
+
+  /// Jumps directly to [index] in the current queue (Queue screen "play
+  /// now"). Unlike [seekToNext]/[seekToPrevious], this ignores [_repeatMode]
+  /// — it's an explicit user pick, not a natural end-of-queue transition.
+  Future<void> jumpTo(int index) async {
+    if (_crossfadeEnabled) {
+      await _hardSwapTo(index);
+      _orderPos = _order.indexOf(index);
+    } else {
+      await _gaplessPlayer.seek(Duration.zero, index: index);
+    }
+  }
+
+  /// Moves the queue item at [oldIndex] to [newIndex] (Queue screen reorder).
+  Future<void> moveQueueItem(int oldIndex, int newIndex) async {
+    if (!_crossfadeEnabled) {
+      final item = _queue.removeAt(oldIndex);
+      _queue.insert(newIndex, item);
+      await _gaplessPlayer.moveAudioSource(oldIndex, newIndex);
+      return;
+    }
+    if (_fadeRampInProgress) _cancelRamp();
+    final currentSong = _queue[_currentIndex];
+    final item = _queue.removeAt(oldIndex);
+    _queue.insert(newIndex, item);
+    _currentIndex = _queue.indexOf(currentSong);
+    _rebuildOrder();
+    _currentIndexController.add(_currentIndex);
+  }
+
+  /// Removes the queue item at [index] (Queue screen remove). If it's the
+  /// track currently playing, advances to whatever now sits at that
+  /// position (or stops if the queue is now empty).
+  Future<void> removeQueueItem(int index) async {
+    if (!_crossfadeEnabled) {
+      _queue.removeAt(index);
+      await _gaplessPlayer.removeAudioSourceAt(index);
+      return;
+    }
+    if (_fadeRampInProgress) _cancelRamp();
+    final removingCurrent = index == _currentIndex;
+    final currentSong = removingCurrent ? null : _queue[_currentIndex];
+    _queue.removeAt(index);
+
+    if (_queue.isEmpty) {
+      await _activeFadePlayer?.pause();
+      _currentIndex = 0;
+      _order = [];
+      _orderPos = 0;
+      _currentIndexController.add(null);
+      return;
+    }
+
+    if (removingCurrent) {
+      final wasPlaying = _activeFadePlayer?.playing ?? false;
+      final newIndex = index.clamp(0, _queue.length - 1);
+      await _startCrossfadeEngineAt(newIndex, position: Duration.zero);
+      _currentIndex = newIndex;
+      _rebuildOrder();
+      if (wasPlaying) await _activeFadePlayer!.play();
+      _currentIndexController.add(_currentIndex);
+    } else {
+      _currentIndex = _queue.indexOf(currentSong!);
+      _rebuildOrder();
+      _currentIndexController.add(_currentIndex);
+    }
+  }
+
+  /// Replaces the queue's order wholesale (Queue screen sort) while the
+  /// current track keeps playing from its current position. [newQueue] must
+  /// be a permutation of the existing queue.
+  Future<void> setQueueOrder(List<Song> newQueue) async {
+    if (_queue.isEmpty) return;
+    if (_crossfadeEnabled) {
+      if (_fadeRampInProgress) _cancelRamp();
+      final currentSong = _queue[_currentIndex];
+      _queue = List.of(newQueue);
+      _currentIndex = _queue.indexOf(currentSong);
+      _rebuildOrder();
+      _currentIndexController.add(_currentIndex);
+      return;
+    }
+    // Gapless: applied as successive moves — just_audio has no atomic
+    // reorder, and rebuilding the playlist would interrupt playback.
+    for (var target = 0; target < newQueue.length; target++) {
+      final from = _queue.indexOf(newQueue[target], target);
+      if (from == target) continue;
+      final song = _queue.removeAt(from);
+      _queue.insert(target, song);
+      await _gaplessPlayer.moveAudioSource(from, target);
     }
   }
 

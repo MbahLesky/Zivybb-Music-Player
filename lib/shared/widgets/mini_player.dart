@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:on_audio_query_pluse/on_audio_query.dart';
 
 import '../../data/models/app_settings.dart';
 import '../../data/repositories/song_repository.dart';
@@ -11,6 +10,7 @@ import '../../features/settings/application/settings_controller.dart';
 import '../../features/visualizer/presentation/wave_visualizer.dart';
 import '../../routes/app_routes.dart';
 import 'glass_card.dart';
+import 'song_artwork.dart';
 
 /// Persistent playback bar docked at the bottom of library screens.
 ///
@@ -22,10 +22,16 @@ class MiniPlayer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playback = ref.watch(playbackControllerProvider);
-    final song = playback.currentSong;
-    if (song == null) {
+    final queuedSong = playback.currentSong;
+    if (queuedSong == null) {
       return const SizedBox.shrink();
     }
+
+    // The queue holds a snapshot taken when it was loaded, so the like state
+    // there goes stale as soon as the song is liked anywhere else (Now
+    // Playing does the same for the same reason).
+    final song =
+        ref.watch(songStreamProvider(queuedSong.id)).value ?? queuedSong;
 
     final settings =
         ref.watch(settingsStreamProvider).value ?? const AppSettings();
@@ -63,29 +69,7 @@ class MiniPlayer extends ConsumerWidget {
                 child: Row(
                   children: [
                     if (settings.showAlbumArtInMiniPlayer) ...[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: QueryArtworkWidget(
-                          id: int.parse(song.id),
-                          type: ArtworkType.AUDIO,
-                          artworkWidth: 40,
-                          artworkHeight: 40,
-                          artworkFit: BoxFit.cover,
-                          nullArtworkWidget: Container(
-                            width: 40,
-                            height: 40,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.music_note,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
+                      SongArtwork(song: song, size: 40),
                       const SizedBox(width: 10),
                     ],
                     Expanded(

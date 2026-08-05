@@ -9,8 +9,8 @@ import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../application/settings_controller.dart';
 
-/// Choose the app's color theme, the wave visualizer's color and style,
-/// with a live preview (Screens.md #12).
+/// Choose the app's theme family and color, with a live preview
+/// (Screens.md #12). Visualizer options live in their own settings section.
 class ThemeCustomizationScreen extends ConsumerWidget {
   const ThemeCustomizationScreen({super.key});
 
@@ -102,72 +102,11 @@ class ThemeCustomizationScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Visualizer color',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    ColorSwatchPicker(
-                      selectedHex: settings.visualizerColorHex,
-                      onSelected: controller.setVisualizerColor,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Visualizer style',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final style in VisualizerStyle.values)
-                          ChoiceChip(
-                            label: Text(style.label),
-                            labelStyle: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: settings.visualizerStyle == style
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            selected: settings.visualizerStyle == style,
-                            selectedColor: theme.colorScheme.primaryContainer,
-                            backgroundColor:
-                                theme.colorScheme.surfaceContainerHighest,
-                            side: BorderSide(
-                              color: settings.visualizerStyle == style
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.outlineVariant,
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
-                            onSelected: (_) =>
-                                controller.setVisualizerStyle(style),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              GlassCard(
                 child: Row(
                   children: [
                     Icon(
                       Icons.palette,
-                      color: colorFromHex(settings.visualizerColorHex),
+                      color: colorFromHex(settings.themeSeedColorHex),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

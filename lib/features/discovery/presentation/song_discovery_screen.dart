@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/gradient_card.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../../playback/application/playback_controller.dart';
 import '../../playlists/presentation/save_to_playlist_sheet.dart';
 import '../application/discovery_controller.dart';
@@ -17,6 +18,7 @@ class SongDiscoveryScreen extends ConsumerWidget {
     final feed = ref.watch(discoveryControllerProvider);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: GradientAppBar(
         title: const Text('Discover'),
         actions: [

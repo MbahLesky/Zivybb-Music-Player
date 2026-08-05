@@ -159,6 +159,29 @@ class SettingsController extends Notifier<AsyncValue<void>> {
           .setShowVisualizerInNowPlaying(enabled),
     );
   }
+
+  Future<void> setSeekStep(Duration step) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setSeekStep(step),
+    );
+  }
+
+  Future<void> setRealtimeVisualizerEnabled(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setRealtimeVisualizerEnabled(enabled),
+    );
+  }
+
+  Future<void> setIncludeVideos(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setIncludeVideos(enabled),
+    );
+  }
 }
 
 final settingsControllerProvider =

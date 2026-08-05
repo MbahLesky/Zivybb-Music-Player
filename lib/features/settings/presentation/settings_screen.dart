@@ -4,22 +4,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
-import '../../mood_tagging/presentation/mood_tag_management_screen.dart';
+import '../../library/application/library_controller.dart';
+import '../../vibe_tagging/presentation/vibe_tag_management_screen.dart';
 import '../application/settings_controller.dart';
 import 'backup_restore_screen.dart';
 import 'equalizer_screen.dart';
 import 'settings_section_screen.dart';
 import 'theme_customization_screen.dart';
+import 'visualizer_settings_screen.dart';
 
 /// Central hub for app configuration (Screens.md #11).
+///
+/// Each section's controls live in their own [ConsumerWidget] below rather
+/// than being built inline here. Built inline, they would capture the
+/// settings values as they stood when the category was tapped: the pushed
+/// route holds that one widget instance, so later changes rebuilt this
+/// screen (behind the route) while the visible switches and radios kept
+/// showing stale values until the section was reopened.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings =
-        ref.watch(settingsStreamProvider).value ?? const AppSettings();
-    final controller = ref.read(settingsControllerProvider.notifier);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -55,70 +61,11 @@ class SettingsScreen extends ConsumerWidget {
                       'Adaptive dark mode, appearance, and theme colors',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => SettingsSectionScreen(
+                      builder: (_) => const SettingsSectionScreen(
                         title: 'Theme',
                         description:
                             'Adjust the app theme, automatic dark mode, and visual accents.',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SwitchListTile(
-                              title: const Text('Adaptive dark mode'),
-                              subtitle: const Text(
-                                'Switch between light and dark based on time of day',
-                              ),
-                              value: settings.adaptiveDarkModeEnabled,
-                              onChanged: settings.manualThemeOverride != null
-                                  ? null
-                                  : (enabled) => controller
-                                        .setAdaptiveDarkModeEnabled(enabled),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Appearance',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            RadioGroup<ThemeOverride?>(
-                              groupValue: settings.manualThemeOverride,
-                              onChanged: (value) =>
-                                  controller.setManualThemeOverride(value),
-                              child: const Column(
-                                children: [
-                                  RadioListTile<ThemeOverride?>(
-                                    title: Text('Auto'),
-                                    value: null,
-                                  ),
-                                  RadioListTile<ThemeOverride?>(
-                                    title: Text('Light'),
-                                    value: ThemeOverride.light,
-                                  ),
-                                  RadioListTile<ThemeOverride?>(
-                                    title: Text('Dark'),
-                                    value: ThemeOverride.dark,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ListTile(
-                              leading: const Icon(Icons.palette_outlined),
-                              title: const Text('Theme Customization'),
-                              subtitle: const Text(
-                                'App color, visualizer color, and style',
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const ThemeCustomizationScreen(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: _ThemeSection(),
                       ),
                     ),
                   ),
@@ -127,46 +74,26 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.play_circle_outline,
                   title: 'Playback',
-                  description: 'Crossfade behavior, duration, and equalizer',
+                  description: 'Crossfade, seek step, and equalizer',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => SettingsSectionScreen(
+                      builder: (_) => const SettingsSectionScreen(
                         title: 'Playback',
                         description:
                             'Adjust how tracks transition and how audio is shaped.',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SwitchListTile(
-                              title: const Text('Crossfade'),
-                              subtitle: const Text(
-                                'Fade out/in between tracks',
-                              ),
-                              value: settings.crossfadeEnabled,
-                              onChanged: (enabled) =>
-                                  controller.setCrossfadeEnabled(enabled),
-                            ),
-                            ListTile(
-                              title: const Text('Crossfade duration'),
-                              subtitle: _CrossfadeDurationSlider(
-                                enabled: settings.crossfadeEnabled,
-                                duration: settings.crossfadeDuration,
-                                onChangeEnd: controller.setCrossfadeDuration,
-                              ),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.equalizer),
-                              title: const Text('Equalizer'),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const EqualizerScreen(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: _PlaybackSection(),
                       ),
+                    ),
+                  ),
+                ),
+                _settingsCategoryCard(
+                  context: context,
+                  icon: Icons.graphic_eq,
+                  title: 'Visualizer',
+                  description: 'Wave color, style, and where it appears',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const VisualizerSettingsScreen(),
                     ),
                   ),
                 ),
@@ -174,41 +101,14 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.library_music_outlined,
                   title: 'Library',
-                  description: 'Manage moods, back up your collection',
+                  description: 'Vibes, video files, back up your collection',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => SettingsSectionScreen(
+                      builder: (_) => const SettingsSectionScreen(
                         title: 'Library',
                         description:
                             'Manage your music library and keep your data safe.',
-                        child: Column(
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.mood_outlined),
-                              title: const Text('Manage Moods'),
-                              subtitle: const Text(
-                                'Add, rename, recolor, or remove mood tags',
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const MoodTagManagementScreen(),
-                                ),
-                              ),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.backup_outlined),
-                              title: const Text('Backup & Restore'),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const BackupRestoreScreen(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: _LibrarySection(),
                       ),
                     ),
                   ),
@@ -217,58 +117,14 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.dashboard_customize_outlined,
                   title: 'Display',
-                  description:
-                      'Album art and visualizer in the mini player and Now Playing',
+                  description: 'Album art in the mini player and Now Playing',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => SettingsSectionScreen(
+                      builder: (_) => const SettingsSectionScreen(
                         title: 'Display',
                         description:
                             'Choose what shows up while music is playing.',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mini player',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SwitchListTile(
-                              title: const Text('Show album art'),
-                              value: settings.showAlbumArtInMiniPlayer,
-                              onChanged: (enabled) => controller
-                                  .setShowAlbumArtInMiniPlayer(enabled),
-                            ),
-                            SwitchListTile(
-                              title: const Text(
-                                'Show visualizer behind mini player',
-                              ),
-                              value: settings.showVisualizerInMiniPlayer,
-                              onChanged: (enabled) => controller
-                                  .setShowVisualizerInMiniPlayer(enabled),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Now Playing',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SwitchListTile(
-                              title: const Text('Show album art'),
-                              value: settings.showAlbumArtInNowPlaying,
-                              onChanged: (enabled) => controller
-                                  .setShowAlbumArtInNowPlaying(enabled),
-                            ),
-                            SwitchListTile(
-                              title: const Text('Show visualizer'),
-                              value: settings.showVisualizerInNowPlaying,
-                              onChanged: (enabled) => controller
-                                  .setShowVisualizerInNowPlaying(enabled),
-                            ),
-                          ],
-                        ),
+                        child: _DisplaySection(),
                       ),
                     ),
                   ),
@@ -339,6 +195,203 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Theme options. Watches settings itself so the switch and radios stay
+/// live while the section is open — see [SettingsScreen].
+class _ThemeSection extends ConsumerWidget {
+  const _ThemeSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final controller = ref.read(settingsControllerProvider.notifier);
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          title: const Text('Adaptive dark mode'),
+          subtitle: const Text(
+            'Switch between light and dark based on time of day',
+          ),
+          value: settings.adaptiveDarkModeEnabled,
+          onChanged: settings.manualThemeOverride != null
+              ? null
+              : (enabled) => controller.setAdaptiveDarkModeEnabled(enabled),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Appearance',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        RadioGroup<ThemeOverride?>(
+          groupValue: settings.manualThemeOverride,
+          onChanged: controller.setManualThemeOverride,
+          child: const Column(
+            children: [
+              RadioListTile<ThemeOverride?>(title: Text('Auto'), value: null),
+              RadioListTile<ThemeOverride?>(
+                title: Text('Light'),
+                value: ThemeOverride.light,
+              ),
+              RadioListTile<ThemeOverride?>(
+                title: Text('Dark'),
+                value: ThemeOverride.dark,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ListTile(
+          leading: const Icon(Icons.palette_outlined),
+          title: const Text('Theme Customization'),
+          subtitle: const Text('Theme family and app color'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ThemeCustomizationScreen()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Playback options. See [SettingsScreen] for why this is its own widget.
+class _PlaybackSection extends ConsumerWidget {
+  const _PlaybackSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final controller = ref.read(settingsControllerProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          title: const Text('Crossfade'),
+          subtitle: const Text('Fade out/in between tracks'),
+          value: settings.crossfadeEnabled,
+          onChanged: controller.setCrossfadeEnabled,
+        ),
+        ListTile(
+          title: const Text('Crossfade duration'),
+          subtitle: _CrossfadeDurationSlider(
+            enabled: settings.crossfadeEnabled,
+            duration: settings.crossfadeDuration,
+            onChangeEnd: controller.setCrossfadeDuration,
+          ),
+        ),
+        const ListTile(
+          title: Text('Seek step'),
+          subtitle: Text('How far the Now Playing back/forward buttons jump'),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SegmentedButton<int>(
+            segments: [
+              for (final seconds in const [5, 10, 15, 30])
+                ButtonSegment(value: seconds, label: Text('${seconds}s')),
+            ],
+            selected: {settings.seekStep.inSeconds},
+            onSelectionChanged: (selection) =>
+                controller.setSeekStep(Duration(seconds: selection.first)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        ListTile(
+          leading: const Icon(Icons.equalizer),
+          title: const Text('Equalizer'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+        ),
+      ],
+    );
+  }
+}
+
+/// Library options. See [SettingsScreen] for why this is its own widget.
+class _LibrarySection extends ConsumerWidget {
+  const _LibrarySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final controller = ref.read(settingsControllerProvider.notifier);
+
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.mood_outlined),
+          title: const Text('Manage Vibes'),
+          subtitle: const Text('Add, rename, recolor, or remove vibes'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const VibeTagManagementScreen()),
+          ),
+        ),
+        SwitchListTile(
+          secondary: const Icon(Icons.movie_outlined),
+          title: const Text('Include video files'),
+          subtitle: const Text('Play videos as music — audio only, no picture'),
+          value: settings.includeVideos,
+          onChanged: (enabled) async {
+            await controller.setIncludeVideos(enabled);
+            // Videos only appear (or disappear) once the library is
+            // re-scanned, so do it right away rather than leaving the toggle
+            // looking inert.
+            await ref.read(libraryControllerProvider.notifier).refresh();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.backup_outlined),
+          title: const Text('Backup & Restore'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Display options. See [SettingsScreen] for why this is its own widget.
+class _DisplaySection extends ConsumerWidget {
+  const _DisplaySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final controller = ref.read(settingsControllerProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          title: const Text('Album art in mini player'),
+          value: settings.showAlbumArtInMiniPlayer,
+          onChanged: controller.setShowAlbumArtInMiniPlayer,
+        ),
+        SwitchListTile(
+          title: const Text('Album art in Now Playing'),
+          value: settings.showAlbumArtInNowPlaying,
+          onChanged: controller.setShowAlbumArtInNowPlaying,
+        ),
+      ],
     );
   }
 }

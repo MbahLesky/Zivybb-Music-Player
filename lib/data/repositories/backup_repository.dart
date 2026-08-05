@@ -9,9 +9,11 @@ import 'package:uuid/uuid.dart';
 
 import '../datasources/app_database.dart';
 import '../models/app_settings.dart';
+import '../models/vibe_tag.dart';
 import 'playlist_repository.dart';
 import 'settings_repository.dart';
 import 'song_repository.dart';
+import 'vibe_tag_repository.dart';
 
 /// A backup snapshot's metadata; the snapshot itself is a JSON file at
 /// [filePath] (Entity-Diagrams-UML.md BACKUP, Screens.md #13).
@@ -35,7 +37,7 @@ class BackupEntry {
   final String filePath;
 }
 
-/// Backs up and restores playlists, liked songs, mood tags, and settings
+/// Backs up and restores playlists, liked songs, vibes, and settings
 /// (SRS F-5.1/F-5.2) as a self-contained JSON file.
 ///
 /// Songs and playlist entries are matched by file path on restore, not by
@@ -44,18 +46,24 @@ class BackupEntry {
 /// Entries whose file path no longer exists in the library are skipped
 /// rather than failing the whole restore, consistent with this app's
 /// missing-file philosophy (SRS F-5.3).
+///
+/// Format version 2 stores a list of vibes per song plus the vibe
+/// definitions themselves; version 1 (a single `moodTagId` per song, with no
+/// definitions) is still restorable — see [restoreBackup].
 class BackupRepository {
   BackupRepository({
     required this._database,
     required this._songRepository,
     required this._playlistRepository,
     required this._settingsRepository,
+    required this._vibeTagRepository,
   });
 
   final AppDatabase _database;
   final SongRepository _songRepository;
   final PlaylistRepository _playlistRepository;
   final SettingsRepository _settingsRepository;
+  final VibeTagRepository _vibeTagRepository;
   static const _uuid = Uuid();
 
   Stream<List<BackupEntry>> watchBackups() {
@@ -68,11 +76,15 @@ class BackupRepository {
 
   Future<BackupEntry> createBackup() async {
     final settings = await _settingsRepository.currentSettings();
-    final taggedSongs = await _songRepository.taggedOrLikedSongs();
+    final vibeTags = await _vibeTagRepository.allVibeTags();
+    final vibeIdsBySong = await _vibeTagRepository.allSongVibeIds();
+    final taggedSongs = await _songRepository.taggedOrLikedSongs(
+      vibeIdsBySong.keys.toSet(),
+    );
     final playlists = await _playlistRepository.allManualPlaylistsWithSongs();
 
     final data = {
-      'version': 1,
+      'version': 2,
       'settings': {
         'adaptiveDarkModeEnabled': settings.adaptiveDarkModeEnabled,
         'manualThemeOverride': settings.manualThemeOverride?.name,
@@ -81,12 +93,16 @@ class BackupRepository {
         'crossfadeEnabled': settings.crossfadeEnabled,
         'crossfadeDurationMs': settings.crossfadeDuration.inMilliseconds,
       },
+      'vibeTags': [
+        for (final tag in vibeTags)
+          {'id': tag.id, 'label': tag.label, 'colorHex': tag.colorHex},
+      ],
       'songs': [
         for (final song in taggedSongs)
           {
             'filePath': song.filePath,
             'isLiked': song.isLiked,
-            'moodTagId': song.moodTagId,
+            'vibeTagIds': vibeIdsBySong[song.id] ?? const <String>[],
           },
       ],
       'playlists': [
@@ -119,10 +135,12 @@ class BackupRepository {
     return BackupEntry(id: id, createdAt: createdAt, filePath: file.path);
   }
 
-  /// Restores playlists, liked songs, mood tags, and settings from
-  /// [backupId]. Doesn't touch auto-generated mood playlists directly —
-  /// callers should regenerate those afterward, since restored mood tags
-  /// feed into them.
+  /// Restores playlists, liked songs, vibes, and settings from [backupId].
+  /// Doesn't touch auto-generated vibe playlists directly — callers should
+  /// regenerate those afterward, since restored vibes feed into them.
+  ///
+  /// Reads both format versions: version 1's single `moodTagId` per song
+  /// becomes that song's one vibe.
   Future<void> restoreBackup(String backupId) async {
     final row = await (_database.select(
       _database.backups,
@@ -159,6 +177,27 @@ class BackupRepository {
       );
     }
 
+    // Restore the vibe definitions first so the per-song assignments below
+    // can't reference a vibe that doesn't exist. Existing vibes win, so a
+    // restore never overwrites labels or colors the user has since changed.
+    final backedUpTags = (data['vibeTags'] as List?) ?? const [];
+    for (final (index, entry) in backedUpTags.indexed) {
+      final map = entry as Map<String, dynamic>;
+      final id = map['id'] as String?;
+      if (id == null) continue;
+      await _vibeTagRepository.upsertVibeTag(
+        VibeTag(
+          id: id,
+          label: map['label'] as String? ?? id,
+          colorHex: map['colorHex'] as String? ?? '#FF7043',
+        ),
+        sortOrder: index,
+      );
+    }
+
+    final knownVibeIds = {
+      for (final tag in await _vibeTagRepository.allVibeTags()) tag.id,
+    };
     final currentSongs = await _songRepository.allSongs();
     final byFilePath = {for (final song in currentSongs) song.filePath: song};
 
@@ -170,7 +209,15 @@ class BackupRepository {
         match.id,
         map['isLiked'] as bool? ?? false,
       );
-      await _songRepository.setMoodTag(match.id, map['moodTagId'] as String?);
+
+      final vibeIds =
+          (map['vibeTagIds'] as List?)?.cast<String>() ??
+          // Version 1 fallback: one mood per song.
+          [?map['moodTagId'] as String?];
+      await _vibeTagRepository.setSongVibes(match.id, [
+        for (final id in vibeIds)
+          if (knownVibeIds.contains(id)) id,
+      ]);
     }
 
     for (final entry in (data['playlists'] as List?) ?? const []) {
@@ -218,6 +265,7 @@ final backupRepositoryProvider = Provider<BackupRepository>((ref) {
     songRepository: ref.watch(songRepositoryProvider),
     playlistRepository: ref.watch(playlistRepositoryProvider),
     settingsRepository: ref.watch(settingsRepositoryProvider),
+    vibeTagRepository: ref.watch(vibeTagRepositoryProvider),
   );
 });
 
