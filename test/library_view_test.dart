@@ -11,6 +11,8 @@ Song _song({
   Duration duration = const Duration(minutes: 3),
   int playCount = 0,
   DateTime? lastPlayedAt,
+  bool isLiked = false,
+  String? moodTagId,
 }) {
   return Song(
     id: id,
@@ -21,6 +23,8 @@ Song _song({
     duration: duration,
     playCount: playCount,
     lastPlayedAt: lastPlayedAt,
+    isLiked: isLiked,
+    moodTagId: moodTagId,
   );
 }
 
@@ -135,6 +139,79 @@ void main() {
         expect(idsFor(sort), hasLength(library.length), reason: sort.name);
       }
     });
+  });
+
+  group('applyLibraryView filter', () {
+    final library = [
+      _song(id: 'liked', isLiked: true, playCount: 3),
+      _song(id: 'tagged', moodTagId: 'chill', playCount: 1),
+      _song(id: 'fresh'),
+      _song(id: 'short', duration: const Duration(seconds: 40), playCount: 2),
+      _song(id: 'long', duration: const Duration(minutes: 7), playCount: 4),
+    ];
+
+    Set<String> idsFor(LibraryFilter filter) => applyLibraryView(
+      library,
+      query: '',
+      sort: LibrarySort.title,
+      filter: filter,
+    ).map((song) => song.id).toSet();
+
+    test('all keeps everything', () {
+      expect(idsFor(LibraryFilter.all), hasLength(library.length));
+    });
+
+    test('liked keeps only liked songs', () {
+      expect(idsFor(LibraryFilter.liked), {'liked'});
+    });
+
+    test('tagged and untagged partition the library', () {
+      expect(idsFor(LibraryFilter.tagged), {'tagged'});
+      expect(idsFor(LibraryFilter.untagged), {
+        'liked',
+        'fresh',
+        'short',
+        'long',
+      });
+    });
+
+    test('never played keeps only songs with no play count', () {
+      expect(idsFor(LibraryFilter.neverPlayed), {'fresh'});
+    });
+
+    test('duration filters use strict thresholds', () {
+      expect(idsFor(LibraryFilter.underOneMinute), {'short'});
+      expect(idsFor(LibraryFilter.overFiveMinutes), {'long'});
+    });
+
+    test('defaults to no filtering when omitted', () {
+      final withoutFilter = applyLibraryView(
+        library,
+        query: '',
+        sort: LibrarySort.title,
+      );
+      expect(withoutFilter, hasLength(library.length));
+    });
+  });
+
+  test('filter, search, and sort compose', () {
+    final library = [
+      _song(id: 'a', title: 'Blue One', isLiked: true, playCount: 1),
+      _song(id: 'b', title: 'Blue Two', isLiked: true, playCount: 9),
+      _song(id: 'c', title: 'Blue Three', playCount: 5),
+      _song(id: 'd', title: 'Red One', isLiked: true, playCount: 7),
+    ];
+
+    final result = applyLibraryView(
+      library,
+      query: 'blue',
+      sort: LibrarySort.mostPlayed,
+      filter: LibraryFilter.liked,
+    );
+
+    // 'c' is filtered out (not liked), 'd' by the search, and what remains
+    // comes back most-played first.
+    expect(result.map((song) => song.id), ['b', 'a']);
   });
 
   test('search and sort compose', () {

@@ -29,6 +29,38 @@ enum LibrarySort {
   };
 }
 
+/// Narrows the library to a subset before sorting. Independent of the search
+/// query — the two combine.
+enum LibraryFilter {
+  all,
+  liked,
+  tagged,
+  untagged,
+  neverPlayed,
+  underOneMinute,
+  overFiveMinutes;
+
+  String get label => switch (this) {
+    LibraryFilter.all => 'All songs',
+    LibraryFilter.liked => 'Liked only',
+    LibraryFilter.tagged => 'Has a mood tag',
+    LibraryFilter.untagged => 'No mood tag',
+    LibraryFilter.neverPlayed => 'Never played',
+    LibraryFilter.underOneMinute => 'Under 1 minute',
+    LibraryFilter.overFiveMinutes => 'Over 5 minutes',
+  };
+
+  bool matches(Song song) => switch (this) {
+    LibraryFilter.all => true,
+    LibraryFilter.liked => song.isLiked,
+    LibraryFilter.tagged => song.moodTagId != null,
+    LibraryFilter.untagged => song.moodTagId == null,
+    LibraryFilter.neverPlayed => song.playCount == 0,
+    LibraryFilter.underOneMinute => song.duration < const Duration(minutes: 1),
+    LibraryFilter.overFiveMinutes => song.duration > const Duration(minutes: 5),
+  };
+}
+
 /// The user's current search text for the library lists. Empty means no
 /// filtering.
 final librarySearchQueryProvider = StateProvider<String>((ref) => '');
@@ -38,7 +70,12 @@ final librarySortProvider = StateProvider<LibrarySort>(
   (ref) => LibrarySort.title,
 );
 
-/// Applies the active search query and sort order to [songs].
+/// The user's current library filter.
+final libraryFilterProvider = StateProvider<LibraryFilter>(
+  (ref) => LibraryFilter.all,
+);
+
+/// Applies the active search query, filter, and sort order to [songs].
 ///
 /// Deliberately a pure function over an already-loaded list rather than a
 /// database query: the library is a personal-sized collection held in memory
@@ -48,15 +85,16 @@ List<Song> applyLibraryView(
   List<Song> songs, {
   required String query,
   required LibrarySort sort,
+  LibraryFilter filter = LibraryFilter.all,
 }) {
   final trimmed = query.trim().toLowerCase();
-  final filtered = trimmed.isEmpty
-      ? [...songs]
-      : songs.where((song) {
-          return song.title.toLowerCase().contains(trimmed) ||
-              song.artist.toLowerCase().contains(trimmed) ||
-              song.album.toLowerCase().contains(trimmed);
-        }).toList();
+  final filtered = songs.where((song) {
+    if (!filter.matches(song)) return false;
+    if (trimmed.isEmpty) return true;
+    return song.title.toLowerCase().contains(trimmed) ||
+        song.artist.toLowerCase().contains(trimmed) ||
+        song.album.toLowerCase().contains(trimmed);
+  }).toList();
 
   int byText(String a, String b) => a.toLowerCase().compareTo(b.toLowerCase());
 

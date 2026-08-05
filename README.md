@@ -29,20 +29,29 @@ Streaming integration, offline downloads, and other larger features are planned 
 
 ## Brand mark
 
-The Zivybb mark is one unbroken gradient stroke read two ways: the top bar
-and long descending diagonal spell a **Z**, while that diagonal and the
-kicked-up tail meet in a point that reads as a **V**.
+The Zivybb mark is a calligraphic **ZV** monogram. One looping stroke draws
+the Z — along the bottom, up and back over the top, then down across its own
+path and away into a descending tail — and threads through a second stroke
+sweeping the V, so the two interlace like a ribbon. Both are brush strokes:
+the outline comes from offsetting a Bézier centreline by a width that swells
+on the downstrokes and pinches at the turns, which is what gives the
+thick/thin calligraphic weight rather than a uniform pen line.
 
-It lives in three places, all driven by the same coordinates — change one and
-change the others:
+Where the strokes cross, the one in front punches a small transparent gap
+through the one behind — that alternation is what makes the weave read.
 
-- [`assets/images/zivybb_logo.svg`](assets/images/zivybb_logo.svg) — the mark
-  on its own; `zivybb_icon.svg` adds the launcher backdrop.
-- [`tools/zivybb_logo.py`](tools/zivybb_logo.py) — regenerates the Android
-  launcher icons and adaptive-icon layers (`python3 tools/zivybb_logo.py`,
-  needs `numpy` and `Pillow`).
-- [`lib/shared/widgets/zivybb_logo.dart`](lib/shared/widgets/zivybb_logo.dart)
-  — draws the mark in-app so it stays crisp at any size.
+[`tools/zivybb_logo.py`](tools/zivybb_logo.py) is the source of truth. Run
+`python3 tools/zivybb_logo.py` (needs `numpy` and `Pillow`) to regenerate:
+
+- `assets/images/zivybb_logo.svg` / `zivybb_icon.svg` — design sources, both
+  generated; don't hand-edit them.
+- `assets/images/*.png` and the Android launcher icons plus adaptive-icon
+  layers.
+
+[`lib/shared/widgets/zivybb_logo.dart`](lib/shared/widgets/zivybb_logo.dart)
+draws the same mark in-app (app bar, and anywhere else it's needed) so it
+stays crisp at any size. Its geometry constants mirror the Python ones —
+change one and change the other.
 
 ## Building a release
 

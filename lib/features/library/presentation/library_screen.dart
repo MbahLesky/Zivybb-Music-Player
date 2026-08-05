@@ -59,6 +59,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       library,
       query: ref.watch(librarySearchQueryProvider),
       sort: ref.watch(librarySortProvider),
+      filter: ref.watch(libraryFilterProvider),
     );
 
     return DefaultTabController(
@@ -249,7 +250,13 @@ class _SongList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final query = ref.watch(librarySearchQueryProvider);
     final sort = ref.watch(librarySortProvider);
-    final visible = applyLibraryView(songs, query: query, sort: sort);
+    final filter = ref.watch(libraryFilterProvider);
+    final visible = applyLibraryView(
+      songs,
+      query: query,
+      sort: sort,
+      filter: filter,
+    );
 
     return Column(
       children: [
@@ -264,7 +271,7 @@ class _SongList extends ConsumerWidget {
                         child: Text(
                           songs.isEmpty
                               ? emptyMessage
-                              : 'No songs match "${query.trim()}".',
+                              : _noMatchMessage(query, filter),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -287,9 +294,16 @@ class _SongList extends ConsumerWidget {
       ],
     );
   }
+
+  String _noMatchMessage(String query, LibraryFilter filter) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return 'No songs match "${filter.label}".';
+    if (filter == LibraryFilter.all) return 'No songs match "$trimmed".';
+    return 'No songs match "$trimmed" in "${filter.label}".';
+  }
 }
 
-/// Search field plus sort menu, sitting above the song lists.
+/// Search field plus filter and sort menus, sitting above the song lists.
 class _LibraryViewControls extends ConsumerStatefulWidget {
   const _LibraryViewControls();
 
@@ -314,9 +328,10 @@ class _LibraryViewControlsState extends ConsumerState<_LibraryViewControls> {
     final theme = Theme.of(context);
     final query = ref.watch(librarySearchQueryProvider);
     final sort = ref.watch(librarySortProvider);
+    final filter = ref.watch(libraryFilterProvider);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
+      padding: const EdgeInsets.fromLTRB(16, 0, 4, 8),
       child: Row(
         children: [
           Expanded(
@@ -352,19 +367,81 @@ class _LibraryViewControlsState extends ConsumerState<_LibraryViewControls> {
               ),
             ),
           ),
-          PopupMenuButton<LibrarySort>(
-            icon: const Icon(Icons.sort),
-            tooltip: 'Sort: ${sort.label}',
-            initialValue: sort,
+          _MenuButton<LibraryFilter>(
+            icon: Icons.filter_list,
+            tooltipPrefix: 'Filter',
+            selected: filter,
+            options: LibraryFilter.values,
+            labelOf: (value) => value.label,
+            // Highlighted whenever it is actually narrowing the list, so an
+            // unexpectedly short list is easy to explain.
+            isActive: filter != LibraryFilter.all,
+            onSelected: (value) =>
+                ref.read(libraryFilterProvider.notifier).state = value,
+          ),
+          _MenuButton<LibrarySort>(
+            icon: Icons.sort,
+            tooltipPrefix: 'Sort',
+            selected: sort,
+            options: LibrarySort.values,
+            labelOf: (value) => value.label,
+            isActive: sort != LibrarySort.title,
             onSelected: (value) =>
                 ref.read(librarySortProvider.notifier).state = value,
-            itemBuilder: (_) => [
-              for (final option in LibrarySort.values)
-                PopupMenuItem(value: option, child: Text(option.label)),
-            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A popup menu rendered as an icon button, with a tick beside the current
+/// choice and a tint when that choice is not the default.
+class _MenuButton<T> extends StatelessWidget {
+  const _MenuButton({
+    required this.icon,
+    required this.tooltipPrefix,
+    required this.selected,
+    required this.options,
+    required this.labelOf,
+    required this.isActive,
+    required this.onSelected,
+  });
+
+  final IconData icon;
+  final String tooltipPrefix;
+  final T selected;
+  final List<T> options;
+  final String Function(T) labelOf;
+  final bool isActive;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return PopupMenuButton<T>(
+      icon: Icon(icon, color: isActive ? theme.colorScheme.primary : null),
+      tooltip: '$tooltipPrefix: ${labelOf(selected)}',
+      initialValue: selected,
+      onSelected: onSelected,
+      itemBuilder: (_) => [
+        for (final option in options)
+          PopupMenuItem(
+            value: option,
+            child: Row(
+              children: [
+                Icon(
+                  option == selected ? Icons.check : null,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(labelOf(option))),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
