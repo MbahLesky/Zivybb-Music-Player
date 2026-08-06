@@ -12,6 +12,7 @@
 // It is a test file purely because `flutter test` is the shortest route to a
 // working rasterizer. It asserts nothing about the app.
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -106,8 +107,10 @@ void main() {
 
       final tile = await _decode('$images/zivybb_icon.png');
       final mark = await _decode('$images/zivybb_logo.png');
-      stdout.writeln('tile ${tile.width}x${tile.height}  '
-          'mark ${mark.width}x${mark.height}');
+      stdout.writeln(
+        'tile ${tile.width}x${tile.height}  '
+        'mark ${mark.width}x${mark.height}',
+      );
 
       // --- measurements, so the hand-written XML can match the artwork ---
       final tileRgba = (await tile.toByteData())!;
@@ -122,8 +125,7 @@ void main() {
       // Corner radius, read off the top edge: the first opaque pixel in row 0
       // sits exactly one radius in from the corner.
       var radius = 0;
-      while (radius < tile.width &&
-          tileRgba.getUint8(radius * 4 + 3) <= 128) {
+      while (radius < tile.width && tileRgba.getUint8(radius * 4 + 3) <= 128) {
         radius++;
       }
       stdout.writeln(
@@ -171,7 +173,7 @@ void main() {
         final target = size * _safeZone * _markFillsSafeZone;
         // Scale the longer side to the target so the mark never overflows the
         // safe zone, and keep its aspect ratio.
-        final scale = target / math_max(markSrc.width, markSrc.height);
+        final scale = target / math.max(markSrc.width, markSrc.height);
         final width = markSrc.width * scale;
         final height = markSrc.height * scale;
         final image = await _render(entry.value, (canvas) {
@@ -196,5 +198,3 @@ void main() {
     });
   });
 }
-
-double math_max(double a, double b) => a > b ? a : b;

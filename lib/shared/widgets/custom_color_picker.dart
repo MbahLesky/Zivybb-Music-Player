@@ -47,10 +47,8 @@ class CustomColorPickerDialog extends StatefulWidget {
   }) {
     return showDialog<Color>(
       context: context,
-      builder: (_) => CustomColorPickerDialog(
-        initialColor: initialColor,
-        title: title,
-      ),
+      builder: (_) =>
+          CustomColorPickerDialog(initialColor: initialColor, title: title),
     );
   }
 

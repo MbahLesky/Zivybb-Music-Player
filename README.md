@@ -30,29 +30,27 @@ Streaming integration, offline downloads, and other larger features are planned 
 
 ## Brand mark
 
-The Zivybb mark is a calligraphic **ZV** monogram. One looping stroke draws
-the Z — along the bottom, up and back over the top, then down across its own
-path and away into a descending tail — and threads through a second stroke
-sweeping the V, so the two interlace like a ribbon. Both are brush strokes:
-the outline comes from offsetting a Bézier centreline by a width that swells
-on the downstrokes and pinches at the turns, which is what gives the
-thick/thin calligraphic weight rather than a uniform pen line.
+The mark is a gradient **Z** whose descending diagonal and kicked-up tail
+also read as a **V**. It is authored artwork, not code:
 
-Where the strokes cross, the one in front punches a small transparent gap
-through the one behind — that alternation is what makes the weave read.
+- `assets/images/zivybb_logo.png` — the bare mark on transparency.
+- `assets/images/zivybb_icon.png` — the same mark on its launcher tile.
 
-[`tools/zivybb_logo.py`](tools/zivybb_logo.py) is the source of truth. Run
-`python3 tools/zivybb_logo.py` (needs `numpy` and `Pillow`) to regenerate:
+Everything else is cut from those two files, so there is one thing to edit
+when the branding changes:
 
-- `assets/images/zivybb_logo.svg` / `zivybb_icon.svg` — design sources, both
-  generated; don't hand-edit them.
-- `assets/images/*.png` and the Android launcher icons plus adaptive-icon
-  layers.
+- [`tool/generate_icons.dart`](tool/generate_icons.dart) rescales them into
+  the Android launcher icons and adaptive-icon layers. Run it with
+  `flutter test tool/generate_icons.dart` — it is a test file only because
+  `flutter test` is the shortest route to a working rasterizer; it asserts
+  nothing about the app. The splash screen reuses the generated adaptive
+  foreground, so it follows automatically.
+- [`lib/shared/widgets/zivybb_logo.dart`](lib/shared/widgets/zivybb_logo.dart)
+  renders `zivybb_logo.png` in-app (the Library app bar, and anywhere else
+  it's needed).
 
-[`lib/shared/widgets/zivybb_logo.dart`](lib/shared/widgets/zivybb_logo.dart)
-draws the same mark in-app (app bar, and anywhere else it's needed) so it
-stays crisp at any size. Its geometry constants mirror the Python ones —
-change one and change the other.
+Replace the two PNGs, re-run the generator, and every surface updates
+together.
 
 ## Visualizer and the microphone permission
 

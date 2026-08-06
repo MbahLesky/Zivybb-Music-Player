@@ -69,10 +69,7 @@ Future<void> _dragTo(
   // Start the drag in the middle so the gesture is unambiguous, then move to
   // the target: the field reads the pointer's position, not the distance.
   final start = rect.center;
-  final target = Offset(
-    rect.left + rect.width * x,
-    rect.top + rect.height * y,
-  );
+  final target = Offset(rect.left + rect.width * x, rect.top + rect.height * y);
   await tester.dragFrom(start, target - start);
   await tester.pump();
 }
@@ -88,7 +85,10 @@ void main() {
     });
 
     testWidgets('a typed hex becomes the result', (tester) async {
-      final picked = await _pumpDialog(tester, initial: const Color(0xFFFF7043));
+      final picked = await _pumpDialog(
+        tester,
+        initial: const Color(0xFFFF7043),
+      );
 
       await tester.enterText(find.byType(TextField), '3B82F6');
       await tester.pump();
@@ -101,7 +101,10 @@ void main() {
     testWidgets('an incomplete hex is ignored rather than parsed short', (
       tester,
     ) async {
-      final picked = await _pumpDialog(tester, initial: const Color(0xFFFF7043));
+      final picked = await _pumpDialog(
+        tester,
+        initial: const Color(0xFFFF7043),
+      );
 
       // '3B8' is valid hex but only half a color — treating it as 0x0003B8
       // would recolor the swatch to near-black mid-keystroke.
@@ -114,7 +117,10 @@ void main() {
     });
 
     testWidgets('cancelling reports nothing', (tester) async {
-      final picked = await _pumpDialog(tester, initial: const Color(0xFFFF7043));
+      final picked = await _pumpDialog(
+        tester,
+        initial: const Color(0xFFFF7043),
+      );
 
       await tester.enterText(find.byType(TextField), '3B82F6');
       await tester.pump();
@@ -170,11 +176,7 @@ void main() {
     testWidgets('offers the wheel only when custom colors are allowed', (
       tester,
     ) async {
-      await _pumpSwatches(
-        tester,
-        selectedHex: '#FF7043',
-        allowCustom: false,
-      );
+      await _pumpSwatches(tester, selectedHex: '#FF7043', allowCustom: false);
       expect(find.byTooltip('Custom color'), findsNothing);
 
       await _pumpSwatches(tester, selectedHex: '#FF7043');

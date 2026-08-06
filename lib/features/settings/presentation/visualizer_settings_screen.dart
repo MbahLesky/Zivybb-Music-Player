@@ -54,6 +54,7 @@ class VisualizerSettingsScreen extends ConsumerWidget {
                     ColorSwatchPicker(
                       selectedHex: settings.visualizerColorHex,
                       onSelected: controller.setVisualizerColor,
+                      allowCustom: true,
                     ),
                   ],
                 ),

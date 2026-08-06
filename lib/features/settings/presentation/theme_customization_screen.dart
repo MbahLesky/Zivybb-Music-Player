@@ -144,6 +144,7 @@ class _ColorPickerCard extends StatelessWidget {
             selectedHex: selectedHex,
             onSelected: onSelected,
             swatchSize: 32,
+            allowCustom: true,
           ),
         ],
       ),
