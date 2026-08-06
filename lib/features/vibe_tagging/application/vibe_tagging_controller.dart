@@ -15,6 +15,17 @@ final songVibeIdsStreamProvider = StreamProvider<Map<String, List<String>>>((
   return ref.watch(vibeTagRepositoryProvider).watchSongVibeIds();
 });
 
+/// The ids of songs carrying at least one vibe, for the library's
+/// tagged/untagged filter. Empty until the vibe stream loads, which reads as
+/// "nothing tagged yet" rather than as an error.
+final vibeTaggedSongIdsProvider = Provider<Set<String>>((ref) {
+  final idsBySong = ref.watch(songVibeIdsStreamProvider).value ?? const {};
+  return {
+    for (final entry in idsBySong.entries)
+      if (entry.value.isNotEmpty) entry.key,
+  };
+});
+
 /// A single song's vibe ids, for the tagging sheet.
 final vibeIdsForSongProvider = StreamProvider.family<Set<String>, String>((
   ref,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/services/audio_capture_service.dart';
 import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../visualizer/application/visualizer_source_controller.dart';
 import '../application/settings_controller.dart';
 
 /// Choose the wave visualizer's color and style, and where it appears
@@ -100,38 +100,7 @@ class VisualizerSettingsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Reacts to', style: theme.textTheme.titleMedium),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Real-time audio'),
-                      subtitle: Text(
-                        settings.realtimeVisualizerEnabled
-                            ? 'Bars follow the actual music'
-                            : 'Bars animate to a simulated wave',
-                      ),
-                      value: settings.realtimeVisualizerEnabled,
-                      onChanged: (enabled) =>
-                          _setRealtime(context, ref, enabled: enabled),
-                    ),
-                    if (!settings.realtimeVisualizerEnabled)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          'Android asks for microphone access to read '
-                          "playback. Zivybb only reads its own audio — it "
-                          'never records you.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              const _RealVisualizerCard(),
               const SizedBox(height: 16),
               GlassCard(
                 child: Column(
@@ -162,37 +131,86 @@ class VisualizerSettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  /// Turning this on is gated on the permission Android's capture effect
-  /// requires: without it the visualizer would silently keep simulating, so
-  /// the setting stays off and says why.
-  Future<void> _setRealtime(
-    BuildContext context,
-    WidgetRef ref, {
-    required bool enabled,
-  }) async {
-    final controller = ref.read(settingsControllerProvider.notifier);
-    if (!enabled) {
-      await controller.setRealtimeVisualizerEnabled(false);
-      return;
-    }
+/// The opt-in for driving the visualizer from real audio.
+///
+/// Kept explicit about the permission rather than hiding it behind a bare
+/// switch: Android only exposes the audio it is playing through an API it
+/// gates behind RECORD_AUDIO, which reads alarmingly on a music player that
+/// never touches the microphone.
+class _RealVisualizerCard extends ConsumerWidget {
+  const _RealVisualizerCard();
 
-    final granted = await ref
-        .read(audioCaptureServiceProvider)
-        .requestPermission();
-    if (!granted) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Microphone access is needed to read playback. The visualizer '
-              'will keep using its simulated wave.',
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final theme = Theme.of(context);
+    final isLive = ref.watch(realVisualizerActiveProvider);
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('React to real audio'),
+            subtitle: const Text(
+              'Needs microphone permission — Android only exposes playing '
+              'audio through an API behind it. Zivybb never records.',
             ),
+            isThreeLine: true,
+            value: settings.realVisualizerEnabled,
+            onChanged: (enabled) => _toggle(context, ref, enabled),
           ),
-        );
-      }
-      return;
+          if (settings.realVisualizerEnabled) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  isLive ? Icons.graphic_eq : Icons.hourglass_empty,
+                  size: 16,
+                  color: isLive
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isLive
+                        ? 'Live — reading the audio now playing.'
+                        : 'Waiting for playback. Falls back to the simulated '
+                              'waveform if your device refuses the capture.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    bool enabled,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final applied = await ref
+        .read(settingsControllerProvider.notifier)
+        .setRealVisualizerEnabled(enabled);
+
+    if (enabled && !applied) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Permission denied, so the visualizer stays simulated.',
+          ),
+        ),
+      );
     }
-    await controller.setRealtimeVisualizerEnabled(true);
   }
 }

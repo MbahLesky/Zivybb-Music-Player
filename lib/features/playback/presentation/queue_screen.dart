@@ -9,6 +9,10 @@ import '../application/playback_controller.dart';
 /// Shows the current playback queue: reorder, remove, or jump to a track,
 /// sort it, or scramble it into a fresh random order ("Up next" from the
 /// Now Playing screen).
+///
+/// Lists the queue in its underlying order rather than shuffle order — that
+/// is the order the reorder handles actually manipulate, so showing anything
+/// else would make dragging feel arbitrary.
 class QueueScreen extends ConsumerWidget {
   const QueueScreen({super.key});
 
@@ -21,6 +25,15 @@ class QueueScreen extends ConsumerWidget {
       appBar: GradientAppBar(
         title: const Text('Up Next'),
         actions: [
+          if (queue.isNotEmpty)
+            Center(
+              child: Text(
+                '${queue.length} tracks',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
           AppBarIconAction(
             icon: const Icon(Icons.sort),
             tooltip: 'Sort queue',

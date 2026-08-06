@@ -175,14 +175,14 @@ class SettingsRepository {
     );
   }
 
-  Future<void> setRealtimeVisualizerEnabled(bool enabled) {
+  Future<void> setRealVisualizerEnabled(bool enabled) {
     return _upsert(
       SettingsCompanion.insert(
         id: Settings.singletonId,
-        realtimeVisualizerEnabled: Value(enabled),
+        realVisualizerEnabled: Value(enabled),
       ),
       onConflict: (_) =>
-          SettingsCompanion(realtimeVisualizerEnabled: Value(enabled)),
+          SettingsCompanion(realVisualizerEnabled: Value(enabled)),
     );
   }
 
@@ -214,7 +214,7 @@ class SettingsRepository {
       showVisualizerInNowPlaying: row.showVisualizerInNowPlaying,
       seekStep: Duration(seconds: row.seekStepSeconds),
       includeVideos: row.includeVideos,
-      realtimeVisualizerEnabled: row.realtimeVisualizerEnabled,
+      realVisualizerEnabled: row.realVisualizerEnabled,
     );
   }
 }

@@ -12,12 +12,13 @@ import io.flutter.plugin.common.MethodChannel
 // service — required for the lock-screen/notification controls to work.
 class MainActivity : AudioServiceActivity() {
 
-    private var audioCapture: AudioCapturePlugin? = null
+    private var visualizerBridge: AudioVisualizerBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        audioCapture = AudioCapturePlugin(flutterEngine.dartExecutor.binaryMessenger)
+        visualizerBridge =
+            AudioVisualizerBridge(flutterEngine.dartExecutor.binaryMessenger)
 
         // The bundled media-query plugin only reads MediaStore.Audio, so
         // videos-played-as-music (SRS: video audio playback) need their own
@@ -32,10 +33,10 @@ class MainActivity : AudioServiceActivity() {
     }
 
     override fun onDestroy() {
-        // The capture holds a native effect bound to an audio session; it
-        // must be released or it survives the activity.
-        audioCapture?.dispose()
-        audioCapture = null
+        // Releases the system Visualizer effect. Leaking it would keep the
+        // audio session captured for the life of the process.
+        visualizerBridge?.dispose()
+        visualizerBridge = null
         super.onDestroy()
     }
 
@@ -109,4 +110,21 @@ class MainActivity : AudioServiceActivity() {
     private companion object {
         const val VIDEO_CHANNEL = "com.lespa.zivybb/video_query"
     }
+=======
+    private var visualizerBridge: AudioVisualizerBridge? = null
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        visualizerBridge =
+            AudioVisualizerBridge(flutterEngine.dartExecutor.binaryMessenger)
+    }
+
+    override fun onDestroy() {
+        // Releases the system Visualizer effect. Leaking it would keep the
+        // audio session captured for the life of the process.
+        visualizerBridge?.dispose()
+        visualizerBridge = null
+        super.onDestroy()
+    }
+>>>>>>> 5e442c83fbab8a8cd5e2356976221499079b95f1
 }

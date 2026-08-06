@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../data/repositories/backup_repository.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
@@ -96,12 +99,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                     return ListTile(
                       leading: const Icon(Icons.history),
                       title: Text(_formatTimestamp(entry.createdAt)),
+                      subtitle: const Text('Tap Export to keep a copy'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           TextButton(
                             onPressed: _busy ? null : () => _restore(entry.id),
                             child: const Text('Restore'),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.ios_share),
+                            tooltip: 'Export backup',
+                            onPressed: _busy ? null : () => _export(entry),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
@@ -124,6 +133,28 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Hands the backup file to Android's share sheet.
+  ///
+  /// Backups otherwise live in app-private storage, which Android wipes on
+  /// uninstall — exporting is what makes them survive reinstalling the app
+  /// or moving to a new phone (SRS F-5.1).
+  Future<void> _export(BackupEntry entry) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final file = File(entry.filePath);
+    if (!await file.exists()) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('That backup file is missing.')),
+      );
+      return;
+    }
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(entry.filePath, mimeType: 'application/json')],
+        subject: 'Zivybb backup ${_formatTimestamp(entry.createdAt)}',
       ),
     );
   }

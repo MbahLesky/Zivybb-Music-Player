@@ -13,10 +13,13 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
-    <!-- Android's Visualizer effect is treated as audio capture, so it needs
-         RECORD_AUDIO even though Zivybb only ever reads its own playback
-         session and never the microphone. Requested only when the user turns
-         the real-time visualizer on. -->
+    <!-- Real (rather than simulated) audio for the wave visualizer, via
+         android.media.audiofx.Visualizer. That API can observe the output
+         mix, so Android gates it behind RECORD_AUDIO even though Zivybb
+         never touches the microphone. The feature is off by default and the
+         permission is only *requested* if the user turns it on in Settings —
+         but note the declaration alone is what Play Store surfaces in the
+         listing, so it shows up there either way. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Background playback + the media notification (audio_service). -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -36,7 +39,7 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28"/>
     <application
-        android:label="zivybb"
+        android:label="Zivybb"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

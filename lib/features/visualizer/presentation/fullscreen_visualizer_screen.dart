@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/theme/app_gradients.dart';
+import '../../../data/models/app_settings.dart';
 import '../../playback/application/playback_controller.dart';
 import '../../settings/application/settings_controller.dart';
 import 'wave_visualizer.dart';
@@ -11,7 +15,10 @@ import 'wave_visualizer.dart';
 ///
 /// Keeps the screen awake for as long as it's open and hides the system
 /// status/navigation bars; tapping anywhere toggles a minimal overlay with
-/// track info and transport controls.
+/// track info and transport controls. Swiping left or right cycles the
+/// visualizer style, so trying them out doesn't mean a round trip to
+/// Settings. The controls fade themselves out after a few seconds so the
+/// visualizer is left unobstructed without the user having to tap.
 class FullScreenVisualizerScreen extends ConsumerStatefulWidget {
   const FullScreenVisualizerScreen({super.key});
 
@@ -22,20 +29,50 @@ class FullScreenVisualizerScreen extends ConsumerStatefulWidget {
 
 class _FullScreenVisualizerScreenState
     extends ConsumerState<FullScreenVisualizerScreen> {
+  static const _autoHideAfter = Duration(seconds: 4);
+
   bool _controlsVisible = true;
+  Timer? _autoHide;
 
   @override
   void initState() {
     super.initState();
     WakelockPlus.enable();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    _scheduleAutoHide();
   }
 
   @override
   void dispose() {
+    _autoHide?.cancel();
     WakelockPlus.disable();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  void _scheduleAutoHide() {
+    _autoHide?.cancel();
+    if (!_controlsVisible) return;
+    _autoHide = Timer(_autoHideAfter, () {
+      if (mounted) setState(() => _controlsVisible = false);
+    });
+  }
+
+  void _toggleControls() {
+    setState(() => _controlsVisible = !_controlsVisible);
+    _scheduleAutoHide();
+  }
+
+  /// Steps the visualizer style by [delta] places, wrapping round.
+  void _cycleStyle(int delta) {
+    final styles = VisualizerStyle.values;
+    final current = ref.read(visualizerStyleProvider);
+    final next =
+        styles[(current.index + delta + styles.length) % styles.length];
+    ref.read(settingsControllerProvider.notifier).setVisualizerStyle(next);
+
+    setState(() => _controlsVisible = true);
+    _scheduleAutoHide();
   }
 
   @override
@@ -54,12 +91,27 @@ class _FullScreenVisualizerScreenState
         backgroundColor: scheme.surface,
         body: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => setState(() => _controlsVisible = !_controlsVisible),
+          onTap: _toggleControls,
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity.abs() < 100) return;
+            _cycleStyle(velocity < 0 ? 1 : -1);
+          },
           child: Stack(
             children: [
+              // A dim gradient rather than flat surface, so the glow the
+              // painters draw has something to bloom against.
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.surface(scheme),
+                  ),
+                ),
+              ),
               Positioned.fill(
                 child: WaveVisualizer(
                   color: ref.watch(visualizerColorProvider),
+                  barCount: 56,
                 ),
               ),
               AnimatedOpacity(
@@ -92,6 +144,17 @@ class _FullScreenVisualizerScreenState
                                           context,
                                         ).textTheme.titleMedium,
                                       ),
+                                    Text(
+                                      '${ref.watch(visualizerStyleProvider).label}'
+                                      '  ·  swipe to change',
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: scheme.onSurfaceVariant,
+                                          ),
+                                    ),
                                   ],
                                 ),
                               ),

@@ -309,221 +309,6 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
   }
 }
 
-class $SongVibesTable extends SongVibes
-    with TableInfo<$SongVibesTable, SongVibeRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SongVibesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _songIdMeta = const VerificationMeta('songId');
-  @override
-  late final GeneratedColumn<String> songId = GeneratedColumn<String>(
-    'song_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _vibeTagIdMeta = const VerificationMeta(
-    'vibeTagId',
-  );
-  @override
-  late final GeneratedColumn<String> vibeTagId = GeneratedColumn<String>(
-    'vibe_tag_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [songId, vibeTagId];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'song_vibes';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SongVibeRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('song_id')) {
-      context.handle(
-        _songIdMeta,
-        songId.isAcceptableOrUnknown(data['song_id']!, _songIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_songIdMeta);
-    }
-    if (data.containsKey('vibe_tag_id')) {
-      context.handle(
-        _vibeTagIdMeta,
-        vibeTagId.isAcceptableOrUnknown(data['vibe_tag_id']!, _vibeTagIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_vibeTagIdMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {songId, vibeTagId};
-  @override
-  SongVibeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SongVibeRow(
-      songId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}song_id'],
-      )!,
-      vibeTagId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}vibe_tag_id'],
-      )!,
-    );
-  }
-
-  @override
-  $SongVibesTable createAlias(String alias) {
-    return $SongVibesTable(attachedDatabase, alias);
-  }
-}
-
-class SongVibeRow extends DataClass implements Insertable<SongVibeRow> {
-  final String songId;
-  final String vibeTagId;
-  const SongVibeRow({required this.songId, required this.vibeTagId});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['song_id'] = Variable<String>(songId);
-    map['vibe_tag_id'] = Variable<String>(vibeTagId);
-    return map;
-  }
-
-  SongVibesCompanion toCompanion(bool nullToAbsent) {
-    return SongVibesCompanion(
-      songId: Value(songId),
-      vibeTagId: Value(vibeTagId),
-    );
-  }
-
-  factory SongVibeRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SongVibeRow(
-      songId: serializer.fromJson<String>(json['songId']),
-      vibeTagId: serializer.fromJson<String>(json['vibeTagId']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'songId': serializer.toJson<String>(songId),
-      'vibeTagId': serializer.toJson<String>(vibeTagId),
-    };
-  }
-
-  SongVibeRow copyWith({String? songId, String? vibeTagId}) => SongVibeRow(
-    songId: songId ?? this.songId,
-    vibeTagId: vibeTagId ?? this.vibeTagId,
-  );
-  SongVibeRow copyWithCompanion(SongVibesCompanion data) {
-    return SongVibeRow(
-      songId: data.songId.present ? data.songId.value : this.songId,
-      vibeTagId: data.vibeTagId.present ? data.vibeTagId.value : this.vibeTagId,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SongVibeRow(')
-          ..write('songId: $songId, ')
-          ..write('vibeTagId: $vibeTagId')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(songId, vibeTagId);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SongVibeRow &&
-          other.songId == this.songId &&
-          other.vibeTagId == this.vibeTagId);
-}
-
-class SongVibesCompanion extends UpdateCompanion<SongVibeRow> {
-  final Value<String> songId;
-  final Value<String> vibeTagId;
-  final Value<int> rowid;
-  const SongVibesCompanion({
-    this.songId = const Value.absent(),
-    this.vibeTagId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SongVibesCompanion.insert({
-    required String songId,
-    required String vibeTagId,
-    this.rowid = const Value.absent(),
-  }) : songId = Value(songId),
-       vibeTagId = Value(vibeTagId);
-  static Insertable<SongVibeRow> custom({
-    Expression<String>? songId,
-    Expression<String>? vibeTagId,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (songId != null) 'song_id': songId,
-      if (vibeTagId != null) 'vibe_tag_id': vibeTagId,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SongVibesCompanion copyWith({
-    Value<String>? songId,
-    Value<String>? vibeTagId,
-    Value<int>? rowid,
-  }) {
-    return SongVibesCompanion(
-      songId: songId ?? this.songId,
-      vibeTagId: vibeTagId ?? this.vibeTagId,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (songId.present) {
-      map['song_id'] = Variable<String>(songId.value);
-    }
-    if (vibeTagId.present) {
-      map['vibe_tag_id'] = Variable<String>(vibeTagId.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SongVibesCompanion(')
-          ..write('songId: $songId, ')
-          ..write('vibeTagId: $vibeTagId, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1180,6 +965,221 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
           ..write('isMissing: $isMissing, ')
           ..write('playCount: $playCount, ')
           ..write('lastPlayedAt: $lastPlayedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SongVibesTable extends SongVibes
+    with TableInfo<$SongVibesTable, SongVibeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SongVibesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _songIdMeta = const VerificationMeta('songId');
+  @override
+  late final GeneratedColumn<String> songId = GeneratedColumn<String>(
+    'song_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vibeTagIdMeta = const VerificationMeta(
+    'vibeTagId',
+  );
+  @override
+  late final GeneratedColumn<String> vibeTagId = GeneratedColumn<String>(
+    'vibe_tag_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [songId, vibeTagId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'song_vibes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SongVibeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('song_id')) {
+      context.handle(
+        _songIdMeta,
+        songId.isAcceptableOrUnknown(data['song_id']!, _songIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_songIdMeta);
+    }
+    if (data.containsKey('vibe_tag_id')) {
+      context.handle(
+        _vibeTagIdMeta,
+        vibeTagId.isAcceptableOrUnknown(data['vibe_tag_id']!, _vibeTagIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vibeTagIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {songId, vibeTagId};
+  @override
+  SongVibeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SongVibeRow(
+      songId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}song_id'],
+      )!,
+      vibeTagId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vibe_tag_id'],
+      )!,
+    );
+  }
+
+  @override
+  $SongVibesTable createAlias(String alias) {
+    return $SongVibesTable(attachedDatabase, alias);
+  }
+}
+
+class SongVibeRow extends DataClass implements Insertable<SongVibeRow> {
+  final String songId;
+  final String vibeTagId;
+  const SongVibeRow({required this.songId, required this.vibeTagId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['song_id'] = Variable<String>(songId);
+    map['vibe_tag_id'] = Variable<String>(vibeTagId);
+    return map;
+  }
+
+  SongVibesCompanion toCompanion(bool nullToAbsent) {
+    return SongVibesCompanion(
+      songId: Value(songId),
+      vibeTagId: Value(vibeTagId),
+    );
+  }
+
+  factory SongVibeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SongVibeRow(
+      songId: serializer.fromJson<String>(json['songId']),
+      vibeTagId: serializer.fromJson<String>(json['vibeTagId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'songId': serializer.toJson<String>(songId),
+      'vibeTagId': serializer.toJson<String>(vibeTagId),
+    };
+  }
+
+  SongVibeRow copyWith({String? songId, String? vibeTagId}) => SongVibeRow(
+    songId: songId ?? this.songId,
+    vibeTagId: vibeTagId ?? this.vibeTagId,
+  );
+  SongVibeRow copyWithCompanion(SongVibesCompanion data) {
+    return SongVibeRow(
+      songId: data.songId.present ? data.songId.value : this.songId,
+      vibeTagId: data.vibeTagId.present ? data.vibeTagId.value : this.vibeTagId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SongVibeRow(')
+          ..write('songId: $songId, ')
+          ..write('vibeTagId: $vibeTagId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(songId, vibeTagId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SongVibeRow &&
+          other.songId == this.songId &&
+          other.vibeTagId == this.vibeTagId);
+}
+
+class SongVibesCompanion extends UpdateCompanion<SongVibeRow> {
+  final Value<String> songId;
+  final Value<String> vibeTagId;
+  final Value<int> rowid;
+  const SongVibesCompanion({
+    this.songId = const Value.absent(),
+    this.vibeTagId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SongVibesCompanion.insert({
+    required String songId,
+    required String vibeTagId,
+    this.rowid = const Value.absent(),
+  }) : songId = Value(songId),
+       vibeTagId = Value(vibeTagId);
+  static Insertable<SongVibeRow> custom({
+    Expression<String>? songId,
+    Expression<String>? vibeTagId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (songId != null) 'song_id': songId,
+      if (vibeTagId != null) 'vibe_tag_id': vibeTagId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SongVibesCompanion copyWith({
+    Value<String>? songId,
+    Value<String>? vibeTagId,
+    Value<int>? rowid,
+  }) {
+    return SongVibesCompanion(
+      songId: songId ?? this.songId,
+      vibeTagId: vibeTagId ?? this.vibeTagId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (songId.present) {
+      map['song_id'] = Variable<String>(songId.value);
+    }
+    if (vibeTagId.present) {
+      map['vibe_tag_id'] = Variable<String>(vibeTagId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SongVibesCompanion(')
+          ..write('songId: $songId, ')
+          ..write('vibeTagId: $vibeTagId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1891,1074 +1891,6 @@ class PlaylistSongsCompanion extends UpdateCompanion<PlaylistSongRow> {
   }
 }
 
-class $SettingsTable extends Settings
-    with TableInfo<$SettingsTable, SettingsRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SettingsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _adaptiveDarkModeEnabledMeta =
-      const VerificationMeta('adaptiveDarkModeEnabled');
-  @override
-  late final GeneratedColumn<bool> adaptiveDarkModeEnabled =
-      GeneratedColumn<bool>(
-        'adaptive_dark_mode_enabled',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("adaptive_dark_mode_enabled" IN (0, 1))',
-        ),
-        defaultValue: const Constant(true),
-      );
-  static const VerificationMeta _manualThemeOverrideMeta =
-      const VerificationMeta('manualThemeOverride');
-  @override
-  late final GeneratedColumn<String> manualThemeOverride =
-      GeneratedColumn<String>(
-        'manual_theme_override',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _themeSeedColorHexMeta = const VerificationMeta(
-    'themeSeedColorHex',
-  );
-  @override
-  late final GeneratedColumn<String> themeSeedColorHex =
-      GeneratedColumn<String>(
-        'theme_seed_color_hex',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('#673AB7'),
-      );
-  static const VerificationMeta _visualizerColorHexMeta =
-      const VerificationMeta('visualizerColorHex');
-  @override
-  late final GeneratedColumn<String> visualizerColorHex =
-      GeneratedColumn<String>(
-        'visualizer_color_hex',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('#673AB7'),
-      );
-  static const VerificationMeta _crossfadeEnabledMeta = const VerificationMeta(
-    'crossfadeEnabled',
-  );
-  @override
-  late final GeneratedColumn<bool> crossfadeEnabled = GeneratedColumn<bool>(
-    'crossfade_enabled',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("crossfade_enabled" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _crossfadeDurationMsMeta =
-      const VerificationMeta('crossfadeDurationMs');
-  @override
-  late final GeneratedColumn<int> crossfadeDurationMs = GeneratedColumn<int>(
-    'crossfade_duration_ms',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(3000),
-  );
-  static const VerificationMeta _currentEqualizerPresetIdMeta =
-      const VerificationMeta('currentEqualizerPresetId');
-  @override
-  late final GeneratedColumn<String> currentEqualizerPresetId =
-      GeneratedColumn<String>(
-        'current_equalizer_preset_id',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _visualizerStyleMeta = const VerificationMeta(
-    'visualizerStyle',
-  );
-  @override
-  late final GeneratedColumn<String> visualizerStyle = GeneratedColumn<String>(
-    'visualizer_style',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('bars'),
-  );
-  static const VerificationMeta _showAlbumArtInMiniPlayerMeta =
-      const VerificationMeta('showAlbumArtInMiniPlayer');
-  @override
-  late final GeneratedColumn<bool> showAlbumArtInMiniPlayer =
-      GeneratedColumn<bool>(
-        'show_album_art_in_mini_player',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("show_album_art_in_mini_player" IN (0, 1))',
-        ),
-        defaultValue: const Constant(true),
-      );
-  static const VerificationMeta _showVisualizerInMiniPlayerMeta =
-      const VerificationMeta('showVisualizerInMiniPlayer');
-  @override
-  late final GeneratedColumn<bool> showVisualizerInMiniPlayer =
-      GeneratedColumn<bool>(
-        'show_visualizer_in_mini_player',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("show_visualizer_in_mini_player" IN (0, 1))',
-        ),
-        defaultValue: const Constant(false),
-      );
-  static const VerificationMeta _showAlbumArtInNowPlayingMeta =
-      const VerificationMeta('showAlbumArtInNowPlaying');
-  @override
-  late final GeneratedColumn<bool> showAlbumArtInNowPlaying =
-      GeneratedColumn<bool>(
-        'show_album_art_in_now_playing',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("show_album_art_in_now_playing" IN (0, 1))',
-        ),
-        defaultValue: const Constant(true),
-      );
-  static const VerificationMeta _showVisualizerInNowPlayingMeta =
-      const VerificationMeta('showVisualizerInNowPlaying');
-  @override
-  late final GeneratedColumn<bool> showVisualizerInNowPlaying =
-      GeneratedColumn<bool>(
-        'show_visualizer_in_now_playing',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("show_visualizer_in_now_playing" IN (0, 1))',
-        ),
-        defaultValue: const Constant(true),
-      );
-  static const VerificationMeta _seekStepSecondsMeta = const VerificationMeta(
-    'seekStepSeconds',
-  );
-  @override
-  late final GeneratedColumn<int> seekStepSeconds = GeneratedColumn<int>(
-    'seek_step_seconds',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(10),
-  );
-  static const VerificationMeta _includeVideosMeta = const VerificationMeta(
-    'includeVideos',
-  );
-  @override
-  late final GeneratedColumn<bool> includeVideos = GeneratedColumn<bool>(
-    'include_videos',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("include_videos" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _realtimeVisualizerEnabledMeta =
-      const VerificationMeta('realtimeVisualizerEnabled');
-  @override
-  late final GeneratedColumn<bool> realtimeVisualizerEnabled =
-      GeneratedColumn<bool>(
-        'realtime_visualizer_enabled',
-        aliasedName,
-        false,
-        type: DriftSqlType.bool,
-        requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("realtime_visualizer_enabled" IN (0, 1))',
-        ),
-        defaultValue: const Constant(false),
-      );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    adaptiveDarkModeEnabled,
-    manualThemeOverride,
-    themeSeedColorHex,
-    visualizerColorHex,
-    crossfadeEnabled,
-    crossfadeDurationMs,
-    currentEqualizerPresetId,
-    visualizerStyle,
-    showAlbumArtInMiniPlayer,
-    showVisualizerInMiniPlayer,
-    showAlbumArtInNowPlaying,
-    showVisualizerInNowPlaying,
-    seekStepSeconds,
-    includeVideos,
-    realtimeVisualizerEnabled,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'settings';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SettingsRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('adaptive_dark_mode_enabled')) {
-      context.handle(
-        _adaptiveDarkModeEnabledMeta,
-        adaptiveDarkModeEnabled.isAcceptableOrUnknown(
-          data['adaptive_dark_mode_enabled']!,
-          _adaptiveDarkModeEnabledMeta,
-        ),
-      );
-    }
-    if (data.containsKey('manual_theme_override')) {
-      context.handle(
-        _manualThemeOverrideMeta,
-        manualThemeOverride.isAcceptableOrUnknown(
-          data['manual_theme_override']!,
-          _manualThemeOverrideMeta,
-        ),
-      );
-    }
-    if (data.containsKey('theme_seed_color_hex')) {
-      context.handle(
-        _themeSeedColorHexMeta,
-        themeSeedColorHex.isAcceptableOrUnknown(
-          data['theme_seed_color_hex']!,
-          _themeSeedColorHexMeta,
-        ),
-      );
-    }
-    if (data.containsKey('visualizer_color_hex')) {
-      context.handle(
-        _visualizerColorHexMeta,
-        visualizerColorHex.isAcceptableOrUnknown(
-          data['visualizer_color_hex']!,
-          _visualizerColorHexMeta,
-        ),
-      );
-    }
-    if (data.containsKey('crossfade_enabled')) {
-      context.handle(
-        _crossfadeEnabledMeta,
-        crossfadeEnabled.isAcceptableOrUnknown(
-          data['crossfade_enabled']!,
-          _crossfadeEnabledMeta,
-        ),
-      );
-    }
-    if (data.containsKey('crossfade_duration_ms')) {
-      context.handle(
-        _crossfadeDurationMsMeta,
-        crossfadeDurationMs.isAcceptableOrUnknown(
-          data['crossfade_duration_ms']!,
-          _crossfadeDurationMsMeta,
-        ),
-      );
-    }
-    if (data.containsKey('current_equalizer_preset_id')) {
-      context.handle(
-        _currentEqualizerPresetIdMeta,
-        currentEqualizerPresetId.isAcceptableOrUnknown(
-          data['current_equalizer_preset_id']!,
-          _currentEqualizerPresetIdMeta,
-        ),
-      );
-    }
-    if (data.containsKey('visualizer_style')) {
-      context.handle(
-        _visualizerStyleMeta,
-        visualizerStyle.isAcceptableOrUnknown(
-          data['visualizer_style']!,
-          _visualizerStyleMeta,
-        ),
-      );
-    }
-    if (data.containsKey('show_album_art_in_mini_player')) {
-      context.handle(
-        _showAlbumArtInMiniPlayerMeta,
-        showAlbumArtInMiniPlayer.isAcceptableOrUnknown(
-          data['show_album_art_in_mini_player']!,
-          _showAlbumArtInMiniPlayerMeta,
-        ),
-      );
-    }
-    if (data.containsKey('show_visualizer_in_mini_player')) {
-      context.handle(
-        _showVisualizerInMiniPlayerMeta,
-        showVisualizerInMiniPlayer.isAcceptableOrUnknown(
-          data['show_visualizer_in_mini_player']!,
-          _showVisualizerInMiniPlayerMeta,
-        ),
-      );
-    }
-    if (data.containsKey('show_album_art_in_now_playing')) {
-      context.handle(
-        _showAlbumArtInNowPlayingMeta,
-        showAlbumArtInNowPlaying.isAcceptableOrUnknown(
-          data['show_album_art_in_now_playing']!,
-          _showAlbumArtInNowPlayingMeta,
-        ),
-      );
-    }
-    if (data.containsKey('show_visualizer_in_now_playing')) {
-      context.handle(
-        _showVisualizerInNowPlayingMeta,
-        showVisualizerInNowPlaying.isAcceptableOrUnknown(
-          data['show_visualizer_in_now_playing']!,
-          _showVisualizerInNowPlayingMeta,
-        ),
-      );
-    }
-    if (data.containsKey('seek_step_seconds')) {
-      context.handle(
-        _seekStepSecondsMeta,
-        seekStepSeconds.isAcceptableOrUnknown(
-          data['seek_step_seconds']!,
-          _seekStepSecondsMeta,
-        ),
-      );
-    }
-    if (data.containsKey('include_videos')) {
-      context.handle(
-        _includeVideosMeta,
-        includeVideos.isAcceptableOrUnknown(
-          data['include_videos']!,
-          _includeVideosMeta,
-        ),
-      );
-    }
-    if (data.containsKey('realtime_visualizer_enabled')) {
-      context.handle(
-        _realtimeVisualizerEnabledMeta,
-        realtimeVisualizerEnabled.isAcceptableOrUnknown(
-          data['realtime_visualizer_enabled']!,
-          _realtimeVisualizerEnabledMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  SettingsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SettingsRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      adaptiveDarkModeEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}adaptive_dark_mode_enabled'],
-      )!,
-      manualThemeOverride: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}manual_theme_override'],
-      ),
-      themeSeedColorHex: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}theme_seed_color_hex'],
-      )!,
-      visualizerColorHex: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}visualizer_color_hex'],
-      )!,
-      crossfadeEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}crossfade_enabled'],
-      )!,
-      crossfadeDurationMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}crossfade_duration_ms'],
-      )!,
-      currentEqualizerPresetId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}current_equalizer_preset_id'],
-      ),
-      visualizerStyle: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}visualizer_style'],
-      )!,
-      showAlbumArtInMiniPlayer: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}show_album_art_in_mini_player'],
-      )!,
-      showVisualizerInMiniPlayer: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}show_visualizer_in_mini_player'],
-      )!,
-      showAlbumArtInNowPlaying: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}show_album_art_in_now_playing'],
-      )!,
-      showVisualizerInNowPlaying: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}show_visualizer_in_now_playing'],
-      )!,
-      seekStepSeconds: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}seek_step_seconds'],
-      )!,
-      includeVideos: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}include_videos'],
-      )!,
-      realtimeVisualizerEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}realtime_visualizer_enabled'],
-      )!,
-    );
-  }
-
-  @override
-  $SettingsTable createAlias(String alias) {
-    return $SettingsTable(attachedDatabase, alias);
-  }
-}
-
-class SettingsRow extends DataClass implements Insertable<SettingsRow> {
-  final String id;
-  final bool adaptiveDarkModeEnabled;
-  final String? manualThemeOverride;
-  final String themeSeedColorHex;
-  final String visualizerColorHex;
-  final bool crossfadeEnabled;
-  final int crossfadeDurationMs;
-  final String? currentEqualizerPresetId;
-  final String visualizerStyle;
-  final bool showAlbumArtInMiniPlayer;
-  final bool showVisualizerInMiniPlayer;
-  final bool showAlbumArtInNowPlaying;
-  final bool showVisualizerInNowPlaying;
-
-  /// How far Now Playing's seek-back/forward buttons jump, in seconds.
-  final int seekStepSeconds;
-
-  /// Whether the library scan also picks up video files, played as audio.
-  final bool includeVideos;
-
-  /// Whether the visualizer reacts to the real audio signal rather than a
-  /// simulated waveform. Off by default: it needs the microphone permission,
-  /// which shouldn't be requested unasked.
-  final bool realtimeVisualizerEnabled;
-  const SettingsRow({
-    required this.id,
-    required this.adaptiveDarkModeEnabled,
-    this.manualThemeOverride,
-    required this.themeSeedColorHex,
-    required this.visualizerColorHex,
-    required this.crossfadeEnabled,
-    required this.crossfadeDurationMs,
-    this.currentEqualizerPresetId,
-    required this.visualizerStyle,
-    required this.showAlbumArtInMiniPlayer,
-    required this.showVisualizerInMiniPlayer,
-    required this.showAlbumArtInNowPlaying,
-    required this.showVisualizerInNowPlaying,
-    required this.seekStepSeconds,
-    required this.includeVideos,
-    required this.realtimeVisualizerEnabled,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['adaptive_dark_mode_enabled'] = Variable<bool>(adaptiveDarkModeEnabled);
-    if (!nullToAbsent || manualThemeOverride != null) {
-      map['manual_theme_override'] = Variable<String>(manualThemeOverride);
-    }
-    map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex);
-    map['visualizer_color_hex'] = Variable<String>(visualizerColorHex);
-    map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled);
-    map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs);
-    if (!nullToAbsent || currentEqualizerPresetId != null) {
-      map['current_equalizer_preset_id'] = Variable<String>(
-        currentEqualizerPresetId,
-      );
-    }
-    map['visualizer_style'] = Variable<String>(visualizerStyle);
-    map['show_album_art_in_mini_player'] = Variable<bool>(
-      showAlbumArtInMiniPlayer,
-    );
-    map['show_visualizer_in_mini_player'] = Variable<bool>(
-      showVisualizerInMiniPlayer,
-    );
-    map['show_album_art_in_now_playing'] = Variable<bool>(
-      showAlbumArtInNowPlaying,
-    );
-    map['show_visualizer_in_now_playing'] = Variable<bool>(
-      showVisualizerInNowPlaying,
-    );
-    map['seek_step_seconds'] = Variable<int>(seekStepSeconds);
-    map['include_videos'] = Variable<bool>(includeVideos);
-    map['realtime_visualizer_enabled'] = Variable<bool>(
-      realtimeVisualizerEnabled,
-    );
-    return map;
-  }
-
-  SettingsCompanion toCompanion(bool nullToAbsent) {
-    return SettingsCompanion(
-      id: Value(id),
-      adaptiveDarkModeEnabled: Value(adaptiveDarkModeEnabled),
-      manualThemeOverride: manualThemeOverride == null && nullToAbsent
-          ? const Value.absent()
-          : Value(manualThemeOverride),
-      themeSeedColorHex: Value(themeSeedColorHex),
-      visualizerColorHex: Value(visualizerColorHex),
-      crossfadeEnabled: Value(crossfadeEnabled),
-      crossfadeDurationMs: Value(crossfadeDurationMs),
-      currentEqualizerPresetId: currentEqualizerPresetId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(currentEqualizerPresetId),
-      visualizerStyle: Value(visualizerStyle),
-      showAlbumArtInMiniPlayer: Value(showAlbumArtInMiniPlayer),
-      showVisualizerInMiniPlayer: Value(showVisualizerInMiniPlayer),
-      showAlbumArtInNowPlaying: Value(showAlbumArtInNowPlaying),
-      showVisualizerInNowPlaying: Value(showVisualizerInNowPlaying),
-      seekStepSeconds: Value(seekStepSeconds),
-      includeVideos: Value(includeVideos),
-      realtimeVisualizerEnabled: Value(realtimeVisualizerEnabled),
-    );
-  }
-
-  factory SettingsRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SettingsRow(
-      id: serializer.fromJson<String>(json['id']),
-      adaptiveDarkModeEnabled: serializer.fromJson<bool>(
-        json['adaptiveDarkModeEnabled'],
-      ),
-      manualThemeOverride: serializer.fromJson<String?>(
-        json['manualThemeOverride'],
-      ),
-      themeSeedColorHex: serializer.fromJson<String>(json['themeSeedColorHex']),
-      visualizerColorHex: serializer.fromJson<String>(
-        json['visualizerColorHex'],
-      ),
-      crossfadeEnabled: serializer.fromJson<bool>(json['crossfadeEnabled']),
-      crossfadeDurationMs: serializer.fromJson<int>(
-        json['crossfadeDurationMs'],
-      ),
-      currentEqualizerPresetId: serializer.fromJson<String?>(
-        json['currentEqualizerPresetId'],
-      ),
-      visualizerStyle: serializer.fromJson<String>(json['visualizerStyle']),
-      showAlbumArtInMiniPlayer: serializer.fromJson<bool>(
-        json['showAlbumArtInMiniPlayer'],
-      ),
-      showVisualizerInMiniPlayer: serializer.fromJson<bool>(
-        json['showVisualizerInMiniPlayer'],
-      ),
-      showAlbumArtInNowPlaying: serializer.fromJson<bool>(
-        json['showAlbumArtInNowPlaying'],
-      ),
-      showVisualizerInNowPlaying: serializer.fromJson<bool>(
-        json['showVisualizerInNowPlaying'],
-      ),
-      seekStepSeconds: serializer.fromJson<int>(json['seekStepSeconds']),
-      includeVideos: serializer.fromJson<bool>(json['includeVideos']),
-      realtimeVisualizerEnabled: serializer.fromJson<bool>(
-        json['realtimeVisualizerEnabled'],
-      ),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'adaptiveDarkModeEnabled': serializer.toJson<bool>(
-        adaptiveDarkModeEnabled,
-      ),
-      'manualThemeOverride': serializer.toJson<String?>(manualThemeOverride),
-      'themeSeedColorHex': serializer.toJson<String>(themeSeedColorHex),
-      'visualizerColorHex': serializer.toJson<String>(visualizerColorHex),
-      'crossfadeEnabled': serializer.toJson<bool>(crossfadeEnabled),
-      'crossfadeDurationMs': serializer.toJson<int>(crossfadeDurationMs),
-      'currentEqualizerPresetId': serializer.toJson<String?>(
-        currentEqualizerPresetId,
-      ),
-      'visualizerStyle': serializer.toJson<String>(visualizerStyle),
-      'showAlbumArtInMiniPlayer': serializer.toJson<bool>(
-        showAlbumArtInMiniPlayer,
-      ),
-      'showVisualizerInMiniPlayer': serializer.toJson<bool>(
-        showVisualizerInMiniPlayer,
-      ),
-      'showAlbumArtInNowPlaying': serializer.toJson<bool>(
-        showAlbumArtInNowPlaying,
-      ),
-      'showVisualizerInNowPlaying': serializer.toJson<bool>(
-        showVisualizerInNowPlaying,
-      ),
-      'seekStepSeconds': serializer.toJson<int>(seekStepSeconds),
-      'includeVideos': serializer.toJson<bool>(includeVideos),
-      'realtimeVisualizerEnabled': serializer.toJson<bool>(
-        realtimeVisualizerEnabled,
-      ),
-    };
-  }
-
-  SettingsRow copyWith({
-    String? id,
-    bool? adaptiveDarkModeEnabled,
-    Value<String?> manualThemeOverride = const Value.absent(),
-    String? themeSeedColorHex,
-    String? visualizerColorHex,
-    bool? crossfadeEnabled,
-    int? crossfadeDurationMs,
-    Value<String?> currentEqualizerPresetId = const Value.absent(),
-    String? visualizerStyle,
-    bool? showAlbumArtInMiniPlayer,
-    bool? showVisualizerInMiniPlayer,
-    bool? showAlbumArtInNowPlaying,
-    bool? showVisualizerInNowPlaying,
-    int? seekStepSeconds,
-    bool? includeVideos,
-    bool? realtimeVisualizerEnabled,
-  }) => SettingsRow(
-    id: id ?? this.id,
-    adaptiveDarkModeEnabled:
-        adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
-    manualThemeOverride: manualThemeOverride.present
-        ? manualThemeOverride.value
-        : this.manualThemeOverride,
-    themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
-    visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
-    crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
-    crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
-    currentEqualizerPresetId: currentEqualizerPresetId.present
-        ? currentEqualizerPresetId.value
-        : this.currentEqualizerPresetId,
-    visualizerStyle: visualizerStyle ?? this.visualizerStyle,
-    showAlbumArtInMiniPlayer:
-        showAlbumArtInMiniPlayer ?? this.showAlbumArtInMiniPlayer,
-    showVisualizerInMiniPlayer:
-        showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
-    showAlbumArtInNowPlaying:
-        showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
-    showVisualizerInNowPlaying:
-        showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
-    seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
-    includeVideos: includeVideos ?? this.includeVideos,
-    realtimeVisualizerEnabled:
-        realtimeVisualizerEnabled ?? this.realtimeVisualizerEnabled,
-  );
-  SettingsRow copyWithCompanion(SettingsCompanion data) {
-    return SettingsRow(
-      id: data.id.present ? data.id.value : this.id,
-      adaptiveDarkModeEnabled: data.adaptiveDarkModeEnabled.present
-          ? data.adaptiveDarkModeEnabled.value
-          : this.adaptiveDarkModeEnabled,
-      manualThemeOverride: data.manualThemeOverride.present
-          ? data.manualThemeOverride.value
-          : this.manualThemeOverride,
-      themeSeedColorHex: data.themeSeedColorHex.present
-          ? data.themeSeedColorHex.value
-          : this.themeSeedColorHex,
-      visualizerColorHex: data.visualizerColorHex.present
-          ? data.visualizerColorHex.value
-          : this.visualizerColorHex,
-      crossfadeEnabled: data.crossfadeEnabled.present
-          ? data.crossfadeEnabled.value
-          : this.crossfadeEnabled,
-      crossfadeDurationMs: data.crossfadeDurationMs.present
-          ? data.crossfadeDurationMs.value
-          : this.crossfadeDurationMs,
-      currentEqualizerPresetId: data.currentEqualizerPresetId.present
-          ? data.currentEqualizerPresetId.value
-          : this.currentEqualizerPresetId,
-      visualizerStyle: data.visualizerStyle.present
-          ? data.visualizerStyle.value
-          : this.visualizerStyle,
-      showAlbumArtInMiniPlayer: data.showAlbumArtInMiniPlayer.present
-          ? data.showAlbumArtInMiniPlayer.value
-          : this.showAlbumArtInMiniPlayer,
-      showVisualizerInMiniPlayer: data.showVisualizerInMiniPlayer.present
-          ? data.showVisualizerInMiniPlayer.value
-          : this.showVisualizerInMiniPlayer,
-      showAlbumArtInNowPlaying: data.showAlbumArtInNowPlaying.present
-          ? data.showAlbumArtInNowPlaying.value
-          : this.showAlbumArtInNowPlaying,
-      showVisualizerInNowPlaying: data.showVisualizerInNowPlaying.present
-          ? data.showVisualizerInNowPlaying.value
-          : this.showVisualizerInNowPlaying,
-      seekStepSeconds: data.seekStepSeconds.present
-          ? data.seekStepSeconds.value
-          : this.seekStepSeconds,
-      includeVideos: data.includeVideos.present
-          ? data.includeVideos.value
-          : this.includeVideos,
-      realtimeVisualizerEnabled: data.realtimeVisualizerEnabled.present
-          ? data.realtimeVisualizerEnabled.value
-          : this.realtimeVisualizerEnabled,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SettingsRow(')
-          ..write('id: $id, ')
-          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
-          ..write('manualThemeOverride: $manualThemeOverride, ')
-          ..write('themeSeedColorHex: $themeSeedColorHex, ')
-          ..write('visualizerColorHex: $visualizerColorHex, ')
-          ..write('crossfadeEnabled: $crossfadeEnabled, ')
-          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
-          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
-          ..write('visualizerStyle: $visualizerStyle, ')
-          ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
-          ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
-          ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
-          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
-          ..write('seekStepSeconds: $seekStepSeconds, ')
-          ..write('includeVideos: $includeVideos, ')
-          ..write('realtimeVisualizerEnabled: $realtimeVisualizerEnabled')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    adaptiveDarkModeEnabled,
-    manualThemeOverride,
-    themeSeedColorHex,
-    visualizerColorHex,
-    crossfadeEnabled,
-    crossfadeDurationMs,
-    currentEqualizerPresetId,
-    visualizerStyle,
-    showAlbumArtInMiniPlayer,
-    showVisualizerInMiniPlayer,
-    showAlbumArtInNowPlaying,
-    showVisualizerInNowPlaying,
-    seekStepSeconds,
-    includeVideos,
-    realtimeVisualizerEnabled,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SettingsRow &&
-          other.id == this.id &&
-          other.adaptiveDarkModeEnabled == this.adaptiveDarkModeEnabled &&
-          other.manualThemeOverride == this.manualThemeOverride &&
-          other.themeSeedColorHex == this.themeSeedColorHex &&
-          other.visualizerColorHex == this.visualizerColorHex &&
-          other.crossfadeEnabled == this.crossfadeEnabled &&
-          other.crossfadeDurationMs == this.crossfadeDurationMs &&
-          other.currentEqualizerPresetId == this.currentEqualizerPresetId &&
-          other.visualizerStyle == this.visualizerStyle &&
-          other.showAlbumArtInMiniPlayer == this.showAlbumArtInMiniPlayer &&
-          other.showVisualizerInMiniPlayer == this.showVisualizerInMiniPlayer &&
-          other.showAlbumArtInNowPlaying == this.showAlbumArtInNowPlaying &&
-          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying &&
-          other.seekStepSeconds == this.seekStepSeconds &&
-          other.includeVideos == this.includeVideos &&
-          other.realtimeVisualizerEnabled == this.realtimeVisualizerEnabled);
-}
-
-class SettingsCompanion extends UpdateCompanion<SettingsRow> {
-  final Value<String> id;
-  final Value<bool> adaptiveDarkModeEnabled;
-  final Value<String?> manualThemeOverride;
-  final Value<String> themeSeedColorHex;
-  final Value<String> visualizerColorHex;
-  final Value<bool> crossfadeEnabled;
-  final Value<int> crossfadeDurationMs;
-  final Value<String?> currentEqualizerPresetId;
-  final Value<String> visualizerStyle;
-  final Value<bool> showAlbumArtInMiniPlayer;
-  final Value<bool> showVisualizerInMiniPlayer;
-  final Value<bool> showAlbumArtInNowPlaying;
-  final Value<bool> showVisualizerInNowPlaying;
-  final Value<int> seekStepSeconds;
-  final Value<bool> includeVideos;
-  final Value<bool> realtimeVisualizerEnabled;
-  final Value<int> rowid;
-  const SettingsCompanion({
-    this.id = const Value.absent(),
-    this.adaptiveDarkModeEnabled = const Value.absent(),
-    this.manualThemeOverride = const Value.absent(),
-    this.themeSeedColorHex = const Value.absent(),
-    this.visualizerColorHex = const Value.absent(),
-    this.crossfadeEnabled = const Value.absent(),
-    this.crossfadeDurationMs = const Value.absent(),
-    this.currentEqualizerPresetId = const Value.absent(),
-    this.visualizerStyle = const Value.absent(),
-    this.showAlbumArtInMiniPlayer = const Value.absent(),
-    this.showVisualizerInMiniPlayer = const Value.absent(),
-    this.showAlbumArtInNowPlaying = const Value.absent(),
-    this.showVisualizerInNowPlaying = const Value.absent(),
-    this.seekStepSeconds = const Value.absent(),
-    this.includeVideos = const Value.absent(),
-    this.realtimeVisualizerEnabled = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SettingsCompanion.insert({
-    required String id,
-    this.adaptiveDarkModeEnabled = const Value.absent(),
-    this.manualThemeOverride = const Value.absent(),
-    this.themeSeedColorHex = const Value.absent(),
-    this.visualizerColorHex = const Value.absent(),
-    this.crossfadeEnabled = const Value.absent(),
-    this.crossfadeDurationMs = const Value.absent(),
-    this.currentEqualizerPresetId = const Value.absent(),
-    this.visualizerStyle = const Value.absent(),
-    this.showAlbumArtInMiniPlayer = const Value.absent(),
-    this.showVisualizerInMiniPlayer = const Value.absent(),
-    this.showAlbumArtInNowPlaying = const Value.absent(),
-    this.showVisualizerInNowPlaying = const Value.absent(),
-    this.seekStepSeconds = const Value.absent(),
-    this.includeVideos = const Value.absent(),
-    this.realtimeVisualizerEnabled = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : id = Value(id);
-  static Insertable<SettingsRow> custom({
-    Expression<String>? id,
-    Expression<bool>? adaptiveDarkModeEnabled,
-    Expression<String>? manualThemeOverride,
-    Expression<String>? themeSeedColorHex,
-    Expression<String>? visualizerColorHex,
-    Expression<bool>? crossfadeEnabled,
-    Expression<int>? crossfadeDurationMs,
-    Expression<String>? currentEqualizerPresetId,
-    Expression<String>? visualizerStyle,
-    Expression<bool>? showAlbumArtInMiniPlayer,
-    Expression<bool>? showVisualizerInMiniPlayer,
-    Expression<bool>? showAlbumArtInNowPlaying,
-    Expression<bool>? showVisualizerInNowPlaying,
-    Expression<int>? seekStepSeconds,
-    Expression<bool>? includeVideos,
-    Expression<bool>? realtimeVisualizerEnabled,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (adaptiveDarkModeEnabled != null)
-        'adaptive_dark_mode_enabled': adaptiveDarkModeEnabled,
-      if (manualThemeOverride != null)
-        'manual_theme_override': manualThemeOverride,
-      if (themeSeedColorHex != null) 'theme_seed_color_hex': themeSeedColorHex,
-      if (visualizerColorHex != null)
-        'visualizer_color_hex': visualizerColorHex,
-      if (crossfadeEnabled != null) 'crossfade_enabled': crossfadeEnabled,
-      if (crossfadeDurationMs != null)
-        'crossfade_duration_ms': crossfadeDurationMs,
-      if (currentEqualizerPresetId != null)
-        'current_equalizer_preset_id': currentEqualizerPresetId,
-      if (visualizerStyle != null) 'visualizer_style': visualizerStyle,
-      if (showAlbumArtInMiniPlayer != null)
-        'show_album_art_in_mini_player': showAlbumArtInMiniPlayer,
-      if (showVisualizerInMiniPlayer != null)
-        'show_visualizer_in_mini_player': showVisualizerInMiniPlayer,
-      if (showAlbumArtInNowPlaying != null)
-        'show_album_art_in_now_playing': showAlbumArtInNowPlaying,
-      if (showVisualizerInNowPlaying != null)
-        'show_visualizer_in_now_playing': showVisualizerInNowPlaying,
-      if (seekStepSeconds != null) 'seek_step_seconds': seekStepSeconds,
-      if (includeVideos != null) 'include_videos': includeVideos,
-      if (realtimeVisualizerEnabled != null)
-        'realtime_visualizer_enabled': realtimeVisualizerEnabled,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SettingsCompanion copyWith({
-    Value<String>? id,
-    Value<bool>? adaptiveDarkModeEnabled,
-    Value<String?>? manualThemeOverride,
-    Value<String>? themeSeedColorHex,
-    Value<String>? visualizerColorHex,
-    Value<bool>? crossfadeEnabled,
-    Value<int>? crossfadeDurationMs,
-    Value<String?>? currentEqualizerPresetId,
-    Value<String>? visualizerStyle,
-    Value<bool>? showAlbumArtInMiniPlayer,
-    Value<bool>? showVisualizerInMiniPlayer,
-    Value<bool>? showAlbumArtInNowPlaying,
-    Value<bool>? showVisualizerInNowPlaying,
-    Value<int>? seekStepSeconds,
-    Value<bool>? includeVideos,
-    Value<bool>? realtimeVisualizerEnabled,
-    Value<int>? rowid,
-  }) {
-    return SettingsCompanion(
-      id: id ?? this.id,
-      adaptiveDarkModeEnabled:
-          adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
-      manualThemeOverride: manualThemeOverride ?? this.manualThemeOverride,
-      themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
-      visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
-      crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
-      crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
-      currentEqualizerPresetId:
-          currentEqualizerPresetId ?? this.currentEqualizerPresetId,
-      visualizerStyle: visualizerStyle ?? this.visualizerStyle,
-      showAlbumArtInMiniPlayer:
-          showAlbumArtInMiniPlayer ?? this.showAlbumArtInMiniPlayer,
-      showVisualizerInMiniPlayer:
-          showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
-      showAlbumArtInNowPlaying:
-          showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
-      showVisualizerInNowPlaying:
-          showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
-      seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
-      includeVideos: includeVideos ?? this.includeVideos,
-      realtimeVisualizerEnabled:
-          realtimeVisualizerEnabled ?? this.realtimeVisualizerEnabled,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (adaptiveDarkModeEnabled.present) {
-      map['adaptive_dark_mode_enabled'] = Variable<bool>(
-        adaptiveDarkModeEnabled.value,
-      );
-    }
-    if (manualThemeOverride.present) {
-      map['manual_theme_override'] = Variable<String>(
-        manualThemeOverride.value,
-      );
-    }
-    if (themeSeedColorHex.present) {
-      map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex.value);
-    }
-    if (visualizerColorHex.present) {
-      map['visualizer_color_hex'] = Variable<String>(visualizerColorHex.value);
-    }
-    if (crossfadeEnabled.present) {
-      map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled.value);
-    }
-    if (crossfadeDurationMs.present) {
-      map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs.value);
-    }
-    if (currentEqualizerPresetId.present) {
-      map['current_equalizer_preset_id'] = Variable<String>(
-        currentEqualizerPresetId.value,
-      );
-    }
-    if (visualizerStyle.present) {
-      map['visualizer_style'] = Variable<String>(visualizerStyle.value);
-    }
-    if (showAlbumArtInMiniPlayer.present) {
-      map['show_album_art_in_mini_player'] = Variable<bool>(
-        showAlbumArtInMiniPlayer.value,
-      );
-    }
-    if (showVisualizerInMiniPlayer.present) {
-      map['show_visualizer_in_mini_player'] = Variable<bool>(
-        showVisualizerInMiniPlayer.value,
-      );
-    }
-    if (showAlbumArtInNowPlaying.present) {
-      map['show_album_art_in_now_playing'] = Variable<bool>(
-        showAlbumArtInNowPlaying.value,
-      );
-    }
-    if (showVisualizerInNowPlaying.present) {
-      map['show_visualizer_in_now_playing'] = Variable<bool>(
-        showVisualizerInNowPlaying.value,
-      );
-    }
-    if (seekStepSeconds.present) {
-      map['seek_step_seconds'] = Variable<int>(seekStepSeconds.value);
-    }
-    if (includeVideos.present) {
-      map['include_videos'] = Variable<bool>(includeVideos.value);
-    }
-    if (realtimeVisualizerEnabled.present) {
-      map['realtime_visualizer_enabled'] = Variable<bool>(
-        realtimeVisualizerEnabled.value,
-      );
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SettingsCompanion(')
-          ..write('id: $id, ')
-          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
-          ..write('manualThemeOverride: $manualThemeOverride, ')
-          ..write('themeSeedColorHex: $themeSeedColorHex, ')
-          ..write('visualizerColorHex: $visualizerColorHex, ')
-          ..write('crossfadeEnabled: $crossfadeEnabled, ')
-          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
-          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
-          ..write('visualizerStyle: $visualizerStyle, ')
-          ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
-          ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
-          ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
-          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
-          ..write('seekStepSeconds: $seekStepSeconds, ')
-          ..write('includeVideos: $includeVideos, ')
-          ..write('realtimeVisualizerEnabled: $realtimeVisualizerEnabled, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $EqualizerPresetsTable extends EqualizerPresets
     with TableInfo<$EqualizerPresetsTable, EqualizerPresetRow> {
   @override
@@ -3229,6 +2161,1068 @@ class EqualizerPresetsCompanion extends UpdateCompanion<EqualizerPresetRow> {
   }
 }
 
+class $SettingsTable extends Settings
+    with TableInfo<$SettingsTable, SettingsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _adaptiveDarkModeEnabledMeta =
+      const VerificationMeta('adaptiveDarkModeEnabled');
+  @override
+  late final GeneratedColumn<bool> adaptiveDarkModeEnabled =
+      GeneratedColumn<bool>(
+        'adaptive_dark_mode_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("adaptive_dark_mode_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _manualThemeOverrideMeta =
+      const VerificationMeta('manualThemeOverride');
+  @override
+  late final GeneratedColumn<String> manualThemeOverride =
+      GeneratedColumn<String>(
+        'manual_theme_override',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _themeSeedColorHexMeta = const VerificationMeta(
+    'themeSeedColorHex',
+  );
+  @override
+  late final GeneratedColumn<String> themeSeedColorHex =
+      GeneratedColumn<String>(
+        'theme_seed_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#673AB7'),
+      );
+  static const VerificationMeta _visualizerColorHexMeta =
+      const VerificationMeta('visualizerColorHex');
+  @override
+  late final GeneratedColumn<String> visualizerColorHex =
+      GeneratedColumn<String>(
+        'visualizer_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#673AB7'),
+      );
+  static const VerificationMeta _crossfadeEnabledMeta = const VerificationMeta(
+    'crossfadeEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> crossfadeEnabled = GeneratedColumn<bool>(
+    'crossfade_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("crossfade_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _crossfadeDurationMsMeta =
+      const VerificationMeta('crossfadeDurationMs');
+  @override
+  late final GeneratedColumn<int> crossfadeDurationMs = GeneratedColumn<int>(
+    'crossfade_duration_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(3000),
+  );
+  static const VerificationMeta _currentEqualizerPresetIdMeta =
+      const VerificationMeta('currentEqualizerPresetId');
+  @override
+  late final GeneratedColumn<String> currentEqualizerPresetId =
+      GeneratedColumn<String>(
+        'current_equalizer_preset_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _visualizerStyleMeta = const VerificationMeta(
+    'visualizerStyle',
+  );
+  @override
+  late final GeneratedColumn<String> visualizerStyle = GeneratedColumn<String>(
+    'visualizer_style',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('bars'),
+  );
+  static const VerificationMeta _showAlbumArtInMiniPlayerMeta =
+      const VerificationMeta('showAlbumArtInMiniPlayer');
+  @override
+  late final GeneratedColumn<bool> showAlbumArtInMiniPlayer =
+      GeneratedColumn<bool>(
+        'show_album_art_in_mini_player',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("show_album_art_in_mini_player" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _showVisualizerInMiniPlayerMeta =
+      const VerificationMeta('showVisualizerInMiniPlayer');
+  @override
+  late final GeneratedColumn<bool> showVisualizerInMiniPlayer =
+      GeneratedColumn<bool>(
+        'show_visualizer_in_mini_player',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("show_visualizer_in_mini_player" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _showAlbumArtInNowPlayingMeta =
+      const VerificationMeta('showAlbumArtInNowPlaying');
+  @override
+  late final GeneratedColumn<bool> showAlbumArtInNowPlaying =
+      GeneratedColumn<bool>(
+        'show_album_art_in_now_playing',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("show_album_art_in_now_playing" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _showVisualizerInNowPlayingMeta =
+      const VerificationMeta('showVisualizerInNowPlaying');
+  @override
+  late final GeneratedColumn<bool> showVisualizerInNowPlaying =
+      GeneratedColumn<bool>(
+        'show_visualizer_in_now_playing',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("show_visualizer_in_now_playing" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _seekStepSecondsMeta = const VerificationMeta(
+    'seekStepSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> seekStepSeconds = GeneratedColumn<int>(
+    'seek_step_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(10),
+  );
+  static const VerificationMeta _includeVideosMeta = const VerificationMeta(
+    'includeVideos',
+  );
+  @override
+  late final GeneratedColumn<bool> includeVideos = GeneratedColumn<bool>(
+    'include_videos',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("include_videos" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _realVisualizerEnabledMeta =
+      const VerificationMeta('realVisualizerEnabled');
+  @override
+  late final GeneratedColumn<bool> realVisualizerEnabled =
+      GeneratedColumn<bool>(
+        'real_visualizer_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("real_visualizer_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    adaptiveDarkModeEnabled,
+    manualThemeOverride,
+    themeSeedColorHex,
+    visualizerColorHex,
+    crossfadeEnabled,
+    crossfadeDurationMs,
+    currentEqualizerPresetId,
+    visualizerStyle,
+    showAlbumArtInMiniPlayer,
+    showVisualizerInMiniPlayer,
+    showAlbumArtInNowPlaying,
+    showVisualizerInNowPlaying,
+    seekStepSeconds,
+    includeVideos,
+    realVisualizerEnabled,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SettingsRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('adaptive_dark_mode_enabled')) {
+      context.handle(
+        _adaptiveDarkModeEnabledMeta,
+        adaptiveDarkModeEnabled.isAcceptableOrUnknown(
+          data['adaptive_dark_mode_enabled']!,
+          _adaptiveDarkModeEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('manual_theme_override')) {
+      context.handle(
+        _manualThemeOverrideMeta,
+        manualThemeOverride.isAcceptableOrUnknown(
+          data['manual_theme_override']!,
+          _manualThemeOverrideMeta,
+        ),
+      );
+    }
+    if (data.containsKey('theme_seed_color_hex')) {
+      context.handle(
+        _themeSeedColorHexMeta,
+        themeSeedColorHex.isAcceptableOrUnknown(
+          data['theme_seed_color_hex']!,
+          _themeSeedColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_color_hex')) {
+      context.handle(
+        _visualizerColorHexMeta,
+        visualizerColorHex.isAcceptableOrUnknown(
+          data['visualizer_color_hex']!,
+          _visualizerColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('crossfade_enabled')) {
+      context.handle(
+        _crossfadeEnabledMeta,
+        crossfadeEnabled.isAcceptableOrUnknown(
+          data['crossfade_enabled']!,
+          _crossfadeEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('crossfade_duration_ms')) {
+      context.handle(
+        _crossfadeDurationMsMeta,
+        crossfadeDurationMs.isAcceptableOrUnknown(
+          data['crossfade_duration_ms']!,
+          _crossfadeDurationMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_equalizer_preset_id')) {
+      context.handle(
+        _currentEqualizerPresetIdMeta,
+        currentEqualizerPresetId.isAcceptableOrUnknown(
+          data['current_equalizer_preset_id']!,
+          _currentEqualizerPresetIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_style')) {
+      context.handle(
+        _visualizerStyleMeta,
+        visualizerStyle.isAcceptableOrUnknown(
+          data['visualizer_style']!,
+          _visualizerStyleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_album_art_in_mini_player')) {
+      context.handle(
+        _showAlbumArtInMiniPlayerMeta,
+        showAlbumArtInMiniPlayer.isAcceptableOrUnknown(
+          data['show_album_art_in_mini_player']!,
+          _showAlbumArtInMiniPlayerMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_visualizer_in_mini_player')) {
+      context.handle(
+        _showVisualizerInMiniPlayerMeta,
+        showVisualizerInMiniPlayer.isAcceptableOrUnknown(
+          data['show_visualizer_in_mini_player']!,
+          _showVisualizerInMiniPlayerMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_album_art_in_now_playing')) {
+      context.handle(
+        _showAlbumArtInNowPlayingMeta,
+        showAlbumArtInNowPlaying.isAcceptableOrUnknown(
+          data['show_album_art_in_now_playing']!,
+          _showAlbumArtInNowPlayingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_visualizer_in_now_playing')) {
+      context.handle(
+        _showVisualizerInNowPlayingMeta,
+        showVisualizerInNowPlaying.isAcceptableOrUnknown(
+          data['show_visualizer_in_now_playing']!,
+          _showVisualizerInNowPlayingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('seek_step_seconds')) {
+      context.handle(
+        _seekStepSecondsMeta,
+        seekStepSeconds.isAcceptableOrUnknown(
+          data['seek_step_seconds']!,
+          _seekStepSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('include_videos')) {
+      context.handle(
+        _includeVideosMeta,
+        includeVideos.isAcceptableOrUnknown(
+          data['include_videos']!,
+          _includeVideosMeta,
+        ),
+      );
+    }
+    if (data.containsKey('real_visualizer_enabled')) {
+      context.handle(
+        _realVisualizerEnabledMeta,
+        realVisualizerEnabled.isAcceptableOrUnknown(
+          data['real_visualizer_enabled']!,
+          _realVisualizerEnabledMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SettingsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SettingsRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      adaptiveDarkModeEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}adaptive_dark_mode_enabled'],
+      )!,
+      manualThemeOverride: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}manual_theme_override'],
+      ),
+      themeSeedColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_seed_color_hex'],
+      )!,
+      visualizerColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visualizer_color_hex'],
+      )!,
+      crossfadeEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}crossfade_enabled'],
+      )!,
+      crossfadeDurationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}crossfade_duration_ms'],
+      )!,
+      currentEqualizerPresetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_equalizer_preset_id'],
+      ),
+      visualizerStyle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visualizer_style'],
+      )!,
+      showAlbumArtInMiniPlayer: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_album_art_in_mini_player'],
+      )!,
+      showVisualizerInMiniPlayer: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_visualizer_in_mini_player'],
+      )!,
+      showAlbumArtInNowPlaying: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_album_art_in_now_playing'],
+      )!,
+      showVisualizerInNowPlaying: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_visualizer_in_now_playing'],
+      )!,
+      seekStepSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seek_step_seconds'],
+      )!,
+      includeVideos: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}include_videos'],
+      )!,
+      realVisualizerEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}real_visualizer_enabled'],
+      )!,
+    );
+  }
+
+  @override
+  $SettingsTable createAlias(String alias) {
+    return $SettingsTable(attachedDatabase, alias);
+  }
+}
+
+class SettingsRow extends DataClass implements Insertable<SettingsRow> {
+  final String id;
+  final bool adaptiveDarkModeEnabled;
+  final String? manualThemeOverride;
+  final String themeSeedColorHex;
+  final String visualizerColorHex;
+  final bool crossfadeEnabled;
+  final int crossfadeDurationMs;
+  final String? currentEqualizerPresetId;
+  final String visualizerStyle;
+  final bool showAlbumArtInMiniPlayer;
+  final bool showVisualizerInMiniPlayer;
+  final bool showAlbumArtInNowPlaying;
+  final bool showVisualizerInNowPlaying;
+
+  /// How far Now Playing's seek-back/forward buttons jump, in seconds.
+  final int seekStepSeconds;
+
+  /// Whether the library scan also picks up video files, played as audio.
+  final bool includeVideos;
+
+  /// Opt-in: drive the visualizer from the real audio signal rather than the
+  /// simulated waveform. Off by default because it needs RECORD_AUDIO.
+  final bool realVisualizerEnabled;
+  const SettingsRow({
+    required this.id,
+    required this.adaptiveDarkModeEnabled,
+    this.manualThemeOverride,
+    required this.themeSeedColorHex,
+    required this.visualizerColorHex,
+    required this.crossfadeEnabled,
+    required this.crossfadeDurationMs,
+    this.currentEqualizerPresetId,
+    required this.visualizerStyle,
+    required this.showAlbumArtInMiniPlayer,
+    required this.showVisualizerInMiniPlayer,
+    required this.showAlbumArtInNowPlaying,
+    required this.showVisualizerInNowPlaying,
+    required this.seekStepSeconds,
+    required this.includeVideos,
+    required this.realVisualizerEnabled,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['adaptive_dark_mode_enabled'] = Variable<bool>(adaptiveDarkModeEnabled);
+    if (!nullToAbsent || manualThemeOverride != null) {
+      map['manual_theme_override'] = Variable<String>(manualThemeOverride);
+    }
+    map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex);
+    map['visualizer_color_hex'] = Variable<String>(visualizerColorHex);
+    map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled);
+    map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs);
+    if (!nullToAbsent || currentEqualizerPresetId != null) {
+      map['current_equalizer_preset_id'] = Variable<String>(
+        currentEqualizerPresetId,
+      );
+    }
+    map['visualizer_style'] = Variable<String>(visualizerStyle);
+    map['show_album_art_in_mini_player'] = Variable<bool>(
+      showAlbumArtInMiniPlayer,
+    );
+    map['show_visualizer_in_mini_player'] = Variable<bool>(
+      showVisualizerInMiniPlayer,
+    );
+    map['show_album_art_in_now_playing'] = Variable<bool>(
+      showAlbumArtInNowPlaying,
+    );
+    map['show_visualizer_in_now_playing'] = Variable<bool>(
+      showVisualizerInNowPlaying,
+    );
+    map['seek_step_seconds'] = Variable<int>(seekStepSeconds);
+    map['include_videos'] = Variable<bool>(includeVideos);
+    map['real_visualizer_enabled'] = Variable<bool>(realVisualizerEnabled);
+    return map;
+  }
+
+  SettingsCompanion toCompanion(bool nullToAbsent) {
+    return SettingsCompanion(
+      id: Value(id),
+      adaptiveDarkModeEnabled: Value(adaptiveDarkModeEnabled),
+      manualThemeOverride: manualThemeOverride == null && nullToAbsent
+          ? const Value.absent()
+          : Value(manualThemeOverride),
+      themeSeedColorHex: Value(themeSeedColorHex),
+      visualizerColorHex: Value(visualizerColorHex),
+      crossfadeEnabled: Value(crossfadeEnabled),
+      crossfadeDurationMs: Value(crossfadeDurationMs),
+      currentEqualizerPresetId: currentEqualizerPresetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentEqualizerPresetId),
+      visualizerStyle: Value(visualizerStyle),
+      showAlbumArtInMiniPlayer: Value(showAlbumArtInMiniPlayer),
+      showVisualizerInMiniPlayer: Value(showVisualizerInMiniPlayer),
+      showAlbumArtInNowPlaying: Value(showAlbumArtInNowPlaying),
+      showVisualizerInNowPlaying: Value(showVisualizerInNowPlaying),
+      seekStepSeconds: Value(seekStepSeconds),
+      includeVideos: Value(includeVideos),
+      realVisualizerEnabled: Value(realVisualizerEnabled),
+    );
+  }
+
+  factory SettingsRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SettingsRow(
+      id: serializer.fromJson<String>(json['id']),
+      adaptiveDarkModeEnabled: serializer.fromJson<bool>(
+        json['adaptiveDarkModeEnabled'],
+      ),
+      manualThemeOverride: serializer.fromJson<String?>(
+        json['manualThemeOverride'],
+      ),
+      themeSeedColorHex: serializer.fromJson<String>(json['themeSeedColorHex']),
+      visualizerColorHex: serializer.fromJson<String>(
+        json['visualizerColorHex'],
+      ),
+      crossfadeEnabled: serializer.fromJson<bool>(json['crossfadeEnabled']),
+      crossfadeDurationMs: serializer.fromJson<int>(
+        json['crossfadeDurationMs'],
+      ),
+      currentEqualizerPresetId: serializer.fromJson<String?>(
+        json['currentEqualizerPresetId'],
+      ),
+      visualizerStyle: serializer.fromJson<String>(json['visualizerStyle']),
+      showAlbumArtInMiniPlayer: serializer.fromJson<bool>(
+        json['showAlbumArtInMiniPlayer'],
+      ),
+      showVisualizerInMiniPlayer: serializer.fromJson<bool>(
+        json['showVisualizerInMiniPlayer'],
+      ),
+      showAlbumArtInNowPlaying: serializer.fromJson<bool>(
+        json['showAlbumArtInNowPlaying'],
+      ),
+      showVisualizerInNowPlaying: serializer.fromJson<bool>(
+        json['showVisualizerInNowPlaying'],
+      ),
+      seekStepSeconds: serializer.fromJson<int>(json['seekStepSeconds']),
+      includeVideos: serializer.fromJson<bool>(json['includeVideos']),
+      realVisualizerEnabled: serializer.fromJson<bool>(
+        json['realVisualizerEnabled'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'adaptiveDarkModeEnabled': serializer.toJson<bool>(
+        adaptiveDarkModeEnabled,
+      ),
+      'manualThemeOverride': serializer.toJson<String?>(manualThemeOverride),
+      'themeSeedColorHex': serializer.toJson<String>(themeSeedColorHex),
+      'visualizerColorHex': serializer.toJson<String>(visualizerColorHex),
+      'crossfadeEnabled': serializer.toJson<bool>(crossfadeEnabled),
+      'crossfadeDurationMs': serializer.toJson<int>(crossfadeDurationMs),
+      'currentEqualizerPresetId': serializer.toJson<String?>(
+        currentEqualizerPresetId,
+      ),
+      'visualizerStyle': serializer.toJson<String>(visualizerStyle),
+      'showAlbumArtInMiniPlayer': serializer.toJson<bool>(
+        showAlbumArtInMiniPlayer,
+      ),
+      'showVisualizerInMiniPlayer': serializer.toJson<bool>(
+        showVisualizerInMiniPlayer,
+      ),
+      'showAlbumArtInNowPlaying': serializer.toJson<bool>(
+        showAlbumArtInNowPlaying,
+      ),
+      'showVisualizerInNowPlaying': serializer.toJson<bool>(
+        showVisualizerInNowPlaying,
+      ),
+      'seekStepSeconds': serializer.toJson<int>(seekStepSeconds),
+      'includeVideos': serializer.toJson<bool>(includeVideos),
+      'realVisualizerEnabled': serializer.toJson<bool>(realVisualizerEnabled),
+    };
+  }
+
+  SettingsRow copyWith({
+    String? id,
+    bool? adaptiveDarkModeEnabled,
+    Value<String?> manualThemeOverride = const Value.absent(),
+    String? themeSeedColorHex,
+    String? visualizerColorHex,
+    bool? crossfadeEnabled,
+    int? crossfadeDurationMs,
+    Value<String?> currentEqualizerPresetId = const Value.absent(),
+    String? visualizerStyle,
+    bool? showAlbumArtInMiniPlayer,
+    bool? showVisualizerInMiniPlayer,
+    bool? showAlbumArtInNowPlaying,
+    bool? showVisualizerInNowPlaying,
+    int? seekStepSeconds,
+    bool? includeVideos,
+    bool? realVisualizerEnabled,
+  }) => SettingsRow(
+    id: id ?? this.id,
+    adaptiveDarkModeEnabled:
+        adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
+    manualThemeOverride: manualThemeOverride.present
+        ? manualThemeOverride.value
+        : this.manualThemeOverride,
+    themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
+    visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+    crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
+    crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
+    currentEqualizerPresetId: currentEqualizerPresetId.present
+        ? currentEqualizerPresetId.value
+        : this.currentEqualizerPresetId,
+    visualizerStyle: visualizerStyle ?? this.visualizerStyle,
+    showAlbumArtInMiniPlayer:
+        showAlbumArtInMiniPlayer ?? this.showAlbumArtInMiniPlayer,
+    showVisualizerInMiniPlayer:
+        showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
+    showAlbumArtInNowPlaying:
+        showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
+    showVisualizerInNowPlaying:
+        showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+    seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
+    includeVideos: includeVideos ?? this.includeVideos,
+    realVisualizerEnabled: realVisualizerEnabled ?? this.realVisualizerEnabled,
+  );
+  SettingsRow copyWithCompanion(SettingsCompanion data) {
+    return SettingsRow(
+      id: data.id.present ? data.id.value : this.id,
+      adaptiveDarkModeEnabled: data.adaptiveDarkModeEnabled.present
+          ? data.adaptiveDarkModeEnabled.value
+          : this.adaptiveDarkModeEnabled,
+      manualThemeOverride: data.manualThemeOverride.present
+          ? data.manualThemeOverride.value
+          : this.manualThemeOverride,
+      themeSeedColorHex: data.themeSeedColorHex.present
+          ? data.themeSeedColorHex.value
+          : this.themeSeedColorHex,
+      visualizerColorHex: data.visualizerColorHex.present
+          ? data.visualizerColorHex.value
+          : this.visualizerColorHex,
+      crossfadeEnabled: data.crossfadeEnabled.present
+          ? data.crossfadeEnabled.value
+          : this.crossfadeEnabled,
+      crossfadeDurationMs: data.crossfadeDurationMs.present
+          ? data.crossfadeDurationMs.value
+          : this.crossfadeDurationMs,
+      currentEqualizerPresetId: data.currentEqualizerPresetId.present
+          ? data.currentEqualizerPresetId.value
+          : this.currentEqualizerPresetId,
+      visualizerStyle: data.visualizerStyle.present
+          ? data.visualizerStyle.value
+          : this.visualizerStyle,
+      showAlbumArtInMiniPlayer: data.showAlbumArtInMiniPlayer.present
+          ? data.showAlbumArtInMiniPlayer.value
+          : this.showAlbumArtInMiniPlayer,
+      showVisualizerInMiniPlayer: data.showVisualizerInMiniPlayer.present
+          ? data.showVisualizerInMiniPlayer.value
+          : this.showVisualizerInMiniPlayer,
+      showAlbumArtInNowPlaying: data.showAlbumArtInNowPlaying.present
+          ? data.showAlbumArtInNowPlaying.value
+          : this.showAlbumArtInNowPlaying,
+      showVisualizerInNowPlaying: data.showVisualizerInNowPlaying.present
+          ? data.showVisualizerInNowPlaying.value
+          : this.showVisualizerInNowPlaying,
+      seekStepSeconds: data.seekStepSeconds.present
+          ? data.seekStepSeconds.value
+          : this.seekStepSeconds,
+      includeVideos: data.includeVideos.present
+          ? data.includeVideos.value
+          : this.includeVideos,
+      realVisualizerEnabled: data.realVisualizerEnabled.present
+          ? data.realVisualizerEnabled.value
+          : this.realVisualizerEnabled,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsRow(')
+          ..write('id: $id, ')
+          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
+          ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('themeSeedColorHex: $themeSeedColorHex, ')
+          ..write('visualizerColorHex: $visualizerColorHex, ')
+          ..write('crossfadeEnabled: $crossfadeEnabled, ')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
+          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
+          ..write('visualizerStyle: $visualizerStyle, ')
+          ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
+          ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
+          ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
+          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('seekStepSeconds: $seekStepSeconds, ')
+          ..write('includeVideos: $includeVideos, ')
+          ..write('realVisualizerEnabled: $realVisualizerEnabled')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    adaptiveDarkModeEnabled,
+    manualThemeOverride,
+    themeSeedColorHex,
+    visualizerColorHex,
+    crossfadeEnabled,
+    crossfadeDurationMs,
+    currentEqualizerPresetId,
+    visualizerStyle,
+    showAlbumArtInMiniPlayer,
+    showVisualizerInMiniPlayer,
+    showAlbumArtInNowPlaying,
+    showVisualizerInNowPlaying,
+    seekStepSeconds,
+    includeVideos,
+    realVisualizerEnabled,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SettingsRow &&
+          other.id == this.id &&
+          other.adaptiveDarkModeEnabled == this.adaptiveDarkModeEnabled &&
+          other.manualThemeOverride == this.manualThemeOverride &&
+          other.themeSeedColorHex == this.themeSeedColorHex &&
+          other.visualizerColorHex == this.visualizerColorHex &&
+          other.crossfadeEnabled == this.crossfadeEnabled &&
+          other.crossfadeDurationMs == this.crossfadeDurationMs &&
+          other.currentEqualizerPresetId == this.currentEqualizerPresetId &&
+          other.visualizerStyle == this.visualizerStyle &&
+          other.showAlbumArtInMiniPlayer == this.showAlbumArtInMiniPlayer &&
+          other.showVisualizerInMiniPlayer == this.showVisualizerInMiniPlayer &&
+          other.showAlbumArtInNowPlaying == this.showAlbumArtInNowPlaying &&
+          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying &&
+          other.seekStepSeconds == this.seekStepSeconds &&
+          other.includeVideos == this.includeVideos &&
+          other.realVisualizerEnabled == this.realVisualizerEnabled);
+}
+
+class SettingsCompanion extends UpdateCompanion<SettingsRow> {
+  final Value<String> id;
+  final Value<bool> adaptiveDarkModeEnabled;
+  final Value<String?> manualThemeOverride;
+  final Value<String> themeSeedColorHex;
+  final Value<String> visualizerColorHex;
+  final Value<bool> crossfadeEnabled;
+  final Value<int> crossfadeDurationMs;
+  final Value<String?> currentEqualizerPresetId;
+  final Value<String> visualizerStyle;
+  final Value<bool> showAlbumArtInMiniPlayer;
+  final Value<bool> showVisualizerInMiniPlayer;
+  final Value<bool> showAlbumArtInNowPlaying;
+  final Value<bool> showVisualizerInNowPlaying;
+  final Value<int> seekStepSeconds;
+  final Value<bool> includeVideos;
+  final Value<bool> realVisualizerEnabled;
+  final Value<int> rowid;
+  const SettingsCompanion({
+    this.id = const Value.absent(),
+    this.adaptiveDarkModeEnabled = const Value.absent(),
+    this.manualThemeOverride = const Value.absent(),
+    this.themeSeedColorHex = const Value.absent(),
+    this.visualizerColorHex = const Value.absent(),
+    this.crossfadeEnabled = const Value.absent(),
+    this.crossfadeDurationMs = const Value.absent(),
+    this.currentEqualizerPresetId = const Value.absent(),
+    this.visualizerStyle = const Value.absent(),
+    this.showAlbumArtInMiniPlayer = const Value.absent(),
+    this.showVisualizerInMiniPlayer = const Value.absent(),
+    this.showAlbumArtInNowPlaying = const Value.absent(),
+    this.showVisualizerInNowPlaying = const Value.absent(),
+    this.seekStepSeconds = const Value.absent(),
+    this.includeVideos = const Value.absent(),
+    this.realVisualizerEnabled = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SettingsCompanion.insert({
+    required String id,
+    this.adaptiveDarkModeEnabled = const Value.absent(),
+    this.manualThemeOverride = const Value.absent(),
+    this.themeSeedColorHex = const Value.absent(),
+    this.visualizerColorHex = const Value.absent(),
+    this.crossfadeEnabled = const Value.absent(),
+    this.crossfadeDurationMs = const Value.absent(),
+    this.currentEqualizerPresetId = const Value.absent(),
+    this.visualizerStyle = const Value.absent(),
+    this.showAlbumArtInMiniPlayer = const Value.absent(),
+    this.showVisualizerInMiniPlayer = const Value.absent(),
+    this.showAlbumArtInNowPlaying = const Value.absent(),
+    this.showVisualizerInNowPlaying = const Value.absent(),
+    this.seekStepSeconds = const Value.absent(),
+    this.includeVideos = const Value.absent(),
+    this.realVisualizerEnabled = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<SettingsRow> custom({
+    Expression<String>? id,
+    Expression<bool>? adaptiveDarkModeEnabled,
+    Expression<String>? manualThemeOverride,
+    Expression<String>? themeSeedColorHex,
+    Expression<String>? visualizerColorHex,
+    Expression<bool>? crossfadeEnabled,
+    Expression<int>? crossfadeDurationMs,
+    Expression<String>? currentEqualizerPresetId,
+    Expression<String>? visualizerStyle,
+    Expression<bool>? showAlbumArtInMiniPlayer,
+    Expression<bool>? showVisualizerInMiniPlayer,
+    Expression<bool>? showAlbumArtInNowPlaying,
+    Expression<bool>? showVisualizerInNowPlaying,
+    Expression<int>? seekStepSeconds,
+    Expression<bool>? includeVideos,
+    Expression<bool>? realVisualizerEnabled,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (adaptiveDarkModeEnabled != null)
+        'adaptive_dark_mode_enabled': adaptiveDarkModeEnabled,
+      if (manualThemeOverride != null)
+        'manual_theme_override': manualThemeOverride,
+      if (themeSeedColorHex != null) 'theme_seed_color_hex': themeSeedColorHex,
+      if (visualizerColorHex != null)
+        'visualizer_color_hex': visualizerColorHex,
+      if (crossfadeEnabled != null) 'crossfade_enabled': crossfadeEnabled,
+      if (crossfadeDurationMs != null)
+        'crossfade_duration_ms': crossfadeDurationMs,
+      if (currentEqualizerPresetId != null)
+        'current_equalizer_preset_id': currentEqualizerPresetId,
+      if (visualizerStyle != null) 'visualizer_style': visualizerStyle,
+      if (showAlbumArtInMiniPlayer != null)
+        'show_album_art_in_mini_player': showAlbumArtInMiniPlayer,
+      if (showVisualizerInMiniPlayer != null)
+        'show_visualizer_in_mini_player': showVisualizerInMiniPlayer,
+      if (showAlbumArtInNowPlaying != null)
+        'show_album_art_in_now_playing': showAlbumArtInNowPlaying,
+      if (showVisualizerInNowPlaying != null)
+        'show_visualizer_in_now_playing': showVisualizerInNowPlaying,
+      if (seekStepSeconds != null) 'seek_step_seconds': seekStepSeconds,
+      if (includeVideos != null) 'include_videos': includeVideos,
+      if (realVisualizerEnabled != null)
+        'real_visualizer_enabled': realVisualizerEnabled,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SettingsCompanion copyWith({
+    Value<String>? id,
+    Value<bool>? adaptiveDarkModeEnabled,
+    Value<String?>? manualThemeOverride,
+    Value<String>? themeSeedColorHex,
+    Value<String>? visualizerColorHex,
+    Value<bool>? crossfadeEnabled,
+    Value<int>? crossfadeDurationMs,
+    Value<String?>? currentEqualizerPresetId,
+    Value<String>? visualizerStyle,
+    Value<bool>? showAlbumArtInMiniPlayer,
+    Value<bool>? showVisualizerInMiniPlayer,
+    Value<bool>? showAlbumArtInNowPlaying,
+    Value<bool>? showVisualizerInNowPlaying,
+    Value<int>? seekStepSeconds,
+    Value<bool>? includeVideos,
+    Value<bool>? realVisualizerEnabled,
+    Value<int>? rowid,
+  }) {
+    return SettingsCompanion(
+      id: id ?? this.id,
+      adaptiveDarkModeEnabled:
+          adaptiveDarkModeEnabled ?? this.adaptiveDarkModeEnabled,
+      manualThemeOverride: manualThemeOverride ?? this.manualThemeOverride,
+      themeSeedColorHex: themeSeedColorHex ?? this.themeSeedColorHex,
+      visualizerColorHex: visualizerColorHex ?? this.visualizerColorHex,
+      crossfadeEnabled: crossfadeEnabled ?? this.crossfadeEnabled,
+      crossfadeDurationMs: crossfadeDurationMs ?? this.crossfadeDurationMs,
+      currentEqualizerPresetId:
+          currentEqualizerPresetId ?? this.currentEqualizerPresetId,
+      visualizerStyle: visualizerStyle ?? this.visualizerStyle,
+      showAlbumArtInMiniPlayer:
+          showAlbumArtInMiniPlayer ?? this.showAlbumArtInMiniPlayer,
+      showVisualizerInMiniPlayer:
+          showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
+      showAlbumArtInNowPlaying:
+          showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
+      showVisualizerInNowPlaying:
+          showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+      seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
+      includeVideos: includeVideos ?? this.includeVideos,
+      realVisualizerEnabled:
+          realVisualizerEnabled ?? this.realVisualizerEnabled,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (adaptiveDarkModeEnabled.present) {
+      map['adaptive_dark_mode_enabled'] = Variable<bool>(
+        adaptiveDarkModeEnabled.value,
+      );
+    }
+    if (manualThemeOverride.present) {
+      map['manual_theme_override'] = Variable<String>(
+        manualThemeOverride.value,
+      );
+    }
+    if (themeSeedColorHex.present) {
+      map['theme_seed_color_hex'] = Variable<String>(themeSeedColorHex.value);
+    }
+    if (visualizerColorHex.present) {
+      map['visualizer_color_hex'] = Variable<String>(visualizerColorHex.value);
+    }
+    if (crossfadeEnabled.present) {
+      map['crossfade_enabled'] = Variable<bool>(crossfadeEnabled.value);
+    }
+    if (crossfadeDurationMs.present) {
+      map['crossfade_duration_ms'] = Variable<int>(crossfadeDurationMs.value);
+    }
+    if (currentEqualizerPresetId.present) {
+      map['current_equalizer_preset_id'] = Variable<String>(
+        currentEqualizerPresetId.value,
+      );
+    }
+    if (visualizerStyle.present) {
+      map['visualizer_style'] = Variable<String>(visualizerStyle.value);
+    }
+    if (showAlbumArtInMiniPlayer.present) {
+      map['show_album_art_in_mini_player'] = Variable<bool>(
+        showAlbumArtInMiniPlayer.value,
+      );
+    }
+    if (showVisualizerInMiniPlayer.present) {
+      map['show_visualizer_in_mini_player'] = Variable<bool>(
+        showVisualizerInMiniPlayer.value,
+      );
+    }
+    if (showAlbumArtInNowPlaying.present) {
+      map['show_album_art_in_now_playing'] = Variable<bool>(
+        showAlbumArtInNowPlaying.value,
+      );
+    }
+    if (showVisualizerInNowPlaying.present) {
+      map['show_visualizer_in_now_playing'] = Variable<bool>(
+        showVisualizerInNowPlaying.value,
+      );
+    }
+    if (seekStepSeconds.present) {
+      map['seek_step_seconds'] = Variable<int>(seekStepSeconds.value);
+    }
+    if (includeVideos.present) {
+      map['include_videos'] = Variable<bool>(includeVideos.value);
+    }
+    if (realVisualizerEnabled.present) {
+      map['real_visualizer_enabled'] = Variable<bool>(
+        realVisualizerEnabled.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('adaptiveDarkModeEnabled: $adaptiveDarkModeEnabled, ')
+          ..write('manualThemeOverride: $manualThemeOverride, ')
+          ..write('themeSeedColorHex: $themeSeedColorHex, ')
+          ..write('visualizerColorHex: $visualizerColorHex, ')
+          ..write('crossfadeEnabled: $crossfadeEnabled, ')
+          ..write('crossfadeDurationMs: $crossfadeDurationMs, ')
+          ..write('currentEqualizerPresetId: $currentEqualizerPresetId, ')
+          ..write('visualizerStyle: $visualizerStyle, ')
+          ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
+          ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
+          ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
+          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('seekStepSeconds: $seekStepSeconds, ')
+          ..write('includeVideos: $includeVideos, ')
+          ..write('realVisualizerEnabled: $realVisualizerEnabled, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $BackupsTable extends Backups with TableInfo<$BackupsTable, BackupRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -3489,32 +3483,567 @@ class BackupsCompanion extends UpdateCompanion<BackupRow> {
   }
 }
 
+class $PlaybackSessionsTable extends PlaybackSessions
+    with TableInfo<$PlaybackSessionsTable, PlaybackSessionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaybackSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _songIdsJsonMeta = const VerificationMeta(
+    'songIdsJson',
+  );
+  @override
+  late final GeneratedColumn<String> songIdsJson = GeneratedColumn<String>(
+    'song_ids_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _currentIndexMeta = const VerificationMeta(
+    'currentIndex',
+  );
+  @override
+  late final GeneratedColumn<int> currentIndex = GeneratedColumn<int>(
+    'current_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _positionMsMeta = const VerificationMeta(
+    'positionMs',
+  );
+  @override
+  late final GeneratedColumn<int> positionMs = GeneratedColumn<int>(
+    'position_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _shuffleEnabledMeta = const VerificationMeta(
+    'shuffleEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> shuffleEnabled = GeneratedColumn<bool>(
+    'shuffle_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("shuffle_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _repeatModeMeta = const VerificationMeta(
+    'repeatMode',
+  );
+  @override
+  late final GeneratedColumn<String> repeatMode = GeneratedColumn<String>(
+    'repeat_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('off'),
+  );
+  static const VerificationMeta _speedMeta = const VerificationMeta('speed');
+  @override
+  late final GeneratedColumn<double> speed = GeneratedColumn<double>(
+    'speed',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _sourcePlaylistIdMeta = const VerificationMeta(
+    'sourcePlaylistId',
+  );
+  @override
+  late final GeneratedColumn<String> sourcePlaylistId = GeneratedColumn<String>(
+    'source_playlist_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    songIdsJson,
+    currentIndex,
+    positionMs,
+    shuffleEnabled,
+    repeatMode,
+    speed,
+    sourcePlaylistId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'playback_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaybackSessionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('song_ids_json')) {
+      context.handle(
+        _songIdsJsonMeta,
+        songIdsJson.isAcceptableOrUnknown(
+          data['song_ids_json']!,
+          _songIdsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_index')) {
+      context.handle(
+        _currentIndexMeta,
+        currentIndex.isAcceptableOrUnknown(
+          data['current_index']!,
+          _currentIndexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('position_ms')) {
+      context.handle(
+        _positionMsMeta,
+        positionMs.isAcceptableOrUnknown(data['position_ms']!, _positionMsMeta),
+      );
+    }
+    if (data.containsKey('shuffle_enabled')) {
+      context.handle(
+        _shuffleEnabledMeta,
+        shuffleEnabled.isAcceptableOrUnknown(
+          data['shuffle_enabled']!,
+          _shuffleEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('repeat_mode')) {
+      context.handle(
+        _repeatModeMeta,
+        repeatMode.isAcceptableOrUnknown(data['repeat_mode']!, _repeatModeMeta),
+      );
+    }
+    if (data.containsKey('speed')) {
+      context.handle(
+        _speedMeta,
+        speed.isAcceptableOrUnknown(data['speed']!, _speedMeta),
+      );
+    }
+    if (data.containsKey('source_playlist_id')) {
+      context.handle(
+        _sourcePlaylistIdMeta,
+        sourcePlaylistId.isAcceptableOrUnknown(
+          data['source_playlist_id']!,
+          _sourcePlaylistIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlaybackSessionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaybackSessionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      songIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}song_ids_json'],
+      )!,
+      currentIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current_index'],
+      )!,
+      positionMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position_ms'],
+      )!,
+      shuffleEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}shuffle_enabled'],
+      )!,
+      repeatMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repeat_mode'],
+      )!,
+      speed: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}speed'],
+      )!,
+      sourcePlaylistId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_playlist_id'],
+      ),
+    );
+  }
+
+  @override
+  $PlaybackSessionsTable createAlias(String alias) {
+    return $PlaybackSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class PlaybackSessionRow extends DataClass
+    implements Insertable<PlaybackSessionRow> {
+  final String id;
+
+  /// JSON-encoded `List<String>` of song IDs, in queue order.
+  final String songIdsJson;
+  final int currentIndex;
+  final int positionMs;
+  final bool shuffleEnabled;
+  final String repeatMode;
+  final double speed;
+  final String? sourcePlaylistId;
+  const PlaybackSessionRow({
+    required this.id,
+    required this.songIdsJson,
+    required this.currentIndex,
+    required this.positionMs,
+    required this.shuffleEnabled,
+    required this.repeatMode,
+    required this.speed,
+    this.sourcePlaylistId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['song_ids_json'] = Variable<String>(songIdsJson);
+    map['current_index'] = Variable<int>(currentIndex);
+    map['position_ms'] = Variable<int>(positionMs);
+    map['shuffle_enabled'] = Variable<bool>(shuffleEnabled);
+    map['repeat_mode'] = Variable<String>(repeatMode);
+    map['speed'] = Variable<double>(speed);
+    if (!nullToAbsent || sourcePlaylistId != null) {
+      map['source_playlist_id'] = Variable<String>(sourcePlaylistId);
+    }
+    return map;
+  }
+
+  PlaybackSessionsCompanion toCompanion(bool nullToAbsent) {
+    return PlaybackSessionsCompanion(
+      id: Value(id),
+      songIdsJson: Value(songIdsJson),
+      currentIndex: Value(currentIndex),
+      positionMs: Value(positionMs),
+      shuffleEnabled: Value(shuffleEnabled),
+      repeatMode: Value(repeatMode),
+      speed: Value(speed),
+      sourcePlaylistId: sourcePlaylistId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourcePlaylistId),
+    );
+  }
+
+  factory PlaybackSessionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaybackSessionRow(
+      id: serializer.fromJson<String>(json['id']),
+      songIdsJson: serializer.fromJson<String>(json['songIdsJson']),
+      currentIndex: serializer.fromJson<int>(json['currentIndex']),
+      positionMs: serializer.fromJson<int>(json['positionMs']),
+      shuffleEnabled: serializer.fromJson<bool>(json['shuffleEnabled']),
+      repeatMode: serializer.fromJson<String>(json['repeatMode']),
+      speed: serializer.fromJson<double>(json['speed']),
+      sourcePlaylistId: serializer.fromJson<String?>(json['sourcePlaylistId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'songIdsJson': serializer.toJson<String>(songIdsJson),
+      'currentIndex': serializer.toJson<int>(currentIndex),
+      'positionMs': serializer.toJson<int>(positionMs),
+      'shuffleEnabled': serializer.toJson<bool>(shuffleEnabled),
+      'repeatMode': serializer.toJson<String>(repeatMode),
+      'speed': serializer.toJson<double>(speed),
+      'sourcePlaylistId': serializer.toJson<String?>(sourcePlaylistId),
+    };
+  }
+
+  PlaybackSessionRow copyWith({
+    String? id,
+    String? songIdsJson,
+    int? currentIndex,
+    int? positionMs,
+    bool? shuffleEnabled,
+    String? repeatMode,
+    double? speed,
+    Value<String?> sourcePlaylistId = const Value.absent(),
+  }) => PlaybackSessionRow(
+    id: id ?? this.id,
+    songIdsJson: songIdsJson ?? this.songIdsJson,
+    currentIndex: currentIndex ?? this.currentIndex,
+    positionMs: positionMs ?? this.positionMs,
+    shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
+    repeatMode: repeatMode ?? this.repeatMode,
+    speed: speed ?? this.speed,
+    sourcePlaylistId: sourcePlaylistId.present
+        ? sourcePlaylistId.value
+        : this.sourcePlaylistId,
+  );
+  PlaybackSessionRow copyWithCompanion(PlaybackSessionsCompanion data) {
+    return PlaybackSessionRow(
+      id: data.id.present ? data.id.value : this.id,
+      songIdsJson: data.songIdsJson.present
+          ? data.songIdsJson.value
+          : this.songIdsJson,
+      currentIndex: data.currentIndex.present
+          ? data.currentIndex.value
+          : this.currentIndex,
+      positionMs: data.positionMs.present
+          ? data.positionMs.value
+          : this.positionMs,
+      shuffleEnabled: data.shuffleEnabled.present
+          ? data.shuffleEnabled.value
+          : this.shuffleEnabled,
+      repeatMode: data.repeatMode.present
+          ? data.repeatMode.value
+          : this.repeatMode,
+      speed: data.speed.present ? data.speed.value : this.speed,
+      sourcePlaylistId: data.sourcePlaylistId.present
+          ? data.sourcePlaylistId.value
+          : this.sourcePlaylistId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaybackSessionRow(')
+          ..write('id: $id, ')
+          ..write('songIdsJson: $songIdsJson, ')
+          ..write('currentIndex: $currentIndex, ')
+          ..write('positionMs: $positionMs, ')
+          ..write('shuffleEnabled: $shuffleEnabled, ')
+          ..write('repeatMode: $repeatMode, ')
+          ..write('speed: $speed, ')
+          ..write('sourcePlaylistId: $sourcePlaylistId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    songIdsJson,
+    currentIndex,
+    positionMs,
+    shuffleEnabled,
+    repeatMode,
+    speed,
+    sourcePlaylistId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaybackSessionRow &&
+          other.id == this.id &&
+          other.songIdsJson == this.songIdsJson &&
+          other.currentIndex == this.currentIndex &&
+          other.positionMs == this.positionMs &&
+          other.shuffleEnabled == this.shuffleEnabled &&
+          other.repeatMode == this.repeatMode &&
+          other.speed == this.speed &&
+          other.sourcePlaylistId == this.sourcePlaylistId);
+}
+
+class PlaybackSessionsCompanion extends UpdateCompanion<PlaybackSessionRow> {
+  final Value<String> id;
+  final Value<String> songIdsJson;
+  final Value<int> currentIndex;
+  final Value<int> positionMs;
+  final Value<bool> shuffleEnabled;
+  final Value<String> repeatMode;
+  final Value<double> speed;
+  final Value<String?> sourcePlaylistId;
+  final Value<int> rowid;
+  const PlaybackSessionsCompanion({
+    this.id = const Value.absent(),
+    this.songIdsJson = const Value.absent(),
+    this.currentIndex = const Value.absent(),
+    this.positionMs = const Value.absent(),
+    this.shuffleEnabled = const Value.absent(),
+    this.repeatMode = const Value.absent(),
+    this.speed = const Value.absent(),
+    this.sourcePlaylistId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlaybackSessionsCompanion.insert({
+    required String id,
+    this.songIdsJson = const Value.absent(),
+    this.currentIndex = const Value.absent(),
+    this.positionMs = const Value.absent(),
+    this.shuffleEnabled = const Value.absent(),
+    this.repeatMode = const Value.absent(),
+    this.speed = const Value.absent(),
+    this.sourcePlaylistId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<PlaybackSessionRow> custom({
+    Expression<String>? id,
+    Expression<String>? songIdsJson,
+    Expression<int>? currentIndex,
+    Expression<int>? positionMs,
+    Expression<bool>? shuffleEnabled,
+    Expression<String>? repeatMode,
+    Expression<double>? speed,
+    Expression<String>? sourcePlaylistId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (songIdsJson != null) 'song_ids_json': songIdsJson,
+      if (currentIndex != null) 'current_index': currentIndex,
+      if (positionMs != null) 'position_ms': positionMs,
+      if (shuffleEnabled != null) 'shuffle_enabled': shuffleEnabled,
+      if (repeatMode != null) 'repeat_mode': repeatMode,
+      if (speed != null) 'speed': speed,
+      if (sourcePlaylistId != null) 'source_playlist_id': sourcePlaylistId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlaybackSessionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? songIdsJson,
+    Value<int>? currentIndex,
+    Value<int>? positionMs,
+    Value<bool>? shuffleEnabled,
+    Value<String>? repeatMode,
+    Value<double>? speed,
+    Value<String?>? sourcePlaylistId,
+    Value<int>? rowid,
+  }) {
+    return PlaybackSessionsCompanion(
+      id: id ?? this.id,
+      songIdsJson: songIdsJson ?? this.songIdsJson,
+      currentIndex: currentIndex ?? this.currentIndex,
+      positionMs: positionMs ?? this.positionMs,
+      shuffleEnabled: shuffleEnabled ?? this.shuffleEnabled,
+      repeatMode: repeatMode ?? this.repeatMode,
+      speed: speed ?? this.speed,
+      sourcePlaylistId: sourcePlaylistId ?? this.sourcePlaylistId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (songIdsJson.present) {
+      map['song_ids_json'] = Variable<String>(songIdsJson.value);
+    }
+    if (currentIndex.present) {
+      map['current_index'] = Variable<int>(currentIndex.value);
+    }
+    if (positionMs.present) {
+      map['position_ms'] = Variable<int>(positionMs.value);
+    }
+    if (shuffleEnabled.present) {
+      map['shuffle_enabled'] = Variable<bool>(shuffleEnabled.value);
+    }
+    if (repeatMode.present) {
+      map['repeat_mode'] = Variable<String>(repeatMode.value);
+    }
+    if (speed.present) {
+      map['speed'] = Variable<double>(speed.value);
+    }
+    if (sourcePlaylistId.present) {
+      map['source_playlist_id'] = Variable<String>(sourcePlaylistId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaybackSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('songIdsJson: $songIdsJson, ')
+          ..write('currentIndex: $currentIndex, ')
+          ..write('positionMs: $positionMs, ')
+          ..write('shuffleEnabled: $shuffleEnabled, ')
+          ..write('repeatMode: $repeatMode, ')
+          ..write('speed: $speed, ')
+          ..write('sourcePlaylistId: $sourcePlaylistId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $VibeTagsTable vibeTags = $VibeTagsTable(this);
-  late final $SongVibesTable songVibes = $SongVibesTable(this);
   late final $SongsTable songs = $SongsTable(this);
+  late final $SongVibesTable songVibes = $SongVibesTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
-  late final $SettingsTable settings = $SettingsTable(this);
   late final $EqualizerPresetsTable equalizerPresets = $EqualizerPresetsTable(
     this,
   );
+  late final $SettingsTable settings = $SettingsTable(this);
   late final $BackupsTable backups = $BackupsTable(this);
+  late final $PlaybackSessionsTable playbackSessions = $PlaybackSessionsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     vibeTags,
-    songVibes,
     songs,
+    songVibes,
     playlists,
     playlistSongs,
-    settings,
     equalizerPresets,
+    settings,
     backups,
+    playbackSessions,
   ];
 }
 
@@ -3694,149 +4223,6 @@ typedef $$VibeTagsTableProcessedTableManager =
       $$VibeTagsTableUpdateCompanionBuilder,
       (VibeTagRow, BaseReferences<_$AppDatabase, $VibeTagsTable, VibeTagRow>),
       VibeTagRow,
-      PrefetchHooks Function()
-    >;
-typedef $$SongVibesTableCreateCompanionBuilder =
-    SongVibesCompanion Function({
-      required String songId,
-      required String vibeTagId,
-      Value<int> rowid,
-    });
-typedef $$SongVibesTableUpdateCompanionBuilder =
-    SongVibesCompanion Function({
-      Value<String> songId,
-      Value<String> vibeTagId,
-      Value<int> rowid,
-    });
-
-class $$SongVibesTableFilterComposer
-    extends Composer<_$AppDatabase, $SongVibesTable> {
-  $$SongVibesTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get songId => $composableBuilder(
-    column: $table.songId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get vibeTagId => $composableBuilder(
-    column: $table.vibeTagId,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SongVibesTableOrderingComposer
-    extends Composer<_$AppDatabase, $SongVibesTable> {
-  $$SongVibesTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get songId => $composableBuilder(
-    column: $table.songId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get vibeTagId => $composableBuilder(
-    column: $table.vibeTagId,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SongVibesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SongVibesTable> {
-  $$SongVibesTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get songId =>
-      $composableBuilder(column: $table.songId, builder: (column) => column);
-
-  GeneratedColumn<String> get vibeTagId =>
-      $composableBuilder(column: $table.vibeTagId, builder: (column) => column);
-}
-
-class $$SongVibesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SongVibesTable,
-          SongVibeRow,
-          $$SongVibesTableFilterComposer,
-          $$SongVibesTableOrderingComposer,
-          $$SongVibesTableAnnotationComposer,
-          $$SongVibesTableCreateCompanionBuilder,
-          $$SongVibesTableUpdateCompanionBuilder,
-          (
-            SongVibeRow,
-            BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
-          ),
-          SongVibeRow,
-          PrefetchHooks Function()
-        > {
-  $$SongVibesTableTableManager(_$AppDatabase db, $SongVibesTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SongVibesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SongVibesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SongVibesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> songId = const Value.absent(),
-                Value<String> vibeTagId = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SongVibesCompanion(
-                songId: songId,
-                vibeTagId: vibeTagId,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String songId,
-                required String vibeTagId,
-                Value<int> rowid = const Value.absent(),
-              }) => SongVibesCompanion.insert(
-                songId: songId,
-                vibeTagId: vibeTagId,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SongVibesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SongVibesTable,
-      SongVibeRow,
-      $$SongVibesTableFilterComposer,
-      $$SongVibesTableOrderingComposer,
-      $$SongVibesTableAnnotationComposer,
-      $$SongVibesTableCreateCompanionBuilder,
-      $$SongVibesTableUpdateCompanionBuilder,
-      (
-        SongVibeRow,
-        BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
-      ),
-      SongVibeRow,
       PrefetchHooks Function()
     >;
 typedef $$SongsTableCreateCompanionBuilder =
@@ -4148,6 +4534,149 @@ typedef $$SongsTableProcessedTableManager =
       $$SongsTableUpdateCompanionBuilder,
       (SongRow, BaseReferences<_$AppDatabase, $SongsTable, SongRow>),
       SongRow,
+      PrefetchHooks Function()
+    >;
+typedef $$SongVibesTableCreateCompanionBuilder =
+    SongVibesCompanion Function({
+      required String songId,
+      required String vibeTagId,
+      Value<int> rowid,
+    });
+typedef $$SongVibesTableUpdateCompanionBuilder =
+    SongVibesCompanion Function({
+      Value<String> songId,
+      Value<String> vibeTagId,
+      Value<int> rowid,
+    });
+
+class $$SongVibesTableFilterComposer
+    extends Composer<_$AppDatabase, $SongVibesTable> {
+  $$SongVibesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vibeTagId => $composableBuilder(
+    column: $table.vibeTagId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SongVibesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SongVibesTable> {
+  $$SongVibesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vibeTagId => $composableBuilder(
+    column: $table.vibeTagId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SongVibesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SongVibesTable> {
+  $$SongVibesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get songId =>
+      $composableBuilder(column: $table.songId, builder: (column) => column);
+
+  GeneratedColumn<String> get vibeTagId =>
+      $composableBuilder(column: $table.vibeTagId, builder: (column) => column);
+}
+
+class $$SongVibesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SongVibesTable,
+          SongVibeRow,
+          $$SongVibesTableFilterComposer,
+          $$SongVibesTableOrderingComposer,
+          $$SongVibesTableAnnotationComposer,
+          $$SongVibesTableCreateCompanionBuilder,
+          $$SongVibesTableUpdateCompanionBuilder,
+          (
+            SongVibeRow,
+            BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
+          ),
+          SongVibeRow,
+          PrefetchHooks Function()
+        > {
+  $$SongVibesTableTableManager(_$AppDatabase db, $SongVibesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SongVibesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SongVibesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SongVibesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> songId = const Value.absent(),
+                Value<String> vibeTagId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SongVibesCompanion(
+                songId: songId,
+                vibeTagId: vibeTagId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String songId,
+                required String vibeTagId,
+                Value<int> rowid = const Value.absent(),
+              }) => SongVibesCompanion.insert(
+                songId: songId,
+                vibeTagId: vibeTagId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SongVibesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SongVibesTable,
+      SongVibeRow,
+      $$SongVibesTableFilterComposer,
+      $$SongVibesTableOrderingComposer,
+      $$SongVibesTableAnnotationComposer,
+      $$SongVibesTableCreateCompanionBuilder,
+      $$SongVibesTableUpdateCompanionBuilder,
+      (
+        SongVibeRow,
+        BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
+      ),
+      SongVibeRow,
       PrefetchHooks Function()
     >;
 typedef $$PlaylistsTableCreateCompanionBuilder =
@@ -4539,442 +5068,6 @@ typedef $$PlaylistSongsTableProcessedTableManager =
       PlaylistSongRow,
       PrefetchHooks Function()
     >;
-typedef $$SettingsTableCreateCompanionBuilder =
-    SettingsCompanion Function({
-      required String id,
-      Value<bool> adaptiveDarkModeEnabled,
-      Value<String?> manualThemeOverride,
-      Value<String> themeSeedColorHex,
-      Value<String> visualizerColorHex,
-      Value<bool> crossfadeEnabled,
-      Value<int> crossfadeDurationMs,
-      Value<String?> currentEqualizerPresetId,
-      Value<String> visualizerStyle,
-      Value<bool> showAlbumArtInMiniPlayer,
-      Value<bool> showVisualizerInMiniPlayer,
-      Value<bool> showAlbumArtInNowPlaying,
-      Value<bool> showVisualizerInNowPlaying,
-      Value<int> seekStepSeconds,
-      Value<bool> includeVideos,
-      Value<bool> realtimeVisualizerEnabled,
-      Value<int> rowid,
-    });
-typedef $$SettingsTableUpdateCompanionBuilder =
-    SettingsCompanion Function({
-      Value<String> id,
-      Value<bool> adaptiveDarkModeEnabled,
-      Value<String?> manualThemeOverride,
-      Value<String> themeSeedColorHex,
-      Value<String> visualizerColorHex,
-      Value<bool> crossfadeEnabled,
-      Value<int> crossfadeDurationMs,
-      Value<String?> currentEqualizerPresetId,
-      Value<String> visualizerStyle,
-      Value<bool> showAlbumArtInMiniPlayer,
-      Value<bool> showVisualizerInMiniPlayer,
-      Value<bool> showAlbumArtInNowPlaying,
-      Value<bool> showVisualizerInNowPlaying,
-      Value<int> seekStepSeconds,
-      Value<bool> includeVideos,
-      Value<bool> realtimeVisualizerEnabled,
-      Value<int> rowid,
-    });
-
-class $$SettingsTableFilterComposer
-    extends Composer<_$AppDatabase, $SettingsTable> {
-  $$SettingsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get adaptiveDarkModeEnabled => $composableBuilder(
-    column: $table.adaptiveDarkModeEnabled,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get manualThemeOverride => $composableBuilder(
-    column: $table.manualThemeOverride,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get themeSeedColorHex => $composableBuilder(
-    column: $table.themeSeedColorHex,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get visualizerColorHex => $composableBuilder(
-    column: $table.visualizerColorHex,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get crossfadeEnabled => $composableBuilder(
-    column: $table.crossfadeEnabled,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get crossfadeDurationMs => $composableBuilder(
-    column: $table.crossfadeDurationMs,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get currentEqualizerPresetId => $composableBuilder(
-    column: $table.currentEqualizerPresetId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get visualizerStyle => $composableBuilder(
-    column: $table.visualizerStyle,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get showAlbumArtInMiniPlayer => $composableBuilder(
-    column: $table.showAlbumArtInMiniPlayer,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get showVisualizerInMiniPlayer => $composableBuilder(
-    column: $table.showVisualizerInMiniPlayer,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get showAlbumArtInNowPlaying => $composableBuilder(
-    column: $table.showAlbumArtInNowPlaying,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get showVisualizerInNowPlaying => $composableBuilder(
-    column: $table.showVisualizerInNowPlaying,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get seekStepSeconds => $composableBuilder(
-    column: $table.seekStepSeconds,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get includeVideos => $composableBuilder(
-    column: $table.includeVideos,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get realtimeVisualizerEnabled => $composableBuilder(
-    column: $table.realtimeVisualizerEnabled,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SettingsTableOrderingComposer
-    extends Composer<_$AppDatabase, $SettingsTable> {
-  $$SettingsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get adaptiveDarkModeEnabled => $composableBuilder(
-    column: $table.adaptiveDarkModeEnabled,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get manualThemeOverride => $composableBuilder(
-    column: $table.manualThemeOverride,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get themeSeedColorHex => $composableBuilder(
-    column: $table.themeSeedColorHex,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get visualizerColorHex => $composableBuilder(
-    column: $table.visualizerColorHex,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get crossfadeEnabled => $composableBuilder(
-    column: $table.crossfadeEnabled,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get crossfadeDurationMs => $composableBuilder(
-    column: $table.crossfadeDurationMs,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get currentEqualizerPresetId => $composableBuilder(
-    column: $table.currentEqualizerPresetId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get visualizerStyle => $composableBuilder(
-    column: $table.visualizerStyle,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get showAlbumArtInMiniPlayer => $composableBuilder(
-    column: $table.showAlbumArtInMiniPlayer,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get showVisualizerInMiniPlayer => $composableBuilder(
-    column: $table.showVisualizerInMiniPlayer,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get showAlbumArtInNowPlaying => $composableBuilder(
-    column: $table.showAlbumArtInNowPlaying,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get showVisualizerInNowPlaying => $composableBuilder(
-    column: $table.showVisualizerInNowPlaying,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get seekStepSeconds => $composableBuilder(
-    column: $table.seekStepSeconds,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get includeVideos => $composableBuilder(
-    column: $table.includeVideos,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get realtimeVisualizerEnabled => $composableBuilder(
-    column: $table.realtimeVisualizerEnabled,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SettingsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SettingsTable> {
-  $$SettingsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<bool> get adaptiveDarkModeEnabled => $composableBuilder(
-    column: $table.adaptiveDarkModeEnabled,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get manualThemeOverride => $composableBuilder(
-    column: $table.manualThemeOverride,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get themeSeedColorHex => $composableBuilder(
-    column: $table.themeSeedColorHex,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get visualizerColorHex => $composableBuilder(
-    column: $table.visualizerColorHex,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get crossfadeEnabled => $composableBuilder(
-    column: $table.crossfadeEnabled,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get crossfadeDurationMs => $composableBuilder(
-    column: $table.crossfadeDurationMs,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get currentEqualizerPresetId => $composableBuilder(
-    column: $table.currentEqualizerPresetId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get visualizerStyle => $composableBuilder(
-    column: $table.visualizerStyle,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get showAlbumArtInMiniPlayer => $composableBuilder(
-    column: $table.showAlbumArtInMiniPlayer,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get showVisualizerInMiniPlayer => $composableBuilder(
-    column: $table.showVisualizerInMiniPlayer,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get showAlbumArtInNowPlaying => $composableBuilder(
-    column: $table.showAlbumArtInNowPlaying,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get showVisualizerInNowPlaying => $composableBuilder(
-    column: $table.showVisualizerInNowPlaying,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get seekStepSeconds => $composableBuilder(
-    column: $table.seekStepSeconds,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get includeVideos => $composableBuilder(
-    column: $table.includeVideos,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get realtimeVisualizerEnabled => $composableBuilder(
-    column: $table.realtimeVisualizerEnabled,
-    builder: (column) => column,
-  );
-}
-
-class $$SettingsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SettingsTable,
-          SettingsRow,
-          $$SettingsTableFilterComposer,
-          $$SettingsTableOrderingComposer,
-          $$SettingsTableAnnotationComposer,
-          $$SettingsTableCreateCompanionBuilder,
-          $$SettingsTableUpdateCompanionBuilder,
-          (
-            SettingsRow,
-            BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>,
-          ),
-          SettingsRow,
-          PrefetchHooks Function()
-        > {
-  $$SettingsTableTableManager(_$AppDatabase db, $SettingsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SettingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SettingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SettingsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
-                Value<String?> manualThemeOverride = const Value.absent(),
-                Value<String> themeSeedColorHex = const Value.absent(),
-                Value<String> visualizerColorHex = const Value.absent(),
-                Value<bool> crossfadeEnabled = const Value.absent(),
-                Value<int> crossfadeDurationMs = const Value.absent(),
-                Value<String?> currentEqualizerPresetId = const Value.absent(),
-                Value<String> visualizerStyle = const Value.absent(),
-                Value<bool> showAlbumArtInMiniPlayer = const Value.absent(),
-                Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
-                Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
-                Value<bool> showVisualizerInNowPlaying = const Value.absent(),
-                Value<int> seekStepSeconds = const Value.absent(),
-                Value<bool> includeVideos = const Value.absent(),
-                Value<bool> realtimeVisualizerEnabled = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SettingsCompanion(
-                id: id,
-                adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
-                manualThemeOverride: manualThemeOverride,
-                themeSeedColorHex: themeSeedColorHex,
-                visualizerColorHex: visualizerColorHex,
-                crossfadeEnabled: crossfadeEnabled,
-                crossfadeDurationMs: crossfadeDurationMs,
-                currentEqualizerPresetId: currentEqualizerPresetId,
-                visualizerStyle: visualizerStyle,
-                showAlbumArtInMiniPlayer: showAlbumArtInMiniPlayer,
-                showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
-                showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
-                showVisualizerInNowPlaying: showVisualizerInNowPlaying,
-                seekStepSeconds: seekStepSeconds,
-                includeVideos: includeVideos,
-                realtimeVisualizerEnabled: realtimeVisualizerEnabled,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
-                Value<String?> manualThemeOverride = const Value.absent(),
-                Value<String> themeSeedColorHex = const Value.absent(),
-                Value<String> visualizerColorHex = const Value.absent(),
-                Value<bool> crossfadeEnabled = const Value.absent(),
-                Value<int> crossfadeDurationMs = const Value.absent(),
-                Value<String?> currentEqualizerPresetId = const Value.absent(),
-                Value<String> visualizerStyle = const Value.absent(),
-                Value<bool> showAlbumArtInMiniPlayer = const Value.absent(),
-                Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
-                Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
-                Value<bool> showVisualizerInNowPlaying = const Value.absent(),
-                Value<int> seekStepSeconds = const Value.absent(),
-                Value<bool> includeVideos = const Value.absent(),
-                Value<bool> realtimeVisualizerEnabled = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SettingsCompanion.insert(
-                id: id,
-                adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
-                manualThemeOverride: manualThemeOverride,
-                themeSeedColorHex: themeSeedColorHex,
-                visualizerColorHex: visualizerColorHex,
-                crossfadeEnabled: crossfadeEnabled,
-                crossfadeDurationMs: crossfadeDurationMs,
-                currentEqualizerPresetId: currentEqualizerPresetId,
-                visualizerStyle: visualizerStyle,
-                showAlbumArtInMiniPlayer: showAlbumArtInMiniPlayer,
-                showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
-                showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
-                showVisualizerInNowPlaying: showVisualizerInNowPlaying,
-                seekStepSeconds: seekStepSeconds,
-                includeVideos: includeVideos,
-                realtimeVisualizerEnabled: realtimeVisualizerEnabled,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SettingsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SettingsTable,
-      SettingsRow,
-      $$SettingsTableFilterComposer,
-      $$SettingsTableOrderingComposer,
-      $$SettingsTableAnnotationComposer,
-      $$SettingsTableCreateCompanionBuilder,
-      $$SettingsTableUpdateCompanionBuilder,
-      (SettingsRow, BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>),
-      SettingsRow,
-      PrefetchHooks Function()
-    >;
 typedef $$EqualizerPresetsTableCreateCompanionBuilder =
     EqualizerPresetsCompanion Function({
       required String id,
@@ -5149,6 +5242,442 @@ typedef $$EqualizerPresetsTableProcessedTableManager =
       EqualizerPresetRow,
       PrefetchHooks Function()
     >;
+typedef $$SettingsTableCreateCompanionBuilder =
+    SettingsCompanion Function({
+      required String id,
+      Value<bool> adaptiveDarkModeEnabled,
+      Value<String?> manualThemeOverride,
+      Value<String> themeSeedColorHex,
+      Value<String> visualizerColorHex,
+      Value<bool> crossfadeEnabled,
+      Value<int> crossfadeDurationMs,
+      Value<String?> currentEqualizerPresetId,
+      Value<String> visualizerStyle,
+      Value<bool> showAlbumArtInMiniPlayer,
+      Value<bool> showVisualizerInMiniPlayer,
+      Value<bool> showAlbumArtInNowPlaying,
+      Value<bool> showVisualizerInNowPlaying,
+      Value<int> seekStepSeconds,
+      Value<bool> includeVideos,
+      Value<bool> realVisualizerEnabled,
+      Value<int> rowid,
+    });
+typedef $$SettingsTableUpdateCompanionBuilder =
+    SettingsCompanion Function({
+      Value<String> id,
+      Value<bool> adaptiveDarkModeEnabled,
+      Value<String?> manualThemeOverride,
+      Value<String> themeSeedColorHex,
+      Value<String> visualizerColorHex,
+      Value<bool> crossfadeEnabled,
+      Value<int> crossfadeDurationMs,
+      Value<String?> currentEqualizerPresetId,
+      Value<String> visualizerStyle,
+      Value<bool> showAlbumArtInMiniPlayer,
+      Value<bool> showVisualizerInMiniPlayer,
+      Value<bool> showAlbumArtInNowPlaying,
+      Value<bool> showVisualizerInNowPlaying,
+      Value<int> seekStepSeconds,
+      Value<bool> includeVideos,
+      Value<bool> realVisualizerEnabled,
+      Value<int> rowid,
+    });
+
+class $$SettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get adaptiveDarkModeEnabled => $composableBuilder(
+    column: $table.adaptiveDarkModeEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get manualThemeOverride => $composableBuilder(
+    column: $table.manualThemeOverride,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get themeSeedColorHex => $composableBuilder(
+    column: $table.themeSeedColorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visualizerColorHex => $composableBuilder(
+    column: $table.visualizerColorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get crossfadeEnabled => $composableBuilder(
+    column: $table.crossfadeEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get crossfadeDurationMs => $composableBuilder(
+    column: $table.crossfadeDurationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentEqualizerPresetId => $composableBuilder(
+    column: $table.currentEqualizerPresetId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visualizerStyle => $composableBuilder(
+    column: $table.visualizerStyle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showAlbumArtInMiniPlayer => $composableBuilder(
+    column: $table.showAlbumArtInMiniPlayer,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showVisualizerInMiniPlayer => $composableBuilder(
+    column: $table.showVisualizerInMiniPlayer,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showAlbumArtInNowPlaying => $composableBuilder(
+    column: $table.showAlbumArtInNowPlaying,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showVisualizerInNowPlaying => $composableBuilder(
+    column: $table.showVisualizerInNowPlaying,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seekStepSeconds => $composableBuilder(
+    column: $table.seekStepSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get includeVideos => $composableBuilder(
+    column: $table.includeVideos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get realVisualizerEnabled => $composableBuilder(
+    column: $table.realVisualizerEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get adaptiveDarkModeEnabled => $composableBuilder(
+    column: $table.adaptiveDarkModeEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get manualThemeOverride => $composableBuilder(
+    column: $table.manualThemeOverride,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get themeSeedColorHex => $composableBuilder(
+    column: $table.themeSeedColorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visualizerColorHex => $composableBuilder(
+    column: $table.visualizerColorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get crossfadeEnabled => $composableBuilder(
+    column: $table.crossfadeEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get crossfadeDurationMs => $composableBuilder(
+    column: $table.crossfadeDurationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentEqualizerPresetId => $composableBuilder(
+    column: $table.currentEqualizerPresetId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visualizerStyle => $composableBuilder(
+    column: $table.visualizerStyle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showAlbumArtInMiniPlayer => $composableBuilder(
+    column: $table.showAlbumArtInMiniPlayer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showVisualizerInMiniPlayer => $composableBuilder(
+    column: $table.showVisualizerInMiniPlayer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showAlbumArtInNowPlaying => $composableBuilder(
+    column: $table.showAlbumArtInNowPlaying,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showVisualizerInNowPlaying => $composableBuilder(
+    column: $table.showVisualizerInNowPlaying,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seekStepSeconds => $composableBuilder(
+    column: $table.seekStepSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get includeVideos => $composableBuilder(
+    column: $table.includeVideos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get realVisualizerEnabled => $composableBuilder(
+    column: $table.realVisualizerEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<bool> get adaptiveDarkModeEnabled => $composableBuilder(
+    column: $table.adaptiveDarkModeEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get manualThemeOverride => $composableBuilder(
+    column: $table.manualThemeOverride,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get themeSeedColorHex => $composableBuilder(
+    column: $table.themeSeedColorHex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get visualizerColorHex => $composableBuilder(
+    column: $table.visualizerColorHex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get crossfadeEnabled => $composableBuilder(
+    column: $table.crossfadeEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get crossfadeDurationMs => $composableBuilder(
+    column: $table.crossfadeDurationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currentEqualizerPresetId => $composableBuilder(
+    column: $table.currentEqualizerPresetId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get visualizerStyle => $composableBuilder(
+    column: $table.visualizerStyle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showAlbumArtInMiniPlayer => $composableBuilder(
+    column: $table.showAlbumArtInMiniPlayer,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showVisualizerInMiniPlayer => $composableBuilder(
+    column: $table.showVisualizerInMiniPlayer,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showAlbumArtInNowPlaying => $composableBuilder(
+    column: $table.showAlbumArtInNowPlaying,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showVisualizerInNowPlaying => $composableBuilder(
+    column: $table.showVisualizerInNowPlaying,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get seekStepSeconds => $composableBuilder(
+    column: $table.seekStepSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get includeVideos => $composableBuilder(
+    column: $table.includeVideos,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get realVisualizerEnabled => $composableBuilder(
+    column: $table.realVisualizerEnabled,
+    builder: (column) => column,
+  );
+}
+
+class $$SettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SettingsTable,
+          SettingsRow,
+          $$SettingsTableFilterComposer,
+          $$SettingsTableOrderingComposer,
+          $$SettingsTableAnnotationComposer,
+          $$SettingsTableCreateCompanionBuilder,
+          $$SettingsTableUpdateCompanionBuilder,
+          (
+            SettingsRow,
+            BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>,
+          ),
+          SettingsRow,
+          PrefetchHooks Function()
+        > {
+  $$SettingsTableTableManager(_$AppDatabase db, $SettingsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
+                Value<String?> manualThemeOverride = const Value.absent(),
+                Value<String> themeSeedColorHex = const Value.absent(),
+                Value<String> visualizerColorHex = const Value.absent(),
+                Value<bool> crossfadeEnabled = const Value.absent(),
+                Value<int> crossfadeDurationMs = const Value.absent(),
+                Value<String?> currentEqualizerPresetId = const Value.absent(),
+                Value<String> visualizerStyle = const Value.absent(),
+                Value<bool> showAlbumArtInMiniPlayer = const Value.absent(),
+                Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
+                Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
+                Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<int> seekStepSeconds = const Value.absent(),
+                Value<bool> includeVideos = const Value.absent(),
+                Value<bool> realVisualizerEnabled = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SettingsCompanion(
+                id: id,
+                adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
+                manualThemeOverride: manualThemeOverride,
+                themeSeedColorHex: themeSeedColorHex,
+                visualizerColorHex: visualizerColorHex,
+                crossfadeEnabled: crossfadeEnabled,
+                crossfadeDurationMs: crossfadeDurationMs,
+                currentEqualizerPresetId: currentEqualizerPresetId,
+                visualizerStyle: visualizerStyle,
+                showAlbumArtInMiniPlayer: showAlbumArtInMiniPlayer,
+                showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
+                showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
+                showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                seekStepSeconds: seekStepSeconds,
+                includeVideos: includeVideos,
+                realVisualizerEnabled: realVisualizerEnabled,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<bool> adaptiveDarkModeEnabled = const Value.absent(),
+                Value<String?> manualThemeOverride = const Value.absent(),
+                Value<String> themeSeedColorHex = const Value.absent(),
+                Value<String> visualizerColorHex = const Value.absent(),
+                Value<bool> crossfadeEnabled = const Value.absent(),
+                Value<int> crossfadeDurationMs = const Value.absent(),
+                Value<String?> currentEqualizerPresetId = const Value.absent(),
+                Value<String> visualizerStyle = const Value.absent(),
+                Value<bool> showAlbumArtInMiniPlayer = const Value.absent(),
+                Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
+                Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
+                Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<int> seekStepSeconds = const Value.absent(),
+                Value<bool> includeVideos = const Value.absent(),
+                Value<bool> realVisualizerEnabled = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SettingsCompanion.insert(
+                id: id,
+                adaptiveDarkModeEnabled: adaptiveDarkModeEnabled,
+                manualThemeOverride: manualThemeOverride,
+                themeSeedColorHex: themeSeedColorHex,
+                visualizerColorHex: visualizerColorHex,
+                crossfadeEnabled: crossfadeEnabled,
+                crossfadeDurationMs: crossfadeDurationMs,
+                currentEqualizerPresetId: currentEqualizerPresetId,
+                visualizerStyle: visualizerStyle,
+                showAlbumArtInMiniPlayer: showAlbumArtInMiniPlayer,
+                showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
+                showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
+                showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                seekStepSeconds: seekStepSeconds,
+                includeVideos: includeVideos,
+                realVisualizerEnabled: realVisualizerEnabled,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SettingsTable,
+      SettingsRow,
+      $$SettingsTableFilterComposer,
+      $$SettingsTableOrderingComposer,
+      $$SettingsTableAnnotationComposer,
+      $$SettingsTableCreateCompanionBuilder,
+      $$SettingsTableUpdateCompanionBuilder,
+      (SettingsRow, BaseReferences<_$AppDatabase, $SettingsTable, SettingsRow>),
+      SettingsRow,
+      PrefetchHooks Function()
+    >;
 typedef $$BackupsTableCreateCompanionBuilder =
     BackupsCompanion Function({
       required String id,
@@ -5305,24 +5834,305 @@ typedef $$BackupsTableProcessedTableManager =
       BackupRow,
       PrefetchHooks Function()
     >;
+typedef $$PlaybackSessionsTableCreateCompanionBuilder =
+    PlaybackSessionsCompanion Function({
+      required String id,
+      Value<String> songIdsJson,
+      Value<int> currentIndex,
+      Value<int> positionMs,
+      Value<bool> shuffleEnabled,
+      Value<String> repeatMode,
+      Value<double> speed,
+      Value<String?> sourcePlaylistId,
+      Value<int> rowid,
+    });
+typedef $$PlaybackSessionsTableUpdateCompanionBuilder =
+    PlaybackSessionsCompanion Function({
+      Value<String> id,
+      Value<String> songIdsJson,
+      Value<int> currentIndex,
+      Value<int> positionMs,
+      Value<bool> shuffleEnabled,
+      Value<String> repeatMode,
+      Value<double> speed,
+      Value<String?> sourcePlaylistId,
+      Value<int> rowid,
+    });
+
+class $$PlaybackSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaybackSessionsTable> {
+  $$PlaybackSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get songIdsJson => $composableBuilder(
+    column: $table.songIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentIndex => $composableBuilder(
+    column: $table.currentIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get shuffleEnabled => $composableBuilder(
+    column: $table.shuffleEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeatMode => $composableBuilder(
+    column: $table.repeatMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get speed => $composableBuilder(
+    column: $table.speed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourcePlaylistId => $composableBuilder(
+    column: $table.sourcePlaylistId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlaybackSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaybackSessionsTable> {
+  $$PlaybackSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get songIdsJson => $composableBuilder(
+    column: $table.songIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currentIndex => $composableBuilder(
+    column: $table.currentIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get shuffleEnabled => $composableBuilder(
+    column: $table.shuffleEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get repeatMode => $composableBuilder(
+    column: $table.repeatMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get speed => $composableBuilder(
+    column: $table.speed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourcePlaylistId => $composableBuilder(
+    column: $table.sourcePlaylistId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlaybackSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaybackSessionsTable> {
+  $$PlaybackSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get songIdsJson => $composableBuilder(
+    column: $table.songIdsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get currentIndex => $composableBuilder(
+    column: $table.currentIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get shuffleEnabled => $composableBuilder(
+    column: $table.shuffleEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get repeatMode => $composableBuilder(
+    column: $table.repeatMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get speed =>
+      $composableBuilder(column: $table.speed, builder: (column) => column);
+
+  GeneratedColumn<String> get sourcePlaylistId => $composableBuilder(
+    column: $table.sourcePlaylistId,
+    builder: (column) => column,
+  );
+}
+
+class $$PlaybackSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaybackSessionsTable,
+          PlaybackSessionRow,
+          $$PlaybackSessionsTableFilterComposer,
+          $$PlaybackSessionsTableOrderingComposer,
+          $$PlaybackSessionsTableAnnotationComposer,
+          $$PlaybackSessionsTableCreateCompanionBuilder,
+          $$PlaybackSessionsTableUpdateCompanionBuilder,
+          (
+            PlaybackSessionRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PlaybackSessionsTable,
+              PlaybackSessionRow
+            >,
+          ),
+          PlaybackSessionRow,
+          PrefetchHooks Function()
+        > {
+  $$PlaybackSessionsTableTableManager(
+    _$AppDatabase db,
+    $PlaybackSessionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaybackSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaybackSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaybackSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> songIdsJson = const Value.absent(),
+                Value<int> currentIndex = const Value.absent(),
+                Value<int> positionMs = const Value.absent(),
+                Value<bool> shuffleEnabled = const Value.absent(),
+                Value<String> repeatMode = const Value.absent(),
+                Value<double> speed = const Value.absent(),
+                Value<String?> sourcePlaylistId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaybackSessionsCompanion(
+                id: id,
+                songIdsJson: songIdsJson,
+                currentIndex: currentIndex,
+                positionMs: positionMs,
+                shuffleEnabled: shuffleEnabled,
+                repeatMode: repeatMode,
+                speed: speed,
+                sourcePlaylistId: sourcePlaylistId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> songIdsJson = const Value.absent(),
+                Value<int> currentIndex = const Value.absent(),
+                Value<int> positionMs = const Value.absent(),
+                Value<bool> shuffleEnabled = const Value.absent(),
+                Value<String> repeatMode = const Value.absent(),
+                Value<double> speed = const Value.absent(),
+                Value<String?> sourcePlaylistId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaybackSessionsCompanion.insert(
+                id: id,
+                songIdsJson: songIdsJson,
+                currentIndex: currentIndex,
+                positionMs: positionMs,
+                shuffleEnabled: shuffleEnabled,
+                repeatMode: repeatMode,
+                speed: speed,
+                sourcePlaylistId: sourcePlaylistId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlaybackSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaybackSessionsTable,
+      PlaybackSessionRow,
+      $$PlaybackSessionsTableFilterComposer,
+      $$PlaybackSessionsTableOrderingComposer,
+      $$PlaybackSessionsTableAnnotationComposer,
+      $$PlaybackSessionsTableCreateCompanionBuilder,
+      $$PlaybackSessionsTableUpdateCompanionBuilder,
+      (
+        PlaybackSessionRow,
+        BaseReferences<
+          _$AppDatabase,
+          $PlaybackSessionsTable,
+          PlaybackSessionRow
+        >,
+      ),
+      PlaybackSessionRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$VibeTagsTableTableManager get vibeTags =>
       $$VibeTagsTableTableManager(_db, _db.vibeTags);
-  $$SongVibesTableTableManager get songVibes =>
-      $$SongVibesTableTableManager(_db, _db.songVibes);
   $$SongsTableTableManager get songs =>
       $$SongsTableTableManager(_db, _db.songs);
+  $$SongVibesTableTableManager get songVibes =>
+      $$SongVibesTableTableManager(_db, _db.songVibes);
   $$PlaylistsTableTableManager get playlists =>
       $$PlaylistsTableTableManager(_db, _db.playlists);
   $$PlaylistSongsTableTableManager get playlistSongs =>
       $$PlaylistSongsTableTableManager(_db, _db.playlistSongs);
-  $$SettingsTableTableManager get settings =>
-      $$SettingsTableTableManager(_db, _db.settings);
   $$EqualizerPresetsTableTableManager get equalizerPresets =>
       $$EqualizerPresetsTableTableManager(_db, _db.equalizerPresets);
+  $$SettingsTableTableManager get settings =>
+      $$SettingsTableTableManager(_db, _db.settings);
   $$BackupsTableTableManager get backups =>
       $$BackupsTableTableManager(_db, _db.backups);
+  $$PlaybackSessionsTableTableManager get playbackSessions =>
+      $$PlaybackSessionsTableTableManager(_db, _db.playbackSessions);
 }

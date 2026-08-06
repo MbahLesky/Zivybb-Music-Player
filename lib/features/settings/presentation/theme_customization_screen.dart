@@ -84,21 +84,13 @@ class ThemeCustomizationScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'App theme color',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    ColorSwatchPicker(
-                      selectedHex: settings.themeSeedColorHex,
-                      onSelected: controller.setThemeSeedColor,
-                    ),
-                  ],
-                ),
+              // Only the app color lives here. Everything visualizer-related
+              // — its color, style, and the real-audio opt-in — moved to the
+              // Visualizer section so all of it sits in one place.
+              _ColorPickerCard(
+                title: 'App color',
+                selectedHex: settings.themeSeedColorHex,
+                onSelected: controller.setThemeSeedColor,
               ),
               const SizedBox(height: 16),
               GlassCard(
@@ -118,6 +110,42 @@ class ThemeCustomizationScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The app-colour picker, in a card matching the surrounding sections.
+class _ColorPickerCard extends StatelessWidget {
+  const _ColorPickerCard({
+    required this.title,
+    required this.selectedHex,
+    required this.onSelected,
+  });
+
+  final String title;
+  final String selectedHex;
+  final ValueChanged<Color> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          ColorSwatchPicker(
+            selectedHex: selectedHex,
+            onSelected: onSelected,
+            swatchSize: 32,
+          ),
+        ],
       ),
     );
   }

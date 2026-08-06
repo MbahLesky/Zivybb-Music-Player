@@ -6,16 +6,28 @@ enum ThemeOverride { light, dark }
 /// The wave visualizer's rendering style, user-selectable in Settings.
 enum VisualizerStyle {
   bars,
+  mirror,
   radial,
+  bloom,
   particles,
-  line;
+  line,
+  ribbon;
 
   String get label => switch (this) {
     VisualizerStyle.bars => 'Bars',
+    VisualizerStyle.mirror => 'Mirror',
     VisualizerStyle.radial => 'Radial',
+    VisualizerStyle.bloom => 'Bloom',
     VisualizerStyle.particles => 'Particles',
     VisualizerStyle.line => 'Line',
+    VisualizerStyle.ribbon => 'Ribbon',
   };
+
+  /// Circular styles need a squarer box than the wide, short bar styles.
+  bool get isRadial =>
+      this == VisualizerStyle.radial ||
+      this == VisualizerStyle.bloom ||
+      this == VisualizerStyle.particles;
 }
 
 const _unset = Object();
@@ -38,7 +50,7 @@ class AppSettings {
     this.showVisualizerInNowPlaying = true,
     this.seekStep = const Duration(seconds: 10),
     this.includeVideos = false,
-    this.realtimeVisualizerEnabled = false,
+    this.realVisualizerEnabled = false,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -61,9 +73,9 @@ class AppSettings {
   /// Whether the library scan also picks up video files, played as audio.
   final bool includeVideos;
 
-  /// Whether the visualizer reacts to the real audio signal rather than a
-  /// simulated waveform.
-  final bool realtimeVisualizerEnabled;
+  /// Drive the visualizer from the real audio signal instead of the
+  /// simulated waveform. Opt-in: it needs the RECORD_AUDIO permission.
+  final bool realVisualizerEnabled;
 
   /// Pass [manualThemeOverride] or [currentEqualizerPresetId] to change
   /// them, including to `null`. Omit either to leave it untouched.
@@ -83,7 +95,7 @@ class AppSettings {
     bool? showVisualizerInNowPlaying,
     Duration? seekStep,
     bool? includeVideos,
-    bool? realtimeVisualizerEnabled,
+    bool? realVisualizerEnabled,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -110,8 +122,8 @@ class AppSettings {
           showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
       seekStep: seekStep ?? this.seekStep,
       includeVideos: includeVideos ?? this.includeVideos,
-      realtimeVisualizerEnabled:
-          realtimeVisualizerEnabled ?? this.realtimeVisualizerEnabled,
+      realVisualizerEnabled:
+          realVisualizerEnabled ?? this.realVisualizerEnabled,
     );
   }
 }

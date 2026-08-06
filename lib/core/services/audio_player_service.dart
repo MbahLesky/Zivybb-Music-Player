@@ -87,14 +87,20 @@ class AudioPlayerService {
   final _processingStateController =
       StreamController<ProcessingState>.broadcast();
   final _errorIndexController = StreamController<int>.broadcast();
-  final _audioSessionIdController = StreamController<int?>.broadcast();
+
+  /// Android audio session of whichever player is currently producing sound.
+  ///
+  /// Followed rather than captured once because the crossfade engine hands
+  /// off between two players, each with its own session — the visualizer has
+  /// to re-attach to the one actually playing.
+  final _sessionIdController = StreamController<int?>.broadcast();
 
   StreamSubscription<Duration>? _fwdPosition;
   StreamSubscription<Duration?>? _fwdDuration;
   StreamSubscription<bool>? _fwdPlaying;
   StreamSubscription<int?>? _fwdCurrentIndex;
   StreamSubscription<ProcessingState>? _fwdProcessingState;
-  StreamSubscription<int?>? _fwdAudioSessionId;
+  StreamSubscription<int?>? _fwdSessionId;
 
   Stream<Duration> get positionStream => _positionController.stream;
   Stream<Duration?> get durationStream => _durationController.stream;
@@ -103,17 +109,13 @@ class AudioPlayerService {
   Stream<ProcessingState> get processingStateStream =>
       _processingStateController.stream;
 
+  /// Emits the Android audio session ID of the active player, or `null` off
+  /// Android and before one is assigned. Drives the real-audio visualizer.
+  Stream<int?> get androidAudioSessionIdStream => _sessionIdController.stream;
+
   /// Emits the queue index of a track that failed to play (SRS F-5.3), e.g.
   /// because its file was deleted.
   Stream<int> get playbackErrorIndexStream => _errorIndexController.stream;
-
-  /// Emits the Android audio session id of whichever player is currently
-  /// producing sound, so the visualizer can attach a capture to it. Changes
-  /// whenever the active player changes — notably on every crossfade, which
-  /// hands over to the other player and so a different session.
-  ///
-  /// Always `null` off Android.
-  Stream<int?> get audioSessionIdStream => _audioSessionIdController.stream;
 
   bool get isShuffleModeEnabled =>
       _crossfadeEnabled ? _shuffleEnabled : _gaplessPlayer.shuffleModeEnabled;
@@ -153,7 +155,7 @@ class AudioPlayerService {
     _fwdPlaying?.cancel();
     _fwdCurrentIndex?.cancel();
     _fwdProcessingState?.cancel();
-    _fwdAudioSessionId?.cancel();
+    _fwdSessionId?.cancel();
   }
 
   void _bindGaplessForwarding() {
@@ -166,17 +168,20 @@ class AudioPlayerService {
     );
     _fwdPlaying = _gaplessPlayer.playingStream.listen(_playingController.add);
     _fwdCurrentIndex = _gaplessPlayer.currentIndexStream.listen((index) {
-      // Mirrored into _currentIndex so queue edits and a live switch to the
-      // crossfade engine start from the track actually playing, not the one
-      // the queue was originally loaded at.
+      // Mirrored into [_currentIndex] (not just forwarded) because the
+      // queue-mutation helpers need to know where playback currently is in
+      // order to keep pointing at the same song after a move or removal —
+      // and in gapless mode just_audio, not this class, advances the track.
+      // It also lets a live switch to the crossfade engine resume from the
+      // track actually playing rather than the one the queue was loaded at.
       if (index != null) _currentIndex = index;
       _currentIndexController.add(index);
     });
     _fwdProcessingState = _gaplessPlayer.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
-    _fwdAudioSessionId = _gaplessPlayer.androidAudioSessionIdStream.listen(
-      _audioSessionIdController.add,
+    _fwdSessionId = _gaplessPlayer.androidAudioSessionIdStream.listen(
+      _sessionIdController.add,
     );
   }
 
@@ -192,8 +197,8 @@ class AudioPlayerService {
     _fwdProcessingState = active.playerStateStream
         .map((state) => state.processingState)
         .listen(_processingStateController.add);
-    _fwdAudioSessionId = active.androidAudioSessionIdStream.listen(
-      _audioSessionIdController.add,
+    _fwdSessionId = active.androidAudioSessionIdStream.listen(
+      _sessionIdController.add,
     );
     // currentIndexStream is driven manually (_currentIndexController.add)
     // in crossfade mode — there's no single playlist to report it from.
@@ -246,6 +251,9 @@ class AudioPlayerService {
 
   /// Moves the queue item at [oldIndex] to [newIndex] (Queue screen reorder).
   Future<void> moveQueueItem(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    if (oldIndex < 0 || oldIndex >= _queue.length) return;
+    if (newIndex < 0 || newIndex >= _queue.length) return;
     if (!_crossfadeEnabled) {
       final item = _queue.removeAt(oldIndex);
       _queue.insert(newIndex, item);
@@ -265,6 +273,7 @@ class AudioPlayerService {
   /// track currently playing, advances to whatever now sits at that
   /// position (or stops if the queue is now empty).
   Future<void> removeQueueItem(int index) async {
+    if (index < 0 || index >= _queue.length) return;
     if (!_crossfadeEnabled) {
       _queue.removeAt(index);
       await _gaplessPlayer.removeAudioSourceAt(index);
@@ -358,6 +367,18 @@ class AudioPlayerService {
       await _activeFadePlayer?.seek(position);
     } else {
       await _gaplessPlayer.seek(position);
+    }
+  }
+
+  /// Jumps straight to [index] in the queue, for the Queue screen's
+  /// tap-to-play.
+  Future<void> skipToIndex(int index) async {
+    if (index < 0 || index >= _queue.length) return;
+    if (_crossfadeEnabled) {
+      await _hardSwapTo(index);
+      _orderPos = _order.indexOf(index);
+    } else {
+      await _gaplessPlayer.seek(Duration.zero, index: index);
     }
   }
 
@@ -677,6 +698,7 @@ class AudioPlayerService {
     await _playingController.close();
     await _currentIndexController.close();
     await _processingStateController.close();
+    await _sessionIdController.close();
     await _gaplessPlayer.dispose();
     await _fadeA?.dispose();
     await _fadeB?.dispose();

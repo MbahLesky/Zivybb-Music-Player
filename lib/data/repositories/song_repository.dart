@@ -141,11 +141,16 @@ class SongRepository {
     );
   }
 
-  /// Removes a song from the library entirely, along with its vibe
-  /// assignments and playlist memberships (Screens.md #14: "remove from
-  /// library").
-  Future<void> deleteFromLibrary(String songId) async {
-    await _database.transaction(() async {
+  /// Removes a song from the library entirely (Screens.md #14: "remove from
+  /// library"), along with its vibe assignments and any playlist entries
+  /// pointing at it.
+  ///
+  /// Those deletes are explicit rather than left to `ON DELETE CASCADE`,
+  /// because databases created before foreign keys were declared have no
+  /// cascade — and a leftover entry would reappear inside a playlist the
+  /// moment a device rescan reused that media-store ID.
+  Future<void> deleteFromLibrary(String songId) {
+    return _database.transaction(() async {
       await (_database.delete(
         _database.songVibes,
       )..where((t) => t.songId.equals(songId))).go();

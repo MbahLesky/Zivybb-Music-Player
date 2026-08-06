@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backdrop layer of the adaptive launcher icon: the same deep indigo
+     gradient baked into assets/images/zivybb_icon.svg. Kept as a vector so
+     Android can scale and mask it to whatever shape the launcher uses. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#1A1730"
+        android:endColor="#0E0C18"
+        android:type="linear"/>
+</shape>
