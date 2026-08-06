@@ -234,6 +234,7 @@ class _VibeDialogState extends State<_VibeDialog> {
             ColorSwatchPicker(
               selectedHex: _colorHex,
               palette: vibeColorPalette,
+              allowCustom: true,
               onSelected: (color) =>
                   setState(() => _colorHex = colorToHex(color)),
             ),

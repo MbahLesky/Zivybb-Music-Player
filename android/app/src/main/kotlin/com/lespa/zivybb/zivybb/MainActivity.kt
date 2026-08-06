@@ -110,21 +110,4 @@ class MainActivity : AudioServiceActivity() {
     private companion object {
         const val VIDEO_CHANNEL = "com.lespa.zivybb/video_query"
     }
-=======
-    private var visualizerBridge: AudioVisualizerBridge? = null
-
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine)
-        visualizerBridge =
-            AudioVisualizerBridge(flutterEngine.dartExecutor.binaryMessenger)
-    }
-
-    override fun onDestroy() {
-        // Releases the system Visualizer effect. Leaking it would keep the
-        // audio session captured for the life of the process.
-        visualizerBridge?.dispose()
-        visualizerBridge = null
-        super.onDestroy()
-    }
->>>>>>> 5e442c83fbab8a8cd5e2356976221499079b95f1
 }

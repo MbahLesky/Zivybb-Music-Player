@@ -19,6 +19,9 @@ const themePalette = <Color>[
 /// Palette offered when picking a vibe's color — brighter and more
 /// varied than [themePalette] since vibes benefit from being visually
 /// distinct from one another at a glance.
+///
+/// These are shortcuts, not the whole choice: the vibe picker also offers the
+/// full spectrum via `CustomColorPickerDialog`.
 const vibeColorPalette = <Color>[
   Color(0xFFFF7043), // Energetic (orange)
   Color(0xFF4FC3F7), // Chill (light blue)
