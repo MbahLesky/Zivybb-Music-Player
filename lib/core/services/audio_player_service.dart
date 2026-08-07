@@ -12,6 +12,27 @@ import '../../data/models/song.dart';
 /// just_audio's playlist/loop machinery (see [AudioPlayerService._peekNextIndex]).
 enum RepeatMode { off, one, all }
 
+/// The crossfade actually usable for a track lasting [trackLength], given the
+/// user's [configured] setting.
+///
+/// Capped at a third of the track, for two reasons.
+///
+/// A track no longer than the configured fade cannot fade for longer than it
+/// plays: the ramp trigger fires at `trackLength - fade`, which for such a
+/// track is at or before zero, so it never fires. Nothing else advances the
+/// queue while crossfade is on, so playback would simply stop dead at the end
+/// of that track.
+///
+/// And because the incoming track starts from zero and plays for the whole
+/// ramp, it becomes the active track already `fade` in. Without a cap,
+/// anything shorter than twice the fade would immediately begin fading out
+/// again, draining the queue several times faster than real time.
+Duration effectiveCrossfadeFor(Duration configured, Duration trackLength) {
+  if (trackLength <= Duration.zero) return Duration.zero;
+  final third = Duration(microseconds: trackLength.inMicroseconds ~/ 3);
+  return configured < third ? configured : third;
+}
+
 /// Thin wrapper around the underlying audio engine ([AudioPlayer]).
 ///
 /// Keeps `just_audio` out of the feature/application layer so the engine
@@ -196,7 +217,12 @@ class AudioPlayerService {
     _fwdPlaying = active.playingStream.listen(_playingController.add);
     _fwdProcessingState = active.playerStateStream
         .map((state) => state.processingState)
-        .listen(_processingStateController.add);
+        .listen((state) {
+          _processingStateController.add(state);
+          if (state == ProcessingState.completed) {
+            _onCrossfadeTrackCompleted();
+          }
+        });
     _fwdSessionId = active.androidAudioSessionIdStream.listen(
       _sessionIdController.add,
     );
@@ -554,14 +580,33 @@ class AudioPlayerService {
 
   void _maybeStartCrossfadeRamp(Duration position, Duration? duration) {
     if (_fadeRampInProgress) return;
-    if (duration == null || duration <= _crossfadeDuration) return;
-    if (position < duration - _crossfadeDuration) return;
+    if (duration == null || duration <= Duration.zero) return;
+    final fade = effectiveCrossfadeFor(_crossfadeDuration, duration);
+    if (position < duration - fade) return;
     final nextIndex = _peekNextIndex();
     if (nextIndex == null) return;
-    unawaited(_beginCrossfadeRamp(nextIndex));
+    unawaited(_beginCrossfadeRamp(nextIndex, fade));
   }
 
-  Future<void> _beginCrossfadeRamp(int nextIndex) async {
+  /// Advances when a track reaches its end without a ramp having started.
+  ///
+  /// The position-driven trigger above is the normal path, but it can be
+  /// missed — a stalled position stream, a track whose reported duration
+  /// turns out to be wrong. In crossfade mode nothing else moves the queue
+  /// on, so without this the engine would sit silent on a finished track.
+  void _onCrossfadeTrackCompleted() {
+    if (!_crossfadeEnabled || _fadeRampInProgress) return;
+    final nextIndex = _peekNextIndex();
+    // Genuinely the end of the queue: stopping is correct.
+    if (nextIndex == null) return;
+    unawaited(() async {
+      await _hardSwapTo(nextIndex);
+      _orderPos = _order.indexOf(nextIndex);
+      await _activeFadePlayer?.play();
+    }());
+  }
+
+  Future<void> _beginCrossfadeRamp(int nextIndex, Duration fade) async {
     _fadeRampInProgress = true;
     final active = _activeFadePlayer!;
     final standby = _standbyFadePlayer!;
@@ -573,10 +618,14 @@ class AudioPlayerService {
     await standby.setVolume(0);
     unawaited(standby.play());
 
-    final rampMs = _crossfadeDuration.inMilliseconds;
+    final rampMs = fade.inMilliseconds;
     final stopwatch = Stopwatch()..start();
     _fadeRampTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      final t = (stopwatch.elapsedMilliseconds / rampMs).clamp(0.0, 1.0);
+      // A zero-length fade (a track too short to ramp over) swaps on the
+      // first tick rather than dividing by zero.
+      final t = rampMs <= 0
+          ? 1.0
+          : (stopwatch.elapsedMilliseconds / rampMs).clamp(0.0, 1.0);
       active.setVolume(1 - t);
       standby.setVolume(t);
       if (t >= 1.0) {

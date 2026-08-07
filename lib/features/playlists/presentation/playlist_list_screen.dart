@@ -239,16 +239,32 @@ class _PlaylistCard extends StatelessWidget {
                     Positioned(
                       top: 4,
                       right: 4,
-                      child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: Colors.white),
-                        onSelected: (value) {
-                          if (value == 'edit') onEdit();
-                          if (value == 'delete') onDelete();
-                        },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
-                        ],
+                      // Scrimmed, because this sits over whatever cover the
+                      // user picked as well as over the pale placeholder —
+                      // against which a bare white icon disappeared in light
+                      // mode. A dark disc keeps it legible over both.
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withValues(alpha: 0.38),
+                        ),
+                        child: PopupMenuButton<String>(
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
+                          ),
+                          onSelected: (value) {
+                            if (value == 'edit') onEdit();
+                            if (value == 'delete') onDelete();
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                 ],

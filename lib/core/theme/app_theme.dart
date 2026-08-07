@@ -145,7 +145,21 @@ ThemeData buildAppTheme({
       backgroundColor: elevatedSurface,
       selectedColor: primary.withValues(alpha: 0.2),
       side: BorderSide(color: borderColor),
-      labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+      // The colour is not optional here. A ChipThemeData.labelStyle replaces
+      // the Material default outright rather than merging with it (see
+      // RawChip's `chipTheme.labelStyle ?? chipDefaults.labelStyle`), so
+      // leaving it off dropped the default onSurfaceVariant and left chip
+      // text inheriting whatever ambient style it happened to sit under —
+      // which rendered it near-white, and invisible, in light mode.
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: scheme.onSurface,
+      ),
+      secondaryLabelStyle: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: scheme.onSurface,
+      ),
+      iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 18),
       showCheckmark: false,
     ),
     dividerTheme: DividerThemeData(color: borderColor, thickness: 0.8),
