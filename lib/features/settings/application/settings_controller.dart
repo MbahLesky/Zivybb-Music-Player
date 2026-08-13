@@ -52,6 +52,27 @@ final visualizerStyleProvider = Provider.autoDispose<VisualizerStyle>((ref) {
   return settings.visualizerStyle;
 });
 
+/// How the visualizer's levels are shaped before they are drawn.
+///
+/// Not auto-disposing, unlike its neighbours: the visualizer reads this from
+/// inside a ticker callback with `ref.read`, which does not keep a provider
+/// alive, so an auto-disposing one would be torn down and rebuilt on every
+/// frame that nothing else happened to be watching it.
+final visualizerTuningProvider = Provider<VisualizerTuning>((ref) {
+  final settings =
+      ref.watch(settingsStreamProvider).value ?? const AppSettings();
+  return settings.visualizerTuning;
+});
+
+/// Where the visualizer is drawn on the Now Playing screen.
+final visualizerPlacementProvider = Provider.autoDispose<VisualizerPlacement>((
+  ref,
+) {
+  final settings =
+      ref.watch(settingsStreamProvider).value ?? const AppSettings();
+  return settings.visualizerPlacement;
+});
+
 /// Applies settings changes made from the Settings screen.
 class SettingsController extends Notifier<AsyncValue<void>> {
   @override
@@ -176,12 +197,28 @@ class SettingsController extends Notifier<AsyncValue<void>> {
     return enabled;
   }
 
-  Future<void> setShowVisualizerInNowPlaying(bool enabled) async {
+  Future<void> setVisualizerPlacement(VisualizerPlacement placement) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
       () => ref
           .read(settingsRepositoryProvider)
-          .setShowVisualizerInNowPlaying(enabled),
+          .setVisualizerPlacement(placement),
+    );
+  }
+
+  Future<void> setVisualizerAsArtworkFallback(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(settingsRepositoryProvider)
+          .setVisualizerAsArtworkFallback(enabled),
+    );
+  }
+
+  Future<void> setVisualizerTuning(VisualizerTuning tuning) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setVisualizerTuning(tuning),
     );
   }
 

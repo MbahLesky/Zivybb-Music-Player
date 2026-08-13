@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import '../../../data/models/app_settings.dart';
+
 /// Produces the per-bar amplitudes the wave visualizer draws.
 ///
 /// Two sources feed this. When the user has opted into real-audio
@@ -31,7 +33,35 @@ class VisualizerMath {
     final slow = math.sin(t * 2.2 + phase);
     final fast = math.sin(t * 5.7 + phase * 1.7);
     final value = (slow * 0.6 + fast * 0.4 + 1) / 2;
-    return value.clamp(0.15, 1.0);
+    // The full range, not a floored one: the visible minimum is
+    // `VisualizerTuning.floor`'s job now, and clamping here would put a hard
+    // limit on how far the contrast setting could push quiet bands down.
+    return value.clamp(0.0, 1.0);
+  }
+
+  /// Reshapes raw levels in `[0, 1]` per the user's [tuning], applied to
+  /// either source before smoothing.
+  ///
+  /// The order matters. Contrast is a gamma curve applied first, on the raw
+  /// value: raising a number below 1 to a power above 1 pulls it down, and
+  /// pulls it down harder the smaller it already was, so quiet bands collapse
+  /// while loud ones barely move — which is what widens the visible gap
+  /// between low and high. Sensitivity then scales the whole curve, and only
+  /// afterwards is the floor added, as a lift of the entire range rather than
+  /// a clamp. Lifting rather than clamping is deliberate: a clamp would flatten
+  /// everything below the floor into one indistinguishable line, undoing the
+  /// contrast that was just applied.
+  static List<double> shape(List<double> raw, VisualizerTuning tuning) {
+    return [
+      for (final value in raw)
+        _shapeOne(value.isFinite ? value.clamp(0.0, 1.0) : 0.0, tuning),
+    ];
+  }
+
+  static double _shapeOne(double value, VisualizerTuning tuning) {
+    final curved = math.pow(value, tuning.contrast).toDouble();
+    final gained = (curved * tuning.sensitivity).clamp(0.0, 1.0);
+    return (tuning.floor + (1 - tuning.floor) * gained).clamp(0.0, 1.0);
   }
 
   /// Eases [current] towards [target], resampling if their lengths differ.

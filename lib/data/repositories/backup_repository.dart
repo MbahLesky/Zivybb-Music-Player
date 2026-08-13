@@ -47,9 +47,10 @@ class BackupEntry {
 /// rather than failing the whole restore, consistent with this app's
 /// missing-file philosophy (SRS F-5.3).
 ///
-/// Format version 2 stores a list of vibes per song plus the vibe
-/// definitions themselves; version 1 (a single `moodTagId` per song, with no
-/// definitions) is still restorable — see [restoreBackup].
+/// Format version 3 adds the vibe folders and each vibe's place in them.
+/// Version 2 stores a list of vibes per song plus the vibe definitions
+/// themselves; version 1 (a single `moodTagId` per song, with no definitions)
+/// is still restorable — see [restoreBackup].
 class BackupRepository {
   BackupRepository({
     required this._database,
@@ -76,6 +77,7 @@ class BackupRepository {
 
   Future<BackupEntry> createBackup() async {
     final settings = await _settingsRepository.currentSettings();
+    final vibeCategories = await _vibeTagRepository.allVibeCategories();
     final vibeTags = await _vibeTagRepository.allVibeTags();
     final vibeIdsBySong = await _vibeTagRepository.allSongVibeIds();
     final taggedSongs = await _songRepository.taggedOrLikedSongs(
@@ -84,7 +86,7 @@ class BackupRepository {
     final playlists = await _playlistRepository.allManualPlaylistsWithSongs();
 
     final data = {
-      'version': 2,
+      'version': 3,
       'settings': {
         'adaptiveDarkModeEnabled': settings.adaptiveDarkModeEnabled,
         'manualThemeOverride': settings.manualThemeOverride?.name,
@@ -93,9 +95,22 @@ class BackupRepository {
         'crossfadeEnabled': settings.crossfadeEnabled,
         'crossfadeDurationMs': settings.crossfadeDuration.inMilliseconds,
       },
+      'vibeCategories': [
+        for (final category in vibeCategories)
+          {
+            'id': category.id,
+            'name': category.name,
+            'colorHex': category.colorHex,
+          },
+      ],
       'vibeTags': [
         for (final tag in vibeTags)
-          {'id': tag.id, 'label': tag.label, 'colorHex': tag.colorHex},
+          {
+            'id': tag.id,
+            'label': tag.label,
+            'colorHex': tag.colorHex,
+            'categoryId': tag.categoryId,
+          },
       ],
       'songs': [
         for (final song in taggedSongs)
@@ -177,19 +192,44 @@ class BackupRepository {
       );
     }
 
-    // Restore the vibe definitions first so the per-song assignments below
-    // can't reference a vibe that doesn't exist. Existing vibes win, so a
-    // restore never overwrites labels or colors the user has since changed.
+    // Folders before the vibes that sit in them, and both before the per-song
+    // assignments, so nothing is restored pointing at something that doesn't
+    // exist yet. Existing rows win throughout, so a restore never overwrites
+    // names or colors the user has since changed. Version 2 and earlier
+    // backups have no folders, and their vibes restore uncategorised.
+    final backedUpCategories = (data['vibeCategories'] as List?) ?? const [];
+    for (final (index, entry) in backedUpCategories.indexed) {
+      final map = entry as Map<String, dynamic>;
+      final id = map['id'] as String?;
+      if (id == null) continue;
+      await _vibeTagRepository.upsertVibeCategory(
+        VibeCategory(
+          id: id,
+          name: map['name'] as String? ?? id,
+          colorHex: map['colorHex'] as String? ?? '#7E57C2',
+        ),
+        sortOrder: index,
+      );
+    }
+
+    final knownCategoryIds = {
+      for (final category in await _vibeTagRepository.allVibeCategories())
+        category.id,
+    };
     final backedUpTags = (data['vibeTags'] as List?) ?? const [];
     for (final (index, entry) in backedUpTags.indexed) {
       final map = entry as Map<String, dynamic>;
       final id = map['id'] as String?;
       if (id == null) continue;
+      final categoryId = map['categoryId'] as String?;
       await _vibeTagRepository.upsertVibeTag(
         VibeTag(
           id: id,
           label: map['label'] as String? ?? id,
           colorHex: map['colorHex'] as String? ?? '#FF7043',
+          // A folder the backup names but that no longer exists leaves the
+          // vibe uncategorised rather than dangling.
+          categoryId: knownCategoryIds.contains(categoryId) ? categoryId : null,
         ),
         sortOrder: index,
       );

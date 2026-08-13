@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/song.dart';
+import '../../vibe_tagging/application/vibe_tagging_controller.dart';
 
 /// Orders the library list can be shown in.
 ///
@@ -85,21 +86,56 @@ final libraryFilterProvider = StateProvider<LibraryFilter>(
   (ref) => LibraryFilter.all,
 );
 
+/// The vibe folder the library is narrowed to, or null for "any folder".
+///
+/// Deliberately separate from [LibraryFilter]: folders are user-created rows,
+/// so they can't be enum cases, and the two narrow along different axes —
+/// "liked songs that carry a Mood vibe" is a reasonable thing to ask for.
+final libraryVibeCategoryFilterProvider = StateProvider<String?>((ref) => null);
+
+/// The song ids the active vibe-folder filter allows through, or null when no
+/// folder is selected — which `applyLibraryView` reads as "don't narrow",
+/// distinct from an empty set meaning "nothing in that folder is tagged".
+final libraryVibeCategoryRestrictionProvider = Provider<Set<String>?>((ref) {
+  final categoryId = ref.watch(libraryVibeCategoryFilterProvider);
+  if (categoryId == null) return null;
+  return ref.watch(songIdsInVibeCategoryProvider(categoryId));
+});
+
+/// The name of the folder the library is narrowed to, or null when it isn't.
+/// Used to explain an unexpectedly short list.
+final libraryVibeCategoryNameProvider = Provider<String?>((ref) {
+  final categoryId = ref.watch(libraryVibeCategoryFilterProvider);
+  if (categoryId == null) return null;
+  final categories = ref.watch(vibeCategoriesStreamProvider).value ?? const [];
+  for (final category in categories) {
+    if (category.id == categoryId) return category.name;
+  }
+  return null;
+});
+
 /// Applies the active search query, filter, and sort order to [songs].
 ///
 /// Deliberately a pure function over an already-loaded list rather than a
 /// database query: the library is a personal-sized collection held in memory
 /// anyway, and this keeps searching instant and keeps every list (All Songs,
 /// Liked, folder contents) filtering identically.
+/// [restrictToSongIds], when given, narrows the list to those songs before
+/// anything else — it carries the vibe-folder filter, which can only be
+/// answered from the vibe join tables rather than from a [Song].
 List<Song> applyLibraryView(
   List<Song> songs, {
   required String query,
   required LibrarySort sort,
   LibraryFilter filter = LibraryFilter.all,
   Set<String> vibeTaggedSongIds = const {},
+  Set<String>? restrictToSongIds,
 }) {
   final trimmed = query.trim().toLowerCase();
   final filtered = songs.where((song) {
+    if (restrictToSongIds != null && !restrictToSongIds.contains(song.id)) {
+      return false;
+    }
     if (!filter.matches(song, vibeTaggedSongIds: vibeTaggedSongIds)) {
       return false;
     }

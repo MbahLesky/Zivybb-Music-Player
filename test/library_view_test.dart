@@ -230,4 +230,54 @@ void main() {
 
     expect(result.map((song) => song.id), ['3', '1']);
   });
+
+  group('restrictToSongIds (the vibe-folder filter)', () {
+    final library = [
+      _song(id: '1', title: 'Blue Monday', isLiked: true),
+      _song(id: '2', title: 'Blue Skies'),
+      _song(id: '3', title: 'Red Rain', isLiked: true),
+    ];
+
+    test('null leaves the list alone', () {
+      final result = applyLibraryView(
+        library,
+        query: '',
+        sort: LibrarySort.title,
+      );
+      expect(result, hasLength(3));
+    });
+
+    test('narrows to the given ids', () {
+      final result = applyLibraryView(
+        library,
+        query: '',
+        sort: LibrarySort.title,
+        restrictToSongIds: {'1', '3'},
+      );
+      expect(result.map((song) => song.id), ['1', '3']);
+    });
+
+    test('an empty set means nothing matched, not "no filter"', () {
+      // A folder whose vibes nothing is tagged with must show an empty list
+      // rather than silently falling back to the whole library.
+      final result = applyLibraryView(
+        library,
+        query: '',
+        sort: LibrarySort.title,
+        restrictToSongIds: const {},
+      );
+      expect(result, isEmpty);
+    });
+
+    test('composes with the search query and the filter', () {
+      final result = applyLibraryView(
+        library,
+        query: 'blue',
+        sort: LibrarySort.title,
+        filter: LibraryFilter.liked,
+        restrictToSongIds: {'1', '2', '3'},
+      );
+      expect(result.map((song) => song.id), ['1']);
+    });
+  });
 }

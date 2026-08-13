@@ -236,6 +236,106 @@ void main() {
     });
   });
 
+  group('VibeTagRepository folders', () {
+    late VibeTagRepository repository;
+
+    setUp(() async {
+      repository = VibeTagRepository(database: database);
+      await repository.ensureSeeded();
+    });
+
+    test('ensureSeeded seeds the folders once and files the presets', () async {
+      await repository.ensureSeeded();
+
+      final categories = await repository.watchVibeCategories().first;
+      expect(categories.map((category) => category.id), [
+        'mood',
+        'feeling',
+        'place',
+        'time',
+        'genre',
+        'activity',
+      ]);
+
+      final tags = await repository.watchVibeTags().first;
+      expect(tags.firstWhere((tag) => tag.id == 'chill').categoryId, 'mood');
+      expect(tags.firstWhere((tag) => tag.id == 'sad').categoryId, 'feeling');
+    });
+
+    test('a new vibe can be filed straight into a folder', () async {
+      final created = await repository.createVibeTag(
+        'Rainy',
+        '#4FC3F7',
+        categoryId: 'time',
+      );
+      expect(created.categoryId, 'time');
+
+      final tags = await repository.watchVibeTags().first;
+      expect(tags.firstWhere((tag) => tag.id == created.id).categoryId, 'time');
+    });
+
+    test('setVibeCategory moves a vibe, and null unfiles it', () async {
+      await repository.setVibeCategory('chill', 'place');
+      var tags = await repository.watchVibeTags().first;
+      expect(tags.firstWhere((tag) => tag.id == 'chill').categoryId, 'place');
+
+      await repository.setVibeCategory('chill', null);
+      tags = await repository.watchVibeTags().first;
+      expect(tags.firstWhere((tag) => tag.id == 'chill').categoryId, isNull);
+    });
+
+    test('deleting a folder keeps its vibes and their tags', () async {
+      await _insertSong(database, id: 'a');
+      await repository.addVibeToSong('a', 'chill');
+
+      await repository.deleteVibeCategory('mood');
+
+      final categories = await repository.watchVibeCategories().first;
+      expect(categories.map((category) => category.id), isNot(contains('mood')));
+
+      final tags = await repository.watchVibeTags().first;
+      final chill = tags.firstWhere((tag) => tag.id == 'chill');
+      expect(chill.categoryId, isNull, reason: 'the vibe survives, unfiled');
+      expect(
+        await repository.watchVibeIdsForSong('a').first,
+        {'chill'},
+        reason: 'deleting a folder must not untag any song',
+      );
+    });
+
+    test('reorderVibeCategories rewrites the folder order', () async {
+      await repository.reorderVibeCategories([
+        'genre',
+        'time',
+        'place',
+        'feeling',
+        'mood',
+        'activity',
+      ]);
+
+      final categories = await repository.watchVibeCategories().first;
+      expect(categories.first.id, 'genre');
+      expect(categories.last.id, 'activity');
+    });
+
+    test('renaming and recoloring a folder updates it in place', () async {
+      await repository.renameVibeCategory('mood', 'Vibe check');
+      await repository.recolorVibeCategory('mood', '#123456');
+
+      final categories = await repository.watchVibeCategories().first;
+      final mood = categories.firstWhere((category) => category.id == 'mood');
+      expect(mood.name, 'Vibe check');
+      expect(mood.colorHex, '#123456');
+    });
+
+    test('deleting a vibe leaves its folder intact', () async {
+      await repository.deleteVibeTag('chill');
+
+      final categories = await repository.watchVibeCategories().first;
+      expect(categories.map((category) => category.id), contains('mood'));
+    });
+  });
+
   group('VibePlaylistGenerator', () {
     late VibePlaylistGenerator generator;
     late PlaylistRepository playlists;

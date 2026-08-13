@@ -143,14 +143,49 @@ class SettingsRepository {
     );
   }
 
-  Future<void> setShowVisualizerInNowPlaying(bool enabled) {
+  Future<void> setVisualizerPlacement(VisualizerPlacement placement) {
     return _upsert(
       SettingsCompanion.insert(
         id: Settings.singletonId,
-        showVisualizerInNowPlaying: Value(enabled),
+        visualizerPlacement: Value(placement.name),
       ),
       onConflict: (_) =>
-          SettingsCompanion(showVisualizerInNowPlaying: Value(enabled)),
+          SettingsCompanion(visualizerPlacement: Value(placement.name)),
+    );
+  }
+
+  Future<void> setVisualizerAsArtworkFallback(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        visualizerAsArtworkFallback: Value(enabled),
+      ),
+      onConflict: (_) =>
+          SettingsCompanion(visualizerAsArtworkFallback: Value(enabled)),
+    );
+  }
+
+  /// Writes all five tuning values at once. They are always set together —
+  /// picking a preset changes every one — and one row write keeps the
+  /// visualizer from restyling itself five times in a row.
+  Future<void> setVisualizerTuning(VisualizerTuning tuning) {
+    final safe = tuning.clamped();
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        visualizerSensitivity: Value(safe.sensitivity),
+        visualizerContrast: Value(safe.contrast),
+        visualizerFloor: Value(safe.floor),
+        visualizerResponsiveness: Value(safe.responsiveness),
+        visualizerBarCount: Value(safe.barCount),
+      ),
+      onConflict: (_) => SettingsCompanion(
+        visualizerSensitivity: Value(safe.sensitivity),
+        visualizerContrast: Value(safe.contrast),
+        visualizerFloor: Value(safe.floor),
+        visualizerResponsiveness: Value(safe.responsiveness),
+        visualizerBarCount: Value(safe.barCount),
+      ),
     );
   }
 
@@ -186,6 +221,17 @@ class SettingsRepository {
     );
   }
 
+  /// Reads a stored [VisualizerPlacement] name, falling back to the default
+  /// rather than throwing. The v13 migration seeds this column from a
+  /// boolean, so any row it missed would otherwise take the whole settings
+  /// stream down with it.
+  static VisualizerPlacement _placementFrom(String name) {
+    for (final placement in VisualizerPlacement.values) {
+      if (placement.name == name) return placement;
+    }
+    return VisualizerPlacement.belowControls;
+  }
+
   Future<void> _upsert(
     SettingsCompanion insertable, {
     required Insertable<SettingsRow> Function($SettingsTable old) onConflict,
@@ -211,7 +257,15 @@ class SettingsRepository {
       showAlbumArtInMiniPlayer: row.showAlbumArtInMiniPlayer,
       showVisualizerInMiniPlayer: row.showVisualizerInMiniPlayer,
       showAlbumArtInNowPlaying: row.showAlbumArtInNowPlaying,
-      showVisualizerInNowPlaying: row.showVisualizerInNowPlaying,
+      visualizerPlacement: _placementFrom(row.visualizerPlacement),
+      visualizerAsArtworkFallback: row.visualizerAsArtworkFallback,
+      visualizerTuning: VisualizerTuning(
+        sensitivity: row.visualizerSensitivity,
+        contrast: row.visualizerContrast,
+        floor: row.visualizerFloor,
+        responsiveness: row.visualizerResponsiveness,
+        barCount: row.visualizerBarCount,
+      ).clamped(),
       seekStep: Duration(seconds: row.seekStepSeconds),
       includeVideos: row.includeVideos,
       realVisualizerEnabled: row.realVisualizerEnabled,

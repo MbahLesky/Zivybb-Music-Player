@@ -3,6 +3,312 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
+class $VibeCategoriesTable extends VibeCategories
+    with TableInfo<$VibeCategoriesTable, VibeCategoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VibeCategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorHexMeta = const VerificationMeta(
+    'colorHex',
+  );
+  @override
+  late final GeneratedColumn<String> colorHex = GeneratedColumn<String>(
+    'color_hex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, colorHex, sortOrder];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vibe_categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VibeCategoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('color_hex')) {
+      context.handle(
+        _colorHexMeta,
+        colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorHexMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VibeCategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VibeCategoryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      colorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_hex'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+    );
+  }
+
+  @override
+  $VibeCategoriesTable createAlias(String alias) {
+    return $VibeCategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class VibeCategoryRow extends DataClass implements Insertable<VibeCategoryRow> {
+  final String id;
+  final String name;
+  final String colorHex;
+  final int sortOrder;
+  const VibeCategoryRow({
+    required this.id,
+    required this.name,
+    required this.colorHex,
+    required this.sortOrder,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['color_hex'] = Variable<String>(colorHex);
+    map['sort_order'] = Variable<int>(sortOrder);
+    return map;
+  }
+
+  VibeCategoriesCompanion toCompanion(bool nullToAbsent) {
+    return VibeCategoriesCompanion(
+      id: Value(id),
+      name: Value(name),
+      colorHex: Value(colorHex),
+      sortOrder: Value(sortOrder),
+    );
+  }
+
+  factory VibeCategoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VibeCategoryRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      colorHex: serializer.fromJson<String>(json['colorHex']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'colorHex': serializer.toJson<String>(colorHex),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+    };
+  }
+
+  VibeCategoryRow copyWith({
+    String? id,
+    String? name,
+    String? colorHex,
+    int? sortOrder,
+  }) => VibeCategoryRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    colorHex: colorHex ?? this.colorHex,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
+  VibeCategoryRow copyWithCompanion(VibeCategoriesCompanion data) {
+    return VibeCategoryRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VibeCategoryRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, colorHex, sortOrder);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VibeCategoryRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.colorHex == this.colorHex &&
+          other.sortOrder == this.sortOrder);
+}
+
+class VibeCategoriesCompanion extends UpdateCompanion<VibeCategoryRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> colorHex;
+  final Value<int> sortOrder;
+  final Value<int> rowid;
+  const VibeCategoriesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.colorHex = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VibeCategoriesCompanion.insert({
+    required String id,
+    required String name,
+    required String colorHex,
+    this.sortOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       colorHex = Value(colorHex);
+  static Insertable<VibeCategoryRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? colorHex,
+    Expression<int>? sortOrder,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (colorHex != null) 'color_hex': colorHex,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VibeCategoriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? colorHex,
+    Value<int>? sortOrder,
+    Value<int>? rowid,
+  }) {
+    return VibeCategoriesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      colorHex: colorHex ?? this.colorHex,
+      sortOrder: sortOrder ?? this.sortOrder,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (colorHex.present) {
+      map['color_hex'] = Variable<String>(colorHex.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VibeCategoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $VibeTagsTable extends VibeTags
     with TableInfo<$VibeTagsTable, VibeTagRow> {
   @override
@@ -50,8 +356,25 @@ class $VibeTagsTable extends VibeTags
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, label, colorHex, sortOrder];
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    label,
+    colorHex,
+    sortOrder,
+    categoryId,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -91,6 +414,12 @@ class $VibeTagsTable extends VibeTags
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
     return context;
   }
 
@@ -116,6 +445,10 @@ class $VibeTagsTable extends VibeTags
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
     );
   }
 
@@ -130,11 +463,21 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
   final String label;
   final String colorHex;
   final int sortOrder;
+
+  /// The folder this vibe sits in, or null for "Uncategorised". A vibe
+  /// belongs to at most one folder.
+  ///
+  /// `VibeTagRepository.deleteVibeCategory` clears this itself rather than
+  /// trusting the constraint below: it only exists on databases created after
+  /// the category feature landed, and `ALTER TABLE ... ADD COLUMN` can't
+  /// retrofit it onto older installs.
+  final String? categoryId;
   const VibeTagRow({
     required this.id,
     required this.label,
     required this.colorHex,
     required this.sortOrder,
+    this.categoryId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -143,6 +486,9 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
     map['label'] = Variable<String>(label);
     map['color_hex'] = Variable<String>(colorHex);
     map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
     return map;
   }
 
@@ -152,6 +498,9 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
       label: Value(label),
       colorHex: Value(colorHex),
       sortOrder: Value(sortOrder),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
     );
   }
 
@@ -165,6 +514,7 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
       label: serializer.fromJson<String>(json['label']),
       colorHex: serializer.fromJson<String>(json['colorHex']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
     );
   }
   @override
@@ -175,6 +525,7 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
       'label': serializer.toJson<String>(label),
       'colorHex': serializer.toJson<String>(colorHex),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'categoryId': serializer.toJson<String?>(categoryId),
     };
   }
 
@@ -183,11 +534,13 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
     String? label,
     String? colorHex,
     int? sortOrder,
+    Value<String?> categoryId = const Value.absent(),
   }) => VibeTagRow(
     id: id ?? this.id,
     label: label ?? this.label,
     colorHex: colorHex ?? this.colorHex,
     sortOrder: sortOrder ?? this.sortOrder,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
   );
   VibeTagRow copyWithCompanion(VibeTagsCompanion data) {
     return VibeTagRow(
@@ -195,6 +548,9 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
       label: data.label.present ? data.label.value : this.label,
       colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
     );
   }
 
@@ -204,13 +560,14 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
           ..write('id: $id, ')
           ..write('label: $label, ')
           ..write('colorHex: $colorHex, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('categoryId: $categoryId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, label, colorHex, sortOrder);
+  int get hashCode => Object.hash(id, label, colorHex, sortOrder, categoryId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -218,7 +575,8 @@ class VibeTagRow extends DataClass implements Insertable<VibeTagRow> {
           other.id == this.id &&
           other.label == this.label &&
           other.colorHex == this.colorHex &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.categoryId == this.categoryId);
 }
 
 class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
@@ -226,12 +584,14 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
   final Value<String> label;
   final Value<String> colorHex;
   final Value<int> sortOrder;
+  final Value<String?> categoryId;
   final Value<int> rowid;
   const VibeTagsCompanion({
     this.id = const Value.absent(),
     this.label = const Value.absent(),
     this.colorHex = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.categoryId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VibeTagsCompanion.insert({
@@ -239,6 +599,7 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
     required String label,
     required String colorHex,
     this.sortOrder = const Value.absent(),
+    this.categoryId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        label = Value(label),
@@ -248,6 +609,7 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
     Expression<String>? label,
     Expression<String>? colorHex,
     Expression<int>? sortOrder,
+    Expression<String>? categoryId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -255,6 +617,7 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
       if (label != null) 'label': label,
       if (colorHex != null) 'color_hex': colorHex,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (categoryId != null) 'category_id': categoryId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -264,6 +627,7 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
     Value<String>? label,
     Value<String>? colorHex,
     Value<int>? sortOrder,
+    Value<String?>? categoryId,
     Value<int>? rowid,
   }) {
     return VibeTagsCompanion(
@@ -271,6 +635,7 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
       label: label ?? this.label,
       colorHex: colorHex ?? this.colorHex,
       sortOrder: sortOrder ?? this.sortOrder,
+      categoryId: categoryId ?? this.categoryId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -290,6 +655,9 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -303,6 +671,7 @@ class VibeTagsCompanion extends UpdateCompanion<VibeTagRow> {
           ..write('label: $label, ')
           ..write('colorHex: $colorHex, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('categoryId: $categoryId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2321,21 +2690,92 @@ class $SettingsTable extends Settings
         ),
         defaultValue: const Constant(true),
       );
-  static const VerificationMeta _showVisualizerInNowPlayingMeta =
-      const VerificationMeta('showVisualizerInNowPlaying');
+  static const VerificationMeta _visualizerPlacementMeta =
+      const VerificationMeta('visualizerPlacement');
   @override
-  late final GeneratedColumn<bool> showVisualizerInNowPlaying =
+  late final GeneratedColumn<String> visualizerPlacement =
+      GeneratedColumn<String>(
+        'visualizer_placement',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('belowControls'),
+      );
+  static const VerificationMeta _visualizerAsArtworkFallbackMeta =
+      const VerificationMeta('visualizerAsArtworkFallback');
+  @override
+  late final GeneratedColumn<bool> visualizerAsArtworkFallback =
       GeneratedColumn<bool>(
-        'show_visualizer_in_now_playing',
+        'visualizer_as_artwork_fallback',
         aliasedName,
         false,
         type: DriftSqlType.bool,
         requiredDuringInsert: false,
         defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("show_visualizer_in_now_playing" IN (0, 1))',
+          'CHECK ("visualizer_as_artwork_fallback" IN (0, 1))',
         ),
-        defaultValue: const Constant(true),
+        defaultValue: const Constant(false),
       );
+  static const VerificationMeta _visualizerSensitivityMeta =
+      const VerificationMeta('visualizerSensitivity');
+  @override
+  late final GeneratedColumn<double> visualizerSensitivity =
+      GeneratedColumn<double>(
+        'visualizer_sensitivity',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(1.0),
+      );
+  static const VerificationMeta _visualizerContrastMeta =
+      const VerificationMeta('visualizerContrast');
+  @override
+  late final GeneratedColumn<double> visualizerContrast =
+      GeneratedColumn<double>(
+        'visualizer_contrast',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(1.0),
+      );
+  static const VerificationMeta _visualizerFloorMeta = const VerificationMeta(
+    'visualizerFloor',
+  );
+  @override
+  late final GeneratedColumn<double> visualizerFloor = GeneratedColumn<double>(
+    'visualizer_floor',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.12),
+  );
+  static const VerificationMeta _visualizerResponsivenessMeta =
+      const VerificationMeta('visualizerResponsiveness');
+  @override
+  late final GeneratedColumn<double> visualizerResponsiveness =
+      GeneratedColumn<double>(
+        'visualizer_responsiveness',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0.5),
+      );
+  static const VerificationMeta _visualizerBarCountMeta =
+      const VerificationMeta('visualizerBarCount');
+  @override
+  late final GeneratedColumn<int> visualizerBarCount = GeneratedColumn<int>(
+    'visualizer_bar_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(40),
+  );
   static const VerificationMeta _seekStepSecondsMeta = const VerificationMeta(
     'seekStepSeconds',
   );
@@ -2392,7 +2832,13 @@ class $SettingsTable extends Settings
     showAlbumArtInMiniPlayer,
     showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying,
-    showVisualizerInNowPlaying,
+    visualizerPlacement,
+    visualizerAsArtworkFallback,
+    visualizerSensitivity,
+    visualizerContrast,
+    visualizerFloor,
+    visualizerResponsiveness,
+    visualizerBarCount,
     seekStepSeconds,
     includeVideos,
     realVisualizerEnabled,
@@ -2513,12 +2959,66 @@ class $SettingsTable extends Settings
         ),
       );
     }
-    if (data.containsKey('show_visualizer_in_now_playing')) {
+    if (data.containsKey('visualizer_placement')) {
       context.handle(
-        _showVisualizerInNowPlayingMeta,
-        showVisualizerInNowPlaying.isAcceptableOrUnknown(
-          data['show_visualizer_in_now_playing']!,
-          _showVisualizerInNowPlayingMeta,
+        _visualizerPlacementMeta,
+        visualizerPlacement.isAcceptableOrUnknown(
+          data['visualizer_placement']!,
+          _visualizerPlacementMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_as_artwork_fallback')) {
+      context.handle(
+        _visualizerAsArtworkFallbackMeta,
+        visualizerAsArtworkFallback.isAcceptableOrUnknown(
+          data['visualizer_as_artwork_fallback']!,
+          _visualizerAsArtworkFallbackMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_sensitivity')) {
+      context.handle(
+        _visualizerSensitivityMeta,
+        visualizerSensitivity.isAcceptableOrUnknown(
+          data['visualizer_sensitivity']!,
+          _visualizerSensitivityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_contrast')) {
+      context.handle(
+        _visualizerContrastMeta,
+        visualizerContrast.isAcceptableOrUnknown(
+          data['visualizer_contrast']!,
+          _visualizerContrastMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_floor')) {
+      context.handle(
+        _visualizerFloorMeta,
+        visualizerFloor.isAcceptableOrUnknown(
+          data['visualizer_floor']!,
+          _visualizerFloorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_responsiveness')) {
+      context.handle(
+        _visualizerResponsivenessMeta,
+        visualizerResponsiveness.isAcceptableOrUnknown(
+          data['visualizer_responsiveness']!,
+          _visualizerResponsivenessMeta,
+        ),
+      );
+    }
+    if (data.containsKey('visualizer_bar_count')) {
+      context.handle(
+        _visualizerBarCountMeta,
+        visualizerBarCount.isAcceptableOrUnknown(
+          data['visualizer_bar_count']!,
+          _visualizerBarCountMeta,
         ),
       );
     }
@@ -2606,9 +3106,33 @@ class $SettingsTable extends Settings
         DriftSqlType.bool,
         data['${effectivePrefix}show_album_art_in_now_playing'],
       )!,
-      showVisualizerInNowPlaying: attachedDatabase.typeMapping.read(
+      visualizerPlacement: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visualizer_placement'],
+      )!,
+      visualizerAsArtworkFallback: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
-        data['${effectivePrefix}show_visualizer_in_now_playing'],
+        data['${effectivePrefix}visualizer_as_artwork_fallback'],
+      )!,
+      visualizerSensitivity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}visualizer_sensitivity'],
+      )!,
+      visualizerContrast: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}visualizer_contrast'],
+      )!,
+      visualizerFloor: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}visualizer_floor'],
+      )!,
+      visualizerResponsiveness: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}visualizer_responsiveness'],
+      )!,
+      visualizerBarCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}visualizer_bar_count'],
       )!,
       seekStepSeconds: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -2644,7 +3168,26 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   final bool showAlbumArtInMiniPlayer;
   final bool showVisualizerInMiniPlayer;
   final bool showAlbumArtInNowPlaying;
-  final bool showVisualizerInNowPlaying;
+
+  /// Where the visualizer sits on Now Playing — a [VisualizerPlacement] name.
+  ///
+  /// Supersedes the `show_visualizer_in_now_playing` boolean, which the v13
+  /// migration reads once to seed this and then leaves behind: SQLite makes
+  /// dropping a column awkward, and nothing reads it any more. Databases
+  /// created from v13 on never have it.
+  final String visualizerPlacement;
+
+  /// Draw the visualizer where a song's artwork would go when that song has
+  /// no artwork, rather than the generic music-note placeholder.
+  final bool visualizerAsArtworkFallback;
+
+  /// How the raw levels are shaped before they are drawn — see
+  /// `VisualizerTuning`, which owns the meaning and the valid ranges.
+  final double visualizerSensitivity;
+  final double visualizerContrast;
+  final double visualizerFloor;
+  final double visualizerResponsiveness;
+  final int visualizerBarCount;
 
   /// How far Now Playing's seek-back/forward buttons jump, in seconds.
   final int seekStepSeconds;
@@ -2668,7 +3211,13 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     required this.showAlbumArtInMiniPlayer,
     required this.showVisualizerInMiniPlayer,
     required this.showAlbumArtInNowPlaying,
-    required this.showVisualizerInNowPlaying,
+    required this.visualizerPlacement,
+    required this.visualizerAsArtworkFallback,
+    required this.visualizerSensitivity,
+    required this.visualizerContrast,
+    required this.visualizerFloor,
+    required this.visualizerResponsiveness,
+    required this.visualizerBarCount,
     required this.seekStepSeconds,
     required this.includeVideos,
     required this.realVisualizerEnabled,
@@ -2700,9 +3249,17 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     map['show_album_art_in_now_playing'] = Variable<bool>(
       showAlbumArtInNowPlaying,
     );
-    map['show_visualizer_in_now_playing'] = Variable<bool>(
-      showVisualizerInNowPlaying,
+    map['visualizer_placement'] = Variable<String>(visualizerPlacement);
+    map['visualizer_as_artwork_fallback'] = Variable<bool>(
+      visualizerAsArtworkFallback,
     );
+    map['visualizer_sensitivity'] = Variable<double>(visualizerSensitivity);
+    map['visualizer_contrast'] = Variable<double>(visualizerContrast);
+    map['visualizer_floor'] = Variable<double>(visualizerFloor);
+    map['visualizer_responsiveness'] = Variable<double>(
+      visualizerResponsiveness,
+    );
+    map['visualizer_bar_count'] = Variable<int>(visualizerBarCount);
     map['seek_step_seconds'] = Variable<int>(seekStepSeconds);
     map['include_videos'] = Variable<bool>(includeVideos);
     map['real_visualizer_enabled'] = Variable<bool>(realVisualizerEnabled);
@@ -2727,7 +3284,13 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showAlbumArtInMiniPlayer: Value(showAlbumArtInMiniPlayer),
       showVisualizerInMiniPlayer: Value(showVisualizerInMiniPlayer),
       showAlbumArtInNowPlaying: Value(showAlbumArtInNowPlaying),
-      showVisualizerInNowPlaying: Value(showVisualizerInNowPlaying),
+      visualizerPlacement: Value(visualizerPlacement),
+      visualizerAsArtworkFallback: Value(visualizerAsArtworkFallback),
+      visualizerSensitivity: Value(visualizerSensitivity),
+      visualizerContrast: Value(visualizerContrast),
+      visualizerFloor: Value(visualizerFloor),
+      visualizerResponsiveness: Value(visualizerResponsiveness),
+      visualizerBarCount: Value(visualizerBarCount),
       seekStepSeconds: Value(seekStepSeconds),
       includeVideos: Value(includeVideos),
       realVisualizerEnabled: Value(realVisualizerEnabled),
@@ -2768,9 +3331,23 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showAlbumArtInNowPlaying: serializer.fromJson<bool>(
         json['showAlbumArtInNowPlaying'],
       ),
-      showVisualizerInNowPlaying: serializer.fromJson<bool>(
-        json['showVisualizerInNowPlaying'],
+      visualizerPlacement: serializer.fromJson<String>(
+        json['visualizerPlacement'],
       ),
+      visualizerAsArtworkFallback: serializer.fromJson<bool>(
+        json['visualizerAsArtworkFallback'],
+      ),
+      visualizerSensitivity: serializer.fromJson<double>(
+        json['visualizerSensitivity'],
+      ),
+      visualizerContrast: serializer.fromJson<double>(
+        json['visualizerContrast'],
+      ),
+      visualizerFloor: serializer.fromJson<double>(json['visualizerFloor']),
+      visualizerResponsiveness: serializer.fromJson<double>(
+        json['visualizerResponsiveness'],
+      ),
+      visualizerBarCount: serializer.fromJson<int>(json['visualizerBarCount']),
       seekStepSeconds: serializer.fromJson<int>(json['seekStepSeconds']),
       includeVideos: serializer.fromJson<bool>(json['includeVideos']),
       realVisualizerEnabled: serializer.fromJson<bool>(
@@ -2804,9 +3381,17 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       'showAlbumArtInNowPlaying': serializer.toJson<bool>(
         showAlbumArtInNowPlaying,
       ),
-      'showVisualizerInNowPlaying': serializer.toJson<bool>(
-        showVisualizerInNowPlaying,
+      'visualizerPlacement': serializer.toJson<String>(visualizerPlacement),
+      'visualizerAsArtworkFallback': serializer.toJson<bool>(
+        visualizerAsArtworkFallback,
       ),
+      'visualizerSensitivity': serializer.toJson<double>(visualizerSensitivity),
+      'visualizerContrast': serializer.toJson<double>(visualizerContrast),
+      'visualizerFloor': serializer.toJson<double>(visualizerFloor),
+      'visualizerResponsiveness': serializer.toJson<double>(
+        visualizerResponsiveness,
+      ),
+      'visualizerBarCount': serializer.toJson<int>(visualizerBarCount),
       'seekStepSeconds': serializer.toJson<int>(seekStepSeconds),
       'includeVideos': serializer.toJson<bool>(includeVideos),
       'realVisualizerEnabled': serializer.toJson<bool>(realVisualizerEnabled),
@@ -2826,7 +3411,13 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     bool? showAlbumArtInMiniPlayer,
     bool? showVisualizerInMiniPlayer,
     bool? showAlbumArtInNowPlaying,
-    bool? showVisualizerInNowPlaying,
+    String? visualizerPlacement,
+    bool? visualizerAsArtworkFallback,
+    double? visualizerSensitivity,
+    double? visualizerContrast,
+    double? visualizerFloor,
+    double? visualizerResponsiveness,
+    int? visualizerBarCount,
     int? seekStepSeconds,
     bool? includeVideos,
     bool? realVisualizerEnabled,
@@ -2851,8 +3442,15 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
         showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying:
         showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
-    showVisualizerInNowPlaying:
-        showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+    visualizerPlacement: visualizerPlacement ?? this.visualizerPlacement,
+    visualizerAsArtworkFallback:
+        visualizerAsArtworkFallback ?? this.visualizerAsArtworkFallback,
+    visualizerSensitivity: visualizerSensitivity ?? this.visualizerSensitivity,
+    visualizerContrast: visualizerContrast ?? this.visualizerContrast,
+    visualizerFloor: visualizerFloor ?? this.visualizerFloor,
+    visualizerResponsiveness:
+        visualizerResponsiveness ?? this.visualizerResponsiveness,
+    visualizerBarCount: visualizerBarCount ?? this.visualizerBarCount,
     seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
     includeVideos: includeVideos ?? this.includeVideos,
     realVisualizerEnabled: realVisualizerEnabled ?? this.realVisualizerEnabled,
@@ -2893,9 +3491,27 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       showAlbumArtInNowPlaying: data.showAlbumArtInNowPlaying.present
           ? data.showAlbumArtInNowPlaying.value
           : this.showAlbumArtInNowPlaying,
-      showVisualizerInNowPlaying: data.showVisualizerInNowPlaying.present
-          ? data.showVisualizerInNowPlaying.value
-          : this.showVisualizerInNowPlaying,
+      visualizerPlacement: data.visualizerPlacement.present
+          ? data.visualizerPlacement.value
+          : this.visualizerPlacement,
+      visualizerAsArtworkFallback: data.visualizerAsArtworkFallback.present
+          ? data.visualizerAsArtworkFallback.value
+          : this.visualizerAsArtworkFallback,
+      visualizerSensitivity: data.visualizerSensitivity.present
+          ? data.visualizerSensitivity.value
+          : this.visualizerSensitivity,
+      visualizerContrast: data.visualizerContrast.present
+          ? data.visualizerContrast.value
+          : this.visualizerContrast,
+      visualizerFloor: data.visualizerFloor.present
+          ? data.visualizerFloor.value
+          : this.visualizerFloor,
+      visualizerResponsiveness: data.visualizerResponsiveness.present
+          ? data.visualizerResponsiveness.value
+          : this.visualizerResponsiveness,
+      visualizerBarCount: data.visualizerBarCount.present
+          ? data.visualizerBarCount.value
+          : this.visualizerBarCount,
       seekStepSeconds: data.seekStepSeconds.present
           ? data.seekStepSeconds.value
           : this.seekStepSeconds,
@@ -2923,7 +3539,13 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
           ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
           ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
-          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('visualizerPlacement: $visualizerPlacement, ')
+          ..write('visualizerAsArtworkFallback: $visualizerAsArtworkFallback, ')
+          ..write('visualizerSensitivity: $visualizerSensitivity, ')
+          ..write('visualizerContrast: $visualizerContrast, ')
+          ..write('visualizerFloor: $visualizerFloor, ')
+          ..write('visualizerResponsiveness: $visualizerResponsiveness, ')
+          ..write('visualizerBarCount: $visualizerBarCount, ')
           ..write('seekStepSeconds: $seekStepSeconds, ')
           ..write('includeVideos: $includeVideos, ')
           ..write('realVisualizerEnabled: $realVisualizerEnabled')
@@ -2932,7 +3554,7 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     adaptiveDarkModeEnabled,
     manualThemeOverride,
@@ -2945,11 +3567,17 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     showAlbumArtInMiniPlayer,
     showVisualizerInMiniPlayer,
     showAlbumArtInNowPlaying,
-    showVisualizerInNowPlaying,
+    visualizerPlacement,
+    visualizerAsArtworkFallback,
+    visualizerSensitivity,
+    visualizerContrast,
+    visualizerFloor,
+    visualizerResponsiveness,
+    visualizerBarCount,
     seekStepSeconds,
     includeVideos,
     realVisualizerEnabled,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2966,7 +3594,14 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           other.showAlbumArtInMiniPlayer == this.showAlbumArtInMiniPlayer &&
           other.showVisualizerInMiniPlayer == this.showVisualizerInMiniPlayer &&
           other.showAlbumArtInNowPlaying == this.showAlbumArtInNowPlaying &&
-          other.showVisualizerInNowPlaying == this.showVisualizerInNowPlaying &&
+          other.visualizerPlacement == this.visualizerPlacement &&
+          other.visualizerAsArtworkFallback ==
+              this.visualizerAsArtworkFallback &&
+          other.visualizerSensitivity == this.visualizerSensitivity &&
+          other.visualizerContrast == this.visualizerContrast &&
+          other.visualizerFloor == this.visualizerFloor &&
+          other.visualizerResponsiveness == this.visualizerResponsiveness &&
+          other.visualizerBarCount == this.visualizerBarCount &&
           other.seekStepSeconds == this.seekStepSeconds &&
           other.includeVideos == this.includeVideos &&
           other.realVisualizerEnabled == this.realVisualizerEnabled);
@@ -2985,7 +3620,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   final Value<bool> showAlbumArtInMiniPlayer;
   final Value<bool> showVisualizerInMiniPlayer;
   final Value<bool> showAlbumArtInNowPlaying;
-  final Value<bool> showVisualizerInNowPlaying;
+  final Value<String> visualizerPlacement;
+  final Value<bool> visualizerAsArtworkFallback;
+  final Value<double> visualizerSensitivity;
+  final Value<double> visualizerContrast;
+  final Value<double> visualizerFloor;
+  final Value<double> visualizerResponsiveness;
+  final Value<int> visualizerBarCount;
   final Value<int> seekStepSeconds;
   final Value<bool> includeVideos;
   final Value<bool> realVisualizerEnabled;
@@ -3003,7 +3644,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.showAlbumArtInMiniPlayer = const Value.absent(),
     this.showVisualizerInMiniPlayer = const Value.absent(),
     this.showAlbumArtInNowPlaying = const Value.absent(),
-    this.showVisualizerInNowPlaying = const Value.absent(),
+    this.visualizerPlacement = const Value.absent(),
+    this.visualizerAsArtworkFallback = const Value.absent(),
+    this.visualizerSensitivity = const Value.absent(),
+    this.visualizerContrast = const Value.absent(),
+    this.visualizerFloor = const Value.absent(),
+    this.visualizerResponsiveness = const Value.absent(),
+    this.visualizerBarCount = const Value.absent(),
     this.seekStepSeconds = const Value.absent(),
     this.includeVideos = const Value.absent(),
     this.realVisualizerEnabled = const Value.absent(),
@@ -3022,7 +3669,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.showAlbumArtInMiniPlayer = const Value.absent(),
     this.showVisualizerInMiniPlayer = const Value.absent(),
     this.showAlbumArtInNowPlaying = const Value.absent(),
-    this.showVisualizerInNowPlaying = const Value.absent(),
+    this.visualizerPlacement = const Value.absent(),
+    this.visualizerAsArtworkFallback = const Value.absent(),
+    this.visualizerSensitivity = const Value.absent(),
+    this.visualizerContrast = const Value.absent(),
+    this.visualizerFloor = const Value.absent(),
+    this.visualizerResponsiveness = const Value.absent(),
+    this.visualizerBarCount = const Value.absent(),
     this.seekStepSeconds = const Value.absent(),
     this.includeVideos = const Value.absent(),
     this.realVisualizerEnabled = const Value.absent(),
@@ -3041,7 +3694,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Expression<bool>? showAlbumArtInMiniPlayer,
     Expression<bool>? showVisualizerInMiniPlayer,
     Expression<bool>? showAlbumArtInNowPlaying,
-    Expression<bool>? showVisualizerInNowPlaying,
+    Expression<String>? visualizerPlacement,
+    Expression<bool>? visualizerAsArtworkFallback,
+    Expression<double>? visualizerSensitivity,
+    Expression<double>? visualizerContrast,
+    Expression<double>? visualizerFloor,
+    Expression<double>? visualizerResponsiveness,
+    Expression<int>? visualizerBarCount,
     Expression<int>? seekStepSeconds,
     Expression<bool>? includeVideos,
     Expression<bool>? realVisualizerEnabled,
@@ -3068,8 +3727,18 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         'show_visualizer_in_mini_player': showVisualizerInMiniPlayer,
       if (showAlbumArtInNowPlaying != null)
         'show_album_art_in_now_playing': showAlbumArtInNowPlaying,
-      if (showVisualizerInNowPlaying != null)
-        'show_visualizer_in_now_playing': showVisualizerInNowPlaying,
+      if (visualizerPlacement != null)
+        'visualizer_placement': visualizerPlacement,
+      if (visualizerAsArtworkFallback != null)
+        'visualizer_as_artwork_fallback': visualizerAsArtworkFallback,
+      if (visualizerSensitivity != null)
+        'visualizer_sensitivity': visualizerSensitivity,
+      if (visualizerContrast != null) 'visualizer_contrast': visualizerContrast,
+      if (visualizerFloor != null) 'visualizer_floor': visualizerFloor,
+      if (visualizerResponsiveness != null)
+        'visualizer_responsiveness': visualizerResponsiveness,
+      if (visualizerBarCount != null)
+        'visualizer_bar_count': visualizerBarCount,
       if (seekStepSeconds != null) 'seek_step_seconds': seekStepSeconds,
       if (includeVideos != null) 'include_videos': includeVideos,
       if (realVisualizerEnabled != null)
@@ -3091,7 +3760,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Value<bool>? showAlbumArtInMiniPlayer,
     Value<bool>? showVisualizerInMiniPlayer,
     Value<bool>? showAlbumArtInNowPlaying,
-    Value<bool>? showVisualizerInNowPlaying,
+    Value<String>? visualizerPlacement,
+    Value<bool>? visualizerAsArtworkFallback,
+    Value<double>? visualizerSensitivity,
+    Value<double>? visualizerContrast,
+    Value<double>? visualizerFloor,
+    Value<double>? visualizerResponsiveness,
+    Value<int>? visualizerBarCount,
     Value<int>? seekStepSeconds,
     Value<bool>? includeVideos,
     Value<bool>? realVisualizerEnabled,
@@ -3115,8 +3790,16 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           showVisualizerInMiniPlayer ?? this.showVisualizerInMiniPlayer,
       showAlbumArtInNowPlaying:
           showAlbumArtInNowPlaying ?? this.showAlbumArtInNowPlaying,
-      showVisualizerInNowPlaying:
-          showVisualizerInNowPlaying ?? this.showVisualizerInNowPlaying,
+      visualizerPlacement: visualizerPlacement ?? this.visualizerPlacement,
+      visualizerAsArtworkFallback:
+          visualizerAsArtworkFallback ?? this.visualizerAsArtworkFallback,
+      visualizerSensitivity:
+          visualizerSensitivity ?? this.visualizerSensitivity,
+      visualizerContrast: visualizerContrast ?? this.visualizerContrast,
+      visualizerFloor: visualizerFloor ?? this.visualizerFloor,
+      visualizerResponsiveness:
+          visualizerResponsiveness ?? this.visualizerResponsiveness,
+      visualizerBarCount: visualizerBarCount ?? this.visualizerBarCount,
       seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
       includeVideos: includeVideos ?? this.includeVideos,
       realVisualizerEnabled:
@@ -3176,10 +3859,32 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         showAlbumArtInNowPlaying.value,
       );
     }
-    if (showVisualizerInNowPlaying.present) {
-      map['show_visualizer_in_now_playing'] = Variable<bool>(
-        showVisualizerInNowPlaying.value,
+    if (visualizerPlacement.present) {
+      map['visualizer_placement'] = Variable<String>(visualizerPlacement.value);
+    }
+    if (visualizerAsArtworkFallback.present) {
+      map['visualizer_as_artwork_fallback'] = Variable<bool>(
+        visualizerAsArtworkFallback.value,
       );
+    }
+    if (visualizerSensitivity.present) {
+      map['visualizer_sensitivity'] = Variable<double>(
+        visualizerSensitivity.value,
+      );
+    }
+    if (visualizerContrast.present) {
+      map['visualizer_contrast'] = Variable<double>(visualizerContrast.value);
+    }
+    if (visualizerFloor.present) {
+      map['visualizer_floor'] = Variable<double>(visualizerFloor.value);
+    }
+    if (visualizerResponsiveness.present) {
+      map['visualizer_responsiveness'] = Variable<double>(
+        visualizerResponsiveness.value,
+      );
+    }
+    if (visualizerBarCount.present) {
+      map['visualizer_bar_count'] = Variable<int>(visualizerBarCount.value);
     }
     if (seekStepSeconds.present) {
       map['seek_step_seconds'] = Variable<int>(seekStepSeconds.value);
@@ -3213,7 +3918,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           ..write('showAlbumArtInMiniPlayer: $showAlbumArtInMiniPlayer, ')
           ..write('showVisualizerInMiniPlayer: $showVisualizerInMiniPlayer, ')
           ..write('showAlbumArtInNowPlaying: $showAlbumArtInNowPlaying, ')
-          ..write('showVisualizerInNowPlaying: $showVisualizerInNowPlaying, ')
+          ..write('visualizerPlacement: $visualizerPlacement, ')
+          ..write('visualizerAsArtworkFallback: $visualizerAsArtworkFallback, ')
+          ..write('visualizerSensitivity: $visualizerSensitivity, ')
+          ..write('visualizerContrast: $visualizerContrast, ')
+          ..write('visualizerFloor: $visualizerFloor, ')
+          ..write('visualizerResponsiveness: $visualizerResponsiveness, ')
+          ..write('visualizerBarCount: $visualizerBarCount, ')
           ..write('seekStepSeconds: $seekStepSeconds, ')
           ..write('includeVideos: $includeVideos, ')
           ..write('realVisualizerEnabled: $realVisualizerEnabled, ')
@@ -4017,6 +4728,7 @@ class PlaybackSessionsCompanion extends UpdateCompanion<PlaybackSessionRow> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $VibeCategoriesTable vibeCategories = $VibeCategoriesTable(this);
   late final $VibeTagsTable vibeTags = $VibeTagsTable(this);
   late final $SongsTable songs = $SongsTable(this);
   late final $SongVibesTable songVibes = $SongVibesTable(this);
@@ -4035,6 +4747,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    vibeCategories,
     vibeTags,
     songs,
     songVibes,
@@ -4047,12 +4760,200 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
 }
 
+typedef $$VibeCategoriesTableCreateCompanionBuilder =
+    VibeCategoriesCompanion Function({
+      required String id,
+      required String name,
+      required String colorHex,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+typedef $$VibeCategoriesTableUpdateCompanionBuilder =
+    VibeCategoriesCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> colorHex,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+
+class $$VibeCategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $VibeCategoriesTable> {
+  $$VibeCategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VibeCategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VibeCategoriesTable> {
+  $$VibeCategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VibeCategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VibeCategoriesTable> {
+  $$VibeCategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get colorHex =>
+      $composableBuilder(column: $table.colorHex, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$VibeCategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VibeCategoriesTable,
+          VibeCategoryRow,
+          $$VibeCategoriesTableFilterComposer,
+          $$VibeCategoriesTableOrderingComposer,
+          $$VibeCategoriesTableAnnotationComposer,
+          $$VibeCategoriesTableCreateCompanionBuilder,
+          $$VibeCategoriesTableUpdateCompanionBuilder,
+          (
+            VibeCategoryRow,
+            BaseReferences<
+              _$AppDatabase,
+              $VibeCategoriesTable,
+              VibeCategoryRow
+            >,
+          ),
+          VibeCategoryRow,
+          PrefetchHooks Function()
+        > {
+  $$VibeCategoriesTableTableManager(
+    _$AppDatabase db,
+    $VibeCategoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VibeCategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VibeCategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VibeCategoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> colorHex = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VibeCategoriesCompanion(
+                id: id,
+                name: name,
+                colorHex: colorHex,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String colorHex,
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VibeCategoriesCompanion.insert(
+                id: id,
+                name: name,
+                colorHex: colorHex,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VibeCategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VibeCategoriesTable,
+      VibeCategoryRow,
+      $$VibeCategoriesTableFilterComposer,
+      $$VibeCategoriesTableOrderingComposer,
+      $$VibeCategoriesTableAnnotationComposer,
+      $$VibeCategoriesTableCreateCompanionBuilder,
+      $$VibeCategoriesTableUpdateCompanionBuilder,
+      (
+        VibeCategoryRow,
+        BaseReferences<_$AppDatabase, $VibeCategoriesTable, VibeCategoryRow>,
+      ),
+      VibeCategoryRow,
+      PrefetchHooks Function()
+    >;
 typedef $$VibeTagsTableCreateCompanionBuilder =
     VibeTagsCompanion Function({
       required String id,
       required String label,
       required String colorHex,
       Value<int> sortOrder,
+      Value<String?> categoryId,
       Value<int> rowid,
     });
 typedef $$VibeTagsTableUpdateCompanionBuilder =
@@ -4061,6 +4962,7 @@ typedef $$VibeTagsTableUpdateCompanionBuilder =
       Value<String> label,
       Value<String> colorHex,
       Value<int> sortOrder,
+      Value<String?> categoryId,
       Value<int> rowid,
     });
 
@@ -4090,6 +4992,11 @@ class $$VibeTagsTableFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4122,6 +5029,11 @@ class $$VibeTagsTableOrderingComposer
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VibeTagsTableAnnotationComposer
@@ -4144,6 +5056,11 @@ class $$VibeTagsTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
 }
 
 class $$VibeTagsTableTableManager
@@ -4181,12 +5098,14 @@ class $$VibeTagsTableTableManager
                 Value<String> label = const Value.absent(),
                 Value<String> colorHex = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VibeTagsCompanion(
                 id: id,
                 label: label,
                 colorHex: colorHex,
                 sortOrder: sortOrder,
+                categoryId: categoryId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4195,12 +5114,14 @@ class $$VibeTagsTableTableManager
                 required String label,
                 required String colorHex,
                 Value<int> sortOrder = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VibeTagsCompanion.insert(
                 id: id,
                 label: label,
                 colorHex: colorHex,
                 sortOrder: sortOrder,
+                categoryId: categoryId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5256,7 +6177,13 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<bool> showAlbumArtInMiniPlayer,
       Value<bool> showVisualizerInMiniPlayer,
       Value<bool> showAlbumArtInNowPlaying,
-      Value<bool> showVisualizerInNowPlaying,
+      Value<String> visualizerPlacement,
+      Value<bool> visualizerAsArtworkFallback,
+      Value<double> visualizerSensitivity,
+      Value<double> visualizerContrast,
+      Value<double> visualizerFloor,
+      Value<double> visualizerResponsiveness,
+      Value<int> visualizerBarCount,
       Value<int> seekStepSeconds,
       Value<bool> includeVideos,
       Value<bool> realVisualizerEnabled,
@@ -5276,7 +6203,13 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<bool> showAlbumArtInMiniPlayer,
       Value<bool> showVisualizerInMiniPlayer,
       Value<bool> showAlbumArtInNowPlaying,
-      Value<bool> showVisualizerInNowPlaying,
+      Value<String> visualizerPlacement,
+      Value<bool> visualizerAsArtworkFallback,
+      Value<double> visualizerSensitivity,
+      Value<double> visualizerContrast,
+      Value<double> visualizerFloor,
+      Value<double> visualizerResponsiveness,
+      Value<int> visualizerBarCount,
       Value<int> seekStepSeconds,
       Value<bool> includeVideos,
       Value<bool> realVisualizerEnabled,
@@ -5352,8 +6285,38 @@ class $$SettingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get showVisualizerInNowPlaying => $composableBuilder(
-    column: $table.showVisualizerInNowPlaying,
+  ColumnFilters<String> get visualizerPlacement => $composableBuilder(
+    column: $table.visualizerPlacement,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get visualizerAsArtworkFallback => $composableBuilder(
+    column: $table.visualizerAsArtworkFallback,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get visualizerSensitivity => $composableBuilder(
+    column: $table.visualizerSensitivity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get visualizerContrast => $composableBuilder(
+    column: $table.visualizerContrast,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get visualizerFloor => $composableBuilder(
+    column: $table.visualizerFloor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get visualizerResponsiveness => $composableBuilder(
+    column: $table.visualizerResponsiveness,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get visualizerBarCount => $composableBuilder(
+    column: $table.visualizerBarCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5442,8 +6405,38 @@ class $$SettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get showVisualizerInNowPlaying => $composableBuilder(
-    column: $table.showVisualizerInNowPlaying,
+  ColumnOrderings<String> get visualizerPlacement => $composableBuilder(
+    column: $table.visualizerPlacement,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get visualizerAsArtworkFallback => $composableBuilder(
+    column: $table.visualizerAsArtworkFallback,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get visualizerSensitivity => $composableBuilder(
+    column: $table.visualizerSensitivity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get visualizerContrast => $composableBuilder(
+    column: $table.visualizerContrast,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get visualizerFloor => $composableBuilder(
+    column: $table.visualizerFloor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get visualizerResponsiveness => $composableBuilder(
+    column: $table.visualizerResponsiveness,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get visualizerBarCount => $composableBuilder(
+    column: $table.visualizerBarCount,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5530,8 +6523,38 @@ class $$SettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<bool> get showVisualizerInNowPlaying => $composableBuilder(
-    column: $table.showVisualizerInNowPlaying,
+  GeneratedColumn<String> get visualizerPlacement => $composableBuilder(
+    column: $table.visualizerPlacement,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get visualizerAsArtworkFallback => $composableBuilder(
+    column: $table.visualizerAsArtworkFallback,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get visualizerSensitivity => $composableBuilder(
+    column: $table.visualizerSensitivity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get visualizerContrast => $composableBuilder(
+    column: $table.visualizerContrast,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get visualizerFloor => $composableBuilder(
+    column: $table.visualizerFloor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get visualizerResponsiveness => $composableBuilder(
+    column: $table.visualizerResponsiveness,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get visualizerBarCount => $composableBuilder(
+    column: $table.visualizerBarCount,
     builder: (column) => column,
   );
 
@@ -5594,7 +6617,13 @@ class $$SettingsTableTableManager
                 Value<bool> showAlbumArtInMiniPlayer = const Value.absent(),
                 Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
                 Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
-                Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<String> visualizerPlacement = const Value.absent(),
+                Value<bool> visualizerAsArtworkFallback = const Value.absent(),
+                Value<double> visualizerSensitivity = const Value.absent(),
+                Value<double> visualizerContrast = const Value.absent(),
+                Value<double> visualizerFloor = const Value.absent(),
+                Value<double> visualizerResponsiveness = const Value.absent(),
+                Value<int> visualizerBarCount = const Value.absent(),
                 Value<int> seekStepSeconds = const Value.absent(),
                 Value<bool> includeVideos = const Value.absent(),
                 Value<bool> realVisualizerEnabled = const Value.absent(),
@@ -5612,7 +6641,13 @@ class $$SettingsTableTableManager
                 showAlbumArtInMiniPlayer: showAlbumArtInMiniPlayer,
                 showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
                 showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
-                showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                visualizerPlacement: visualizerPlacement,
+                visualizerAsArtworkFallback: visualizerAsArtworkFallback,
+                visualizerSensitivity: visualizerSensitivity,
+                visualizerContrast: visualizerContrast,
+                visualizerFloor: visualizerFloor,
+                visualizerResponsiveness: visualizerResponsiveness,
+                visualizerBarCount: visualizerBarCount,
                 seekStepSeconds: seekStepSeconds,
                 includeVideos: includeVideos,
                 realVisualizerEnabled: realVisualizerEnabled,
@@ -5632,7 +6667,13 @@ class $$SettingsTableTableManager
                 Value<bool> showAlbumArtInMiniPlayer = const Value.absent(),
                 Value<bool> showVisualizerInMiniPlayer = const Value.absent(),
                 Value<bool> showAlbumArtInNowPlaying = const Value.absent(),
-                Value<bool> showVisualizerInNowPlaying = const Value.absent(),
+                Value<String> visualizerPlacement = const Value.absent(),
+                Value<bool> visualizerAsArtworkFallback = const Value.absent(),
+                Value<double> visualizerSensitivity = const Value.absent(),
+                Value<double> visualizerContrast = const Value.absent(),
+                Value<double> visualizerFloor = const Value.absent(),
+                Value<double> visualizerResponsiveness = const Value.absent(),
+                Value<int> visualizerBarCount = const Value.absent(),
                 Value<int> seekStepSeconds = const Value.absent(),
                 Value<bool> includeVideos = const Value.absent(),
                 Value<bool> realVisualizerEnabled = const Value.absent(),
@@ -5650,7 +6691,13 @@ class $$SettingsTableTableManager
                 showAlbumArtInMiniPlayer: showAlbumArtInMiniPlayer,
                 showVisualizerInMiniPlayer: showVisualizerInMiniPlayer,
                 showAlbumArtInNowPlaying: showAlbumArtInNowPlaying,
-                showVisualizerInNowPlaying: showVisualizerInNowPlaying,
+                visualizerPlacement: visualizerPlacement,
+                visualizerAsArtworkFallback: visualizerAsArtworkFallback,
+                visualizerSensitivity: visualizerSensitivity,
+                visualizerContrast: visualizerContrast,
+                visualizerFloor: visualizerFloor,
+                visualizerResponsiveness: visualizerResponsiveness,
+                visualizerBarCount: visualizerBarCount,
                 seekStepSeconds: seekStepSeconds,
                 includeVideos: includeVideos,
                 realVisualizerEnabled: realVisualizerEnabled,
@@ -6117,6 +7164,8 @@ typedef $$PlaybackSessionsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$VibeCategoriesTableTableManager get vibeCategories =>
+      $$VibeCategoriesTableTableManager(_db, _db.vibeCategories);
   $$VibeTagsTableTableManager get vibeTags =>
       $$VibeTagsTableTableManager(_db, _db.vibeTags);
   $$SongsTableTableManager get songs =>

@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zivybb/data/datasources/app_database.dart';
+import 'package:zivybb/data/repositories/vibe_tag_repository.dart';
 
 /// Builds the v8 (pre-Vibe) schema — the shape shipped on-device before the
 /// Mood → Vibe rename — so the v9 upgrade can be exercised against real
@@ -80,8 +81,12 @@ const _v8Schema = [
       CHECK (show_visualizer_in_now_playing IN (0, 1)),
     seek_step_seconds INTEGER NOT NULL DEFAULT 10
   )''',
-  "INSERT INTO settings (id, crossfade_enabled, seek_step_seconds) "
-      "VALUES ('default', 1, 15)",
+  // The visualizer is switched off on Now Playing here, so the v13 step that
+  // replaces that boolean with `visualizer_placement` has something other
+  // than the default to carry over.
+  'INSERT INTO settings (id, crossfade_enabled, seek_step_seconds, '
+      'show_visualizer_in_now_playing) '
+      "VALUES ('default', 1, 15, 0)",
   "INSERT INTO mood_tags VALUES ('chill', 'Chill', '#4FC3F7', 0)",
   "INSERT INTO mood_tags VALUES ('happy', 'Happy', '#FFCA28', 1)",
   "INSERT INTO songs VALUES ('1', '/music/a.mp3', 'A', 'Artist', 'Album', "
@@ -152,8 +157,58 @@ void main() {
         isTrue,
         reason: 'songs scanned before v10 are audio',
       );
+
+      // v13 replaces the show/hide boolean with a placement. The fixture had
+      // it switched off, so the user must not find the visualizer back.
+      expect(
+        settings.visualizerPlacement,
+        'off',
+        reason: 'the old show_visualizer_in_now_playing choice must carry over',
+      );
+      expect(settings.visualizerBarCount, 40);
+      expect(settings.visualizerContrast, 1.0);
+
+      // v13 also adds vibe folders. Existing vibes survive uncategorised —
+      // the built-in ids are backfilled by VibeTagRepository.ensureSeeded,
+      // not by the migration.
+      expect(await database.select(database.vibeCategories).get(), isEmpty);
+      expect(
+        vibes.every((vibe) => vibe.categoryId == null),
+        isTrue,
+        reason: 'the new column starts null on an upgraded database',
+      );
     },
   );
+
+  test('v13 backfills the built-in vibes into the seeded folders', () async {
+    final database = AppDatabase.connect(
+      NativeDatabase.memory(
+        setup: (rawDb) {
+          for (final statement in _v8Schema) {
+            rawDb.execute(statement);
+          }
+          rawDb.execute('PRAGMA user_version = 8');
+        },
+      ),
+    );
+    addTearDown(database.close);
+
+    await VibeTagRepository(database: database).ensureSeeded();
+
+    final categories = await database.select(database.vibeCategories).get();
+    expect(categories.map((c) => c.id), contains('mood'));
+
+    final vibes = await database.select(database.vibeTags).get();
+    expect(
+      vibes.firstWhere((v) => v.id == 'chill').categoryId,
+      'mood',
+      reason: 'a surviving built-in vibe should land in its original folder',
+    );
+    expect(
+      vibes.firstWhere((v) => v.id == 'happy').categoryId,
+      'feeling',
+    );
+  });
 
   test('a fresh install creates the current schema directly', () async {
     final database = AppDatabase.connect(NativeDatabase.memory());

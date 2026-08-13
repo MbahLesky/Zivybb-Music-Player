@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/models/app_settings.dart';
 import '../../playback/application/playback_controller.dart';
 import '../../settings/application/settings_controller.dart';
 import '../application/visualizer_math.dart';
@@ -27,6 +28,7 @@ class WaveVisualizer extends ConsumerStatefulWidget {
     required this.color,
     this.height,
     this.barCount,
+    this.tuning,
   });
 
   final Color color;
@@ -34,8 +36,13 @@ class WaveVisualizer extends ConsumerStatefulWidget {
   /// Overrides the style's default height, e.g. to fill the full-screen mode.
   final double? height;
 
-  /// Overrides the style's default bar count.
+  /// Overrides the user's configured bar count — used by callers with a fixed
+  /// idea of the density they need, and by the settings preview.
   final int? barCount;
+
+  /// Overrides the user's saved tuning, so the settings screen can preview a
+  /// slider mid-drag without writing it to the database first.
+  final VisualizerTuning? tuning;
 
   @override
   ConsumerState<WaveVisualizer> createState() => _WaveVisualizerState();
@@ -43,10 +50,6 @@ class WaveVisualizer extends ConsumerStatefulWidget {
 
 class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
     with SingleTickerProviderStateMixin {
-  /// Snappy rise, lazy fall — see [VisualizerMath.smoothTowards].
-  static const _attack = 0.55;
-  static const _decay = 0.12;
-
   /// How fast the peak caps slide back down, in fraction-of-height a second.
   static const _peakFallPerSecond = 0.55;
 
@@ -57,7 +60,15 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
   String? _lastSongId;
   Duration _lastElapsed = Duration.zero;
 
-  int get _barCount => widget.barCount ?? 40;
+  /// The tuning in force: an explicit override, else the saved settings.
+  ///
+  /// Read straight from the provider rather than held in a field because
+  /// [_onTick] needs it every frame and a slider drag can change it between
+  /// two of them.
+  VisualizerTuning get _tuning =>
+      widget.tuning ?? ref.read(visualizerTuningProvider);
+
+  int get _barCount => widget.barCount ?? _tuning.barCount;
 
   @override
   void initState() {
@@ -72,12 +83,17 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
     // ticker is already driving a repaint every frame, so watching would add
     // widget rebuilds for nothing.
     final live = ref.read(visualizerSourceControllerProvider);
-    final target =
+    final tuning = _tuning;
+    final raw =
         live ??
         VisualizerMath.amplitudesAt(
           elapsedSeconds: elapsed.inMilliseconds / 1000,
           barPhases: _barPhases,
         );
+    // Shaped before smoothing, so the eased value chases the contrast the
+    // user asked for rather than the contrast being flattened back out by
+    // the easing.
+    final target = VisualizerMath.shape(raw, tuning);
 
     final deltaSeconds = ((elapsed - _lastElapsed).inMicroseconds / 1e6).clamp(
       0.0,
@@ -89,8 +105,8 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
       _amplitudes = VisualizerMath.smoothTowards(
         current: _amplitudes,
         target: target,
-        attack: _attack,
-        decay: _decay,
+        attack: tuning.attack,
+        decay: tuning.decay,
       );
       final fall = _peakFallPerSecond * deltaSeconds;
       _peaks = [
@@ -111,6 +127,9 @@ class _WaveVisualizerState extends ConsumerState<WaveVisualizer>
     final playback = ref.watch(playbackControllerProvider);
     final song = playback.currentSong;
     final style = ref.watch(visualizerStyleProvider);
+    // Watched (not just read in the ticker) so a change to the bar count
+    // rebuilds and resizes the arrays below on the next frame.
+    ref.watch(visualizerTuningProvider);
 
     if (_amplitudes.length != _barCount) {
       _amplitudes = List.filled(_barCount, 0.08);

@@ -62,6 +62,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       sort: ref.watch(librarySortProvider),
       filter: ref.watch(libraryFilterProvider),
       vibeTaggedSongIds: ref.watch(vibeTaggedSongIdsProvider),
+      restrictToSongIds: ref.watch(libraryVibeCategoryRestrictionProvider),
     );
 
     return DefaultTabController(
@@ -259,7 +260,9 @@ class _SongList extends ConsumerWidget {
       sort: sort,
       filter: filter,
       vibeTaggedSongIds: ref.watch(vibeTaggedSongIdsProvider),
+      restrictToSongIds: ref.watch(libraryVibeCategoryRestrictionProvider),
     );
+    final folderName = ref.watch(libraryVibeCategoryNameProvider);
 
     return Column(
       children: [
@@ -274,7 +277,7 @@ class _SongList extends ConsumerWidget {
                         child: Text(
                           songs.isEmpty
                               ? emptyMessage
-                              : _noMatchMessage(query, filter),
+                              : _noMatchMessage(query, filter, folderName),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -298,11 +301,19 @@ class _SongList extends ConsumerWidget {
     );
   }
 
-  String _noMatchMessage(String query, LibraryFilter filter) {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) return 'No songs match "${filter.label}".';
-    if (filter == LibraryFilter.all) return 'No songs match "$trimmed".';
-    return 'No songs match "$trimmed" in "${filter.label}".';
+  /// Names whichever of the search text, the filter, and the vibe folder are
+  /// actually narrowing the list, so a short list is always explained by the
+  /// controls the user can see.
+  String _noMatchMessage(String query, LibraryFilter filter, String? folder) {
+    final narrowings = [
+      if (query.trim().isNotEmpty) '"${query.trim()}"',
+      if (filter != LibraryFilter.all) '"${filter.label}"',
+      if (folder != null) 'the "$folder" folder',
+    ];
+    if (narrowings.isEmpty) return 'No songs match.';
+    if (narrowings.length == 1) return 'No songs match ${narrowings.first}.';
+    final last = narrowings.removeLast();
+    return 'No songs match ${narrowings.join(', ')} and $last.';
   }
 }
 
@@ -382,6 +393,7 @@ class _LibraryViewControlsState extends ConsumerState<_LibraryViewControls> {
             onSelected: (value) =>
                 ref.read(libraryFilterProvider.notifier).state = value,
           ),
+          const _VibeFolderMenuButton(),
           _MenuButton<LibrarySort>(
             icon: Icons.sort,
             tooltipPrefix: 'Sort',
@@ -394,6 +406,44 @@ class _LibraryViewControlsState extends ConsumerState<_LibraryViewControls> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Narrows the library to songs carrying at least one vibe from a chosen
+/// folder. Hidden entirely when the user has no folders, so it costs nothing
+/// on a library that isn't using them.
+class _VibeFolderMenuButton extends ConsumerWidget {
+  const _VibeFolderMenuButton();
+
+  /// Stands in for "no folder chosen" in the menu.
+  ///
+  /// A `null` menu value cannot be used: [PopupMenuButton] cannot tell a
+  /// null-valued selection from a dismissed menu, and reports both to
+  /// `onCanceled` — so picking "Any folder" would silently do nothing.
+  static const _anyFolder = '';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(vibeCategoriesStreamProvider).value ?? const [];
+    if (categories.isEmpty) return const SizedBox.shrink();
+
+    final selected = ref.watch(libraryVibeCategoryFilterProvider);
+    return _MenuButton<String>(
+      icon: Icons.folder_outlined,
+      tooltipPrefix: 'Vibe folder',
+      selected: selected ?? _anyFolder,
+      options: [_anyFolder, for (final category in categories) category.id],
+      labelOf: (id) {
+        for (final category in categories) {
+          if (category.id == id) return category.name;
+        }
+        return 'Any folder';
+      },
+      isActive: selected != null,
+      onSelected: (value) =>
+          ref.read(libraryVibeCategoryFilterProvider.notifier).state =
+              value == _anyFolder ? null : value,
     );
   }
 }

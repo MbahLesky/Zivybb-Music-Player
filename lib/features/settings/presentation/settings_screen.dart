@@ -5,6 +5,7 @@ import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../library/application/library_controller.dart';
+import '../../vibe_tagging/presentation/vibe_category_management_screen.dart';
 import '../../vibe_tagging/presentation/vibe_tag_management_screen.dart';
 import '../application/settings_controller.dart';
 import 'backup_restore_screen.dart';
@@ -90,7 +91,8 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.graphic_eq,
                   title: 'Visualizer',
-                  description: 'Wave color, style, and where it appears',
+                  description:
+                      'Wave color, style, response, and where it appears',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const VisualizerSettingsScreen(),
@@ -336,10 +338,21 @@ class _LibrarySection extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.mood_outlined),
           title: const Text('Manage Vibes'),
-          subtitle: const Text('Add, rename, recolor, or remove vibes'),
+          subtitle: const Text('Add, rename, recolor, or file vibes in folders'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const VibeTagManagementScreen()),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.folder_outlined),
+          title: const Text('Vibe Folders'),
+          subtitle: const Text('Group vibes by Mood, Place, Time, Genre…'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const VibeCategoryManagementScreen(),
+            ),
           ),
         ),
         SwitchListTile(
@@ -388,8 +401,22 @@ class _DisplaySection extends ConsumerWidget {
         ),
         SwitchListTile(
           title: const Text('Album art in Now Playing'),
+          // The visualizer is occupying that slot, so this switch would have
+          // no visible effect — say so rather than leave it looking broken.
+          subtitle:
+              settings.visualizerPlacement ==
+                  VisualizerPlacement.replaceArtwork
+              ? const Text(
+                  'The visualizer is set to replace the artwork — change '
+                  'that under Visualizer ▸ Where it appears.',
+                )
+              : null,
           value: settings.showAlbumArtInNowPlaying,
-          onChanged: controller.setShowAlbumArtInNowPlaying,
+          onChanged:
+              settings.visualizerPlacement ==
+                  VisualizerPlacement.replaceArtwork
+              ? null
+              : controller.setShowAlbumArtInNowPlaying,
         ),
       ],
     );

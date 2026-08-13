@@ -16,6 +16,7 @@ class SongArtwork extends StatelessWidget {
     required this.size,
     this.borderRadius = 12,
     this.iconSize,
+    this.fallback,
   });
 
   final Song song;
@@ -23,19 +24,25 @@ class SongArtwork extends StatelessWidget {
   final double borderRadius;
   final double? iconSize;
 
+  /// Shown in place of the icon placeholder when the song has no artwork —
+  /// Now Playing passes a visualizer here when the user has asked for one.
+  /// Must size itself to [size]; it fills the same slot the art would.
+  final Widget? fallback;
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: song.isVideo
-          ? _placeholder(context, Icons.movie_outlined)
+          ? fallback ?? _placeholder(context, Icons.movie_outlined)
           : QueryArtworkWidget(
               id: int.parse(song.id),
               type: ArtworkType.AUDIO,
               artworkWidth: size,
               artworkHeight: size,
               artworkFit: BoxFit.cover,
-              nullArtworkWidget: _placeholder(context, Icons.music_note),
+              nullArtworkWidget:
+                  fallback ?? _placeholder(context, Icons.music_note),
             ),
     );
   }

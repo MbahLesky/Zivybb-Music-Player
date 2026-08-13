@@ -101,9 +101,146 @@ void main() {
         );
         expect(values, hasLength(16));
         for (final value in values) {
-          expect(value, inInclusiveRange(0.15, 1.0));
+          // The full range: the visible minimum is the tuning's floor now,
+          // so this source must not impose one of its own.
+          expect(value, inInclusiveRange(0.0, 1.0));
         }
       }
+    });
+  });
+
+  group('VisualizerMath.shape', () {
+    const flat = VisualizerTuning(contrast: 1, sensitivity: 1, floor: 0);
+
+    test('the neutral tuning passes levels through untouched', () {
+      expect(
+        VisualizerMath.shape([0.0, 0.25, 0.5, 1.0], flat),
+        [0.0, 0.25, 0.5, 1.0],
+      );
+    });
+
+    test('raising contrast widens the gap between quiet and loud', () {
+      const quiet = 0.3;
+      const loud = 0.9;
+      double gapAt(double contrast) {
+        final shaped = VisualizerMath.shape([
+          quiet,
+          loud,
+        ], flat.copyWith(contrast: contrast));
+        return shaped[1] - shaped[0];
+      }
+
+      expect(
+        gapAt(3.0),
+        greaterThan(gapAt(1.0)),
+        reason: 'this is the whole point of the contrast control',
+      );
+      expect(
+        gapAt(0.5),
+        lessThan(gapAt(1.0)),
+        reason: 'below 1 should flatten the picture instead',
+      );
+    });
+
+    test('contrast leaves a full-scale level at full scale', () {
+      // Only the quiet end may move: a peak that dropped when contrast was
+      // raised would read as the whole visualizer getting quieter.
+      for (final contrast in [0.5, 1.0, 2.0, 4.0]) {
+        expect(
+          VisualizerMath.shape([1.0], flat.copyWith(contrast: contrast)).single,
+          closeTo(1.0, 1e-9),
+        );
+      }
+    });
+
+    test('sensitivity scales levels up and clamps at the ceiling', () {
+      final boosted = VisualizerMath.shape(
+        [0.2, 0.9],
+        flat.copyWith(sensitivity: 2),
+      );
+      expect(boosted[0], closeTo(0.4, 1e-9));
+      expect(boosted[1], 1.0, reason: 'gain must not overshoot the box');
+    });
+
+    test('the floor lifts the whole range rather than clamping it', () {
+      final shaped = VisualizerMath.shape(
+        [0.0, 0.5, 1.0],
+        flat.copyWith(floor: 0.2),
+      );
+      expect(shaped.first, closeTo(0.2, 1e-9));
+      expect(shaped.last, closeTo(1.0, 1e-9));
+      // A clamp would have flattened this to the floor; a lift keeps it
+      // distinct, which is what preserves the contrast underneath.
+      expect(shaped[1], greaterThan(0.2));
+      expect(shaped[1], lessThan(1.0));
+    });
+
+    test('every result stays drawable, whatever is fed in', () {
+      final hostile = [-1.0, 0.0, 0.5, 1.0, 4.0, double.nan, double.infinity];
+      for (final preset in VisualizerResponsePreset.values) {
+        for (final value in VisualizerMath.shape(hostile, preset.tuning)) {
+          expect(value, inInclusiveRange(0.0, 1.0), reason: preset.name);
+        }
+      }
+    });
+  });
+
+  group('VisualizerTuning', () {
+    test('clamped() pulls every field back into range', () {
+      const wild = VisualizerTuning(
+        sensitivity: 99,
+        contrast: -5,
+        floor: 2,
+        responsiveness: 7,
+        barCount: 5000,
+      );
+      final safe = wild.clamped();
+
+      expect(safe.sensitivity, VisualizerTuning.sensitivityRange.$2);
+      expect(safe.contrast, VisualizerTuning.contrastRange.$1);
+      expect(safe.floor, VisualizerTuning.floorRange.$2);
+      expect(safe.responsiveness, VisualizerTuning.responsivenessRange.$2);
+      expect(safe.barCount, VisualizerTuning.barCountRange.$2);
+    });
+
+    test('rises faster than it falls at every responsiveness', () {
+      for (final responsiveness in [0.0, 0.25, 0.5, 0.75, 1.0]) {
+        final tuning = VisualizerTuning(responsiveness: responsiveness);
+        expect(
+          tuning.attack,
+          greaterThan(tuning.decay),
+          reason: 'transients must snap up and bleed away, never the reverse',
+        );
+      }
+    });
+
+    test('higher responsiveness chases the signal harder', () {
+      const slow = VisualizerTuning(responsiveness: 0.1);
+      const fast = VisualizerTuning(responsiveness: 0.9);
+      expect(fast.attack, greaterThan(slow.attack));
+      expect(fast.decay, greaterThan(slow.decay));
+    });
+
+    test('each preset is recognised as itself', () {
+      for (final preset in VisualizerResponsePreset.values) {
+        expect(preset.tuning.matchingPreset, preset, reason: preset.name);
+      }
+    });
+
+    test('a hand-tuned value matches no preset', () {
+      expect(
+        VisualizerResponsePreset.balanced.tuning
+            .copyWith(contrast: 2.345)
+            .matchingPreset,
+        isNull,
+      );
+    });
+
+    test('the default settings are the balanced preset', () {
+      expect(
+        const VisualizerTuning(),
+        VisualizerResponsePreset.balanced.tuning,
+      );
     });
   });
 

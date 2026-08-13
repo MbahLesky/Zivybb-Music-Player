@@ -20,6 +20,20 @@ part 'app_database.g.dart';
 // therefore cleans up its own dependents rather than trusting the database
 // to cascade.
 
+/// A folder grouping related vibes — Mood, Place, Time, Genre and so on —
+/// so a long vibe list stays navigable. Seeded with a starting set, then
+/// fully user-manageable.
+@DataClassName('VibeCategoryRow')
+class VibeCategories extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get colorHex => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// A vibe (mood/energy) label songs can be tagged with (SRS F-2.6). Starts
 /// out with a handful of built-in presets, but is fully user-manageable.
 @DataClassName('VibeTagRow')
@@ -29,8 +43,27 @@ class VibeTags extends Table {
   TextColumn get colorHex => text()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// The folder this vibe sits in, or null for "Uncategorised". A vibe
+  /// belongs to at most one folder.
+  ///
+  /// `VibeTagRepository.deleteVibeCategory` clears this itself rather than
+  /// trusting the constraint below: it only exists on databases created after
+  /// the category feature landed, and `ALTER TABLE ... ADD COLUMN` can't
+  /// retrofit it onto older installs.
+  TextColumn get categoryId => text().nullable().references(
+    VibeCategories,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
+
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (category_id) REFERENCES vibe_categories (id) '
+        'ON DELETE SET NULL',
+  ];
 }
 
 /// Join entity between [Songs] and [VibeTags] — a song can carry any number
@@ -219,8 +252,30 @@ class Settings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get showAlbumArtInNowPlaying =>
       boolean().withDefault(const Constant(true))();
-  BoolColumn get showVisualizerInNowPlaying =>
-      boolean().withDefault(const Constant(true))();
+
+  /// Where the visualizer sits on Now Playing — a [VisualizerPlacement] name.
+  ///
+  /// Supersedes the `show_visualizer_in_now_playing` boolean, which the v13
+  /// migration reads once to seed this and then leaves behind: SQLite makes
+  /// dropping a column awkward, and nothing reads it any more. Databases
+  /// created from v13 on never have it.
+  TextColumn get visualizerPlacement =>
+      text().withDefault(const Constant('belowControls'))();
+
+  /// Draw the visualizer where a song's artwork would go when that song has
+  /// no artwork, rather than the generic music-note placeholder.
+  BoolColumn get visualizerAsArtworkFallback =>
+      boolean().withDefault(const Constant(false))();
+
+  /// How the raw levels are shaped before they are drawn — see
+  /// `VisualizerTuning`, which owns the meaning and the valid ranges.
+  RealColumn get visualizerSensitivity =>
+      real().withDefault(const Constant(1.0))();
+  RealColumn get visualizerContrast => real().withDefault(const Constant(1.0))();
+  RealColumn get visualizerFloor => real().withDefault(const Constant(0.12))();
+  RealColumn get visualizerResponsiveness =>
+      real().withDefault(const Constant(0.5))();
+  IntColumn get visualizerBarCount => integer().withDefault(const Constant(40))();
 
   /// How far Now Playing's seek-back/forward buttons jump, in seconds.
   IntColumn get seekStepSeconds => integer().withDefault(const Constant(10))();
@@ -246,6 +301,7 @@ class Settings extends Table {
 
 @DriftDatabase(
   tables: [
+    VibeCategories,
     VibeTags,
     SongVibes,
     Songs,
@@ -269,7 +325,7 @@ class AppDatabase extends _$AppDatabase {
   // those versions, so the steps below are all guarded by what the database
   // actually contains, and v12 converges the two histories.
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -317,7 +373,11 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(settings, settings.showAlbumArtInMiniPlayer);
         await m.addColumn(settings, settings.showVisualizerInMiniPlayer);
         await m.addColumn(settings, settings.showAlbumArtInNowPlaying);
-        await m.addColumn(settings, settings.showVisualizerInNowPlaying);
+        // `show_visualizer_in_now_playing` was added here too, until v13
+        // replaced it with `visualizer_placement`. Adding a column no longer
+        // in the table only to have v13 read it back would be pointless
+        // ceremony: a database this old has no preference recorded there
+        // anyway, so it takes the placement default instead.
         await m.addColumn(songs, songs.playCount);
         await m.addColumn(songs, songs.lastPlayedAt);
       }
@@ -413,6 +473,48 @@ class AppDatabase extends _$AppDatabase {
         // Runs last: it reads the vibe tables, which only exist for certain
         // once every step above has been applied.
         await _purgeOrphanedRows();
+      }
+      if (from < 13) {
+        if (!await _hasTable(m, 'vibe_categories')) {
+          await m.createTable(vibeCategories);
+        }
+        if (!await _hasColumn(m, 'vibe_tags', 'category_id')) {
+          // No REFERENCES clause comes with this: SQLite can't retrofit a
+          // foreign key onto an existing table, so the repository clears
+          // dangling category ids itself. `VibeTagRepository.ensureSeeded`
+          // backfills the built-in vibes into the seeded folders.
+          await m.addColumn(vibeTags, vibeTags.categoryId);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_placement')) {
+          await m.addColumn(settings, settings.visualizerPlacement);
+          // Carry the boolean this replaces over, so a user who had the
+          // visualizer switched off on Now Playing doesn't find it back.
+          if (await _hasColumn(m, 'settings', 'show_visualizer_in_now_playing')) {
+            await m.database.customStatement(
+              "UPDATE settings SET visualizer_placement = CASE "
+              "WHEN show_visualizer_in_now_playing = 1 THEN 'belowControls' "
+              "ELSE 'off' END",
+            );
+          }
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_as_artwork_fallback')) {
+          await m.addColumn(settings, settings.visualizerAsArtworkFallback);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_sensitivity')) {
+          await m.addColumn(settings, settings.visualizerSensitivity);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_contrast')) {
+          await m.addColumn(settings, settings.visualizerContrast);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_floor')) {
+          await m.addColumn(settings, settings.visualizerFloor);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_responsiveness')) {
+          await m.addColumn(settings, settings.visualizerResponsiveness);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_bar_count')) {
+          await m.addColumn(settings, settings.visualizerBarCount);
+        }
       }
     },
     beforeOpen: (details) async {

@@ -80,16 +80,6 @@ class NowPlayingScreen extends ConsumerWidget {
                 .togglePreviewMode(),
           ),
           AppBarIconAction(
-            icon: const Icon(Icons.queue_music),
-            tooltip: 'Up next',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                settings: const RouteSettings(name: AppRoutes.queue),
-                builder: (_) => const QueueScreen(),
-              ),
-            ),
-          ),
-          AppBarIconAction(
             icon: const Icon(Icons.equalizer),
             tooltip: 'Equalizer',
             onPressed: () => Navigator.of(
@@ -171,20 +161,15 @@ class NowPlayingScreen extends ConsumerWidget {
                               ),
                               const _CrossfadeIndicator(),
                               const SizedBox(height: 8),
-                              Slider(
-                                min: 0,
-                                max: playback.duration.inMilliseconds > 0
-                                    ? playback.duration.inMilliseconds
-                                          .toDouble()
-                                    : 1,
-                                value: playback.position.inMilliseconds
-                                    .clamp(0, playback.duration.inMilliseconds)
-                                    .toDouble(),
-                                onChanged: (value) => ref
+                              _ProgressBar(
+                                position: playback.position,
+                                duration: playback.duration,
+                                showVisualizer:
+                                    settings.visualizerPlacement ==
+                                    VisualizerPlacement.seekBar,
+                                onSeek: (value) => ref
                                     .read(playbackControllerProvider.notifier)
-                                    .seek(
-                                      Duration(milliseconds: value.round()),
-                                    ),
+                                    .seek(value),
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -359,9 +344,9 @@ class NowPlayingScreen extends ConsumerWidget {
                                   ),
                                 ],
                               ),
-                              if (settings.showVisualizerInNowPlaying) ...[
-                                if (settings.showAlbumArtInNowPlaying)
-                                  const SizedBox(height: 16),
+                              if (settings.visualizerPlacement ==
+                                  VisualizerPlacement.belowControls) ...[
+                                const SizedBox(height: 16),
                                 WaveVisualizer(
                                   color: ref.watch(visualizerColorProvider),
                                 ),
@@ -531,37 +516,167 @@ class NowPlayingScreen extends ConsumerWidget {
 
 /// Artwork and/or visualizer, centered in whatever vertical space the
 /// transport controls leave over.
+///
+/// Which of the two appears is [VisualizerPlacement]'s call: the visualizer
+/// can take the artwork's slot outright, sit in a slim band beneath it, or
+/// stay out of this area entirely.
 class _MediaCenterpiece extends ConsumerWidget {
   const _MediaCenterpiece({required this.song});
 
   final Song song;
 
+  /// Height of the band drawn under the artwork. Deliberately short — the
+  /// artwork above it is the main event in that placement.
+  static const _underArtworkHeight = 64.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings =
         ref.watch(settingsStreamProvider).value ?? const AppSettings();
+    final placement = settings.visualizerPlacement;
     // Sized from the screen rather than a LayoutBuilder because this sits
     // inside an IntrinsicHeight, which LayoutBuilder doesn't support; the
     // FittedBox below absorbs any squeeze from short viewports.
     final screen = MediaQuery.sizeOf(context);
-    final artSize = math.min(screen.width - 48, screen.height * 0.38);
+    final artSize = math.min(screen.width - 72, screen.height * 0.30);
+    final showsArtworkSlot =
+        settings.showAlbumArtInNowPlaying || !placement.showsArtwork;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (settings.showAlbumArtInNowPlaying)
+        if (showsArtworkSlot)
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: SongArtwork(
-                song: song,
-                size: artSize,
-                borderRadius: 20,
-                iconSize: 64,
+              child: placement.showsArtwork
+                  ? SongArtwork(
+                      song: song,
+                      size: artSize,
+                      borderRadius: 20,
+                      iconSize: 64,
+                      // Only handed a visualizer when the user asked for the
+                      // fallback; otherwise the icon placeholder stands.
+                      fallback: settings.visualizerAsArtworkFallback
+                          ? _ArtworkSlotVisualizer(size: artSize)
+                          : null,
+                    )
+                  : _ArtworkSlotVisualizer(size: artSize),
+            ),
+          ),
+        if (placement == VisualizerPlacement.underArtwork) ...[
+          if (showsArtworkSlot) const SizedBox(height: 12),
+          WaveVisualizer(
+            color: ref.watch(visualizerColorProvider),
+            height: _underArtworkHeight,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The visualizer filling a square artwork slot, matching the artwork's
+/// rounded corners and tinted plate so the swap reads as a substitution
+/// rather than a hole in the layout.
+class _ArtworkSlotVisualizer extends ConsumerWidget {
+  const _ArtworkSlotVisualizer({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Center(
+        child: WaveVisualizer(
+          color: ref.watch(visualizerColorProvider),
+          // The square slot suits the radial styles as they are, and gives
+          // the bar styles a taller-than-usual band to fill.
+          height: size,
+        ),
+      ),
+    );
+  }
+}
+
+/// The seek slider, optionally drawn over the visualizer.
+///
+/// The visualizer sits behind the slider rather than replacing it: the bar's
+/// job is still to show progress and to scrub, and a row of bars conveys
+/// neither. It is wrapped in [IgnorePointer] so every touch reaches the
+/// slider underneath it in the hit-test order.
+class _ProgressBar extends ConsumerWidget {
+  const _ProgressBar({
+    required this.position,
+    required this.duration,
+    required this.showVisualizer,
+    required this.onSeek,
+  });
+
+  final Duration position;
+  final Duration duration;
+  final bool showVisualizer;
+  final ValueChanged<Duration> onSeek;
+
+  static const _height = 56.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final slider = Slider(
+      min: 0,
+      max: duration.inMilliseconds > 0
+          ? duration.inMilliseconds.toDouble()
+          : 1,
+      value: position.inMilliseconds
+          .clamp(0, duration.inMilliseconds)
+          .toDouble(),
+      onChanged: (value) => onSeek(Duration(milliseconds: value.round())),
+    );
+
+    if (!showVisualizer) return slider;
+
+    return SizedBox(
+      height: _height,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: 0.6,
+                  child: WaveVisualizer(
+                    color: ref.watch(visualizerColorProvider),
+                    height: _height,
+                  ),
+                ),
               ),
             ),
           ),
-      ],
+          SliderTheme(
+            // A thin track and a solid thumb, so the slider stays readable
+            // as a control against the moving picture behind it.
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              activeTrackColor: scheme.primary,
+              inactiveTrackColor: scheme.onSurface.withValues(alpha: 0.28),
+              thumbColor: scheme.primary,
+            ),
+            child: slider,
+          ),
+        ],
+      ),
     );
   }
 }
