@@ -25,6 +25,7 @@ class Song {
     this.isMissing = false,
     this.playCount = 0,
     this.lastPlayedAt,
+    this.dateAdded,
   });
 
   factory Song.fromRow(SongRow row) {
@@ -40,6 +41,7 @@ class Song {
       isMissing: row.isMissing,
       playCount: row.playCount,
       lastPlayedAt: row.lastPlayedAt,
+      dateAdded: row.dateAdded,
     );
   }
 
@@ -58,6 +60,11 @@ class Song {
   final int playCount;
   final DateTime? lastPlayedAt;
 
+  /// When the device first saw this file. Null means "unknown" — either the
+  /// row predates the column or the media store had no value — and every
+  /// reader sorts those last rather than treating them as ancient.
+  final DateTime? dateAdded;
+
   Song copyWith({
     String? title,
     String? artist,
@@ -66,6 +73,7 @@ class Song {
     bool? isMissing,
     int? playCount,
     DateTime? lastPlayedAt,
+    DateTime? dateAdded,
   }) {
     return Song(
       id: id,
@@ -79,6 +87,7 @@ class Song {
       isMissing: isMissing ?? this.isMissing,
       playCount: playCount ?? this.playCount,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+      dateAdded: dateAdded ?? this.dateAdded,
     );
   }
 
@@ -95,6 +104,7 @@ class Song {
       isMissing: Value(isMissing),
       playCount: Value(playCount),
       lastPlayedAt: Value(lastPlayedAt),
+      dateAdded: Value(dateAdded),
     );
   }
 

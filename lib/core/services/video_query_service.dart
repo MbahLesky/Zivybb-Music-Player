@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/models/song.dart';
+import 'media_scanner_service.dart';
 
 /// Reads the device's video files so they can be played as music
 /// (Screens.md #11: "Include video files").
@@ -71,6 +72,7 @@ class VideoQueryService {
         milliseconds: (row['durationMs'] as num? ?? 0).toInt(),
       ),
       isVideo: true,
+      dateAdded: mediaStoreDateAdded((row['dateAdded'] as num?)?.toInt()),
     );
   }
 }

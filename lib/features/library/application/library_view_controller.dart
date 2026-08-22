@@ -16,7 +16,8 @@ enum LibrarySort {
   durationLongest,
   mostPlayed,
   leastPlayed,
-  recentlyPlayed;
+  recentlyPlayed,
+  newestAdded;
 
   String get label => switch (this) {
     LibrarySort.title => 'Title (A–Z)',
@@ -27,6 +28,7 @@ enum LibrarySort {
     LibrarySort.mostPlayed => 'Most played',
     LibrarySort.leastPlayed => 'Least played',
     LibrarySort.recentlyPlayed => 'Recently played',
+    LibrarySort.newestAdded => 'Newest added',
   };
 }
 
@@ -184,6 +186,21 @@ List<Song> applyLibraryView(
         if (aPlayed == null) return 1;
         if (bPlayed == null) return -1;
         return bPlayed.compareTo(aPlayed);
+      });
+    case LibrarySort.newestAdded:
+      filtered.sort((a, b) {
+        // Songs whose date-added the media store never gave us sort last for
+        // the same reason never-played ones do above — an unknown date is
+        // not evidence of an old one, and a library cached before the column
+        // existed would otherwise show as entirely "oldest" until its next
+        // device scan.
+        final aAdded = a.dateAdded;
+        final bAdded = b.dateAdded;
+        if (aAdded == null && bAdded == null) return byText(a.title, b.title);
+        if (aAdded == null) return 1;
+        if (bAdded == null) return -1;
+        final result = bAdded.compareTo(aAdded);
+        return result != 0 ? result : byText(a.title, b.title);
       });
   }
   return filtered;

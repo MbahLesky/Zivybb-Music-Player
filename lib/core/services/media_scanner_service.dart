@@ -74,8 +74,28 @@ class MediaScannerService {
       artist: model.artist ?? 'Unknown artist',
       album: model.album ?? 'Unknown album',
       duration: Duration(milliseconds: model.duration ?? 0),
+      dateAdded: mediaStoreDateAdded(model.dateAdded),
     );
   }
+}
+
+/// Converts a media-store `DATE_ADDED` value into a [DateTime].
+///
+/// MediaStore documents the column as *seconds* since the epoch, but a fair
+/// number of devices (and some OEM media providers) populate it in
+/// milliseconds instead, which would otherwise date every track to the year
+/// 56000 and pin it to the top of "Newest added" forever. Anything past the
+/// plausible-seconds range is therefore read as milliseconds.
+///
+/// Returns null for a missing or non-positive value, so callers can tell
+/// "unknown" apart from "the epoch".
+DateTime? mediaStoreDateAdded(int? raw) {
+  if (raw == null || raw <= 0) return null;
+  // ~Nov 2286 in seconds; no real DATE_ADDED reaches it, and every
+  // millisecond value since 1973 is above it.
+  const secondsCeiling = 10000000000;
+  final milliseconds = raw > secondsCeiling ? raw : raw * 1000;
+  return DateTime.fromMillisecondsSinceEpoch(milliseconds);
 }
 
 final mediaScannerServiceProvider = Provider<MediaScannerService>(

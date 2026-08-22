@@ -11,7 +11,8 @@ enum NowPlayingMoreAction {
   editTags,
   setRingtone,
   removeFromPlaylist,
-  delete,
+  removeFromLibrary,
+  deleteFromDevice,
 }
 
 /// "More" options for the currently playing song, reached from the Now
@@ -87,13 +88,27 @@ class NowPlayingMoreSheet extends ConsumerWidget {
                 context,
               ).pop(NowPlayingMoreAction.removeFromPlaylist),
             ),
+          // Two separate entries rather than one "delete": taking a song out
+          // of Zivybb is undone by a rescan, deleting its file is not, and
+          // the subtitles are what keep the two from being confused.
           ListTile(
-            leading: Icon(Icons.delete_outline, color: scheme.error),
+            leading: const Icon(Icons.playlist_remove_outlined),
+            title: const Text('Remove from library'),
+            subtitle: const Text('Keeps the file on your device'),
+            onTap: () => Navigator.of(
+              context,
+            ).pop(NowPlayingMoreAction.removeFromLibrary),
+          ),
+          ListTile(
+            leading: Icon(Icons.delete_forever_outlined, color: scheme.error),
             title: Text(
-              'Delete from library',
+              'Delete from device',
               style: TextStyle(color: scheme.error),
             ),
-            onTap: () => Navigator.of(context).pop(NowPlayingMoreAction.delete),
+            subtitle: const Text('Deletes the file permanently'),
+            onTap: () => Navigator.of(
+              context,
+            ).pop(NowPlayingMoreAction.deleteFromDevice),
           ),
         ],
       ),

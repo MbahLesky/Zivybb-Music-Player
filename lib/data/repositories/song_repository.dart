@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/services/media_delete_service.dart';
 import '../../core/services/media_scanner_service.dart';
 import '../datasources/app_database.dart';
 import '../models/song.dart';
@@ -13,10 +14,15 @@ import '../models/song.dart';
 /// device scan; [refreshFromDevice] re-scans and upserts the cache in the
 /// background (SRS N-3).
 class SongRepository {
-  SongRepository({required this._database, required this._scanner});
+  SongRepository({
+    required this._database,
+    required this._scanner,
+    MediaDeleteService? mediaDelete,
+  }) : _mediaDelete = mediaDelete ?? MediaDeleteService();
 
   final AppDatabase _database;
   final MediaScannerService _scanner;
+  final MediaDeleteService _mediaDelete;
 
   /// Emits the cached library, updating whenever it changes.
   Stream<List<Song>> watchLibrary() {
@@ -77,6 +83,11 @@ class SongRepository {
             filePath: excluded.filePath,
             durationMs: excluded.durationMs,
             isMissing: const Constant(false),
+            // Whichever of the two is actually known wins, so a scan that
+            // comes back without a date-added — the media store leaves it
+            // empty on some devices — can't wipe a value an earlier scan
+            // already recorded.
+            dateAdded: coalesce([excluded.dateAdded, old.dateAdded]),
           ),
         ),
       );
@@ -163,6 +174,22 @@ class SongRepository {
     });
   }
 
+  /// Deletes a song's file from the device, and drops it from the library
+  /// only if that actually succeeded.
+  ///
+  /// The order matters: from Android 11 on the system shows its own delete
+  /// confirmation, so the file may well survive a request the user then
+  /// declines. Removing the library row first would leave the song playable
+  /// on the device but invisible in Zivybb until the next scan re-added it —
+  /// stripped of its likes and vibes.
+  Future<MediaDeleteOutcome> deleteFromDevice(Song song) async {
+    final outcome = await _mediaDelete.deleteSong(song);
+    if (outcome == MediaDeleteOutcome.deleted) {
+      await deleteFromLibrary(song.id);
+    }
+    return outcome;
+  }
+
   /// Bumps a song's play count and last-played timestamp (SRS F-4.3), so
   /// Song Discovery can favor tracks that are played less often.
   Future<void> recordPlayed(String songId) {
@@ -232,6 +259,7 @@ final songRepositoryProvider = Provider<SongRepository>((ref) {
   return SongRepository(
     database: ref.watch(appDatabaseProvider),
     scanner: ref.watch(mediaScannerServiceProvider),
+    mediaDelete: ref.watch(mediaDeleteServiceProvider),
   );
 });
 

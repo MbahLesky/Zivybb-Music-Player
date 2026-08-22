@@ -11,6 +11,7 @@ Song _song({
   Duration duration = const Duration(minutes: 3),
   int playCount = 0,
   DateTime? lastPlayedAt,
+  DateTime? dateAdded,
   bool isLiked = false,
 }) {
   return Song(
@@ -22,6 +23,7 @@ Song _song({
     duration: duration,
     playCount: playCount,
     lastPlayedAt: lastPlayedAt,
+    dateAdded: dateAdded,
     isLiked: isLiked,
   );
 }
@@ -81,6 +83,7 @@ void main() {
         duration: const Duration(minutes: 1),
         playCount: 10,
         lastPlayedAt: now.subtract(const Duration(days: 5)),
+        dateAdded: now.subtract(const Duration(days: 30)),
       ),
       _song(
         id: 'a',
@@ -90,6 +93,7 @@ void main() {
         duration: const Duration(minutes: 6),
         playCount: 2,
         lastPlayedAt: now,
+        dateAdded: now.subtract(const Duration(days: 1)),
       ),
       _song(
         id: 'b',
@@ -130,6 +134,40 @@ void main() {
 
     test('recently played puts never-played songs last', () {
       expect(idsFor(LibrarySort.recentlyPlayed), ['a', 'c', 'b']);
+    });
+
+    test('newest added sorts newest first, unknown dates last', () {
+      // 'b' has no date-added — a library cached before the column existed,
+      // or a media store that left it empty — so it lands at the end rather
+      // than reading as the oldest song.
+      expect(idsFor(LibrarySort.newestAdded), ['a', 'c', 'b']);
+    });
+
+    test('newest added falls back to title when dates are unknown', () {
+      final undated = [
+        _song(id: 'z', title: 'Zulu'),
+        _song(id: 'm', title: 'Mike'),
+      ];
+      final ids = applyLibraryView(
+        undated,
+        query: '',
+        sort: LibrarySort.newestAdded,
+      ).map((song) => song.id);
+      expect(ids, ['m', 'z']);
+    });
+
+    test('newest added breaks ties on title', () {
+      final sameMoment = DateTime(2026, 8, 1);
+      final tied = [
+        _song(id: 'second', title: 'Bravo', dateAdded: sameMoment),
+        _song(id: 'first', title: 'Alpha', dateAdded: sameMoment),
+      ];
+      final ids = applyLibraryView(
+        tied,
+        query: '',
+        sort: LibrarySort.newestAdded,
+      ).map((song) => song.id);
+      expect(ids, ['first', 'second']);
     });
 
     test('every sort keeps the whole list', () {
