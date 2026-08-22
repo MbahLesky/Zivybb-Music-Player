@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Small icon for the media notification (the glyph in the status bar).
+
+     This exists because the default audio_service uses — mipmap/ic_launcher —
+     resolves to the adaptive icon in mipmap-anydpi-v26 on Android 8+, and an
+     AdaptiveIconDrawable cannot be a notification small icon: SystemUI fails
+     to build the status-bar icon and drops the notification entirely.
+
+     Android masks the small icon down to a silhouette and tints it itself, so
+     this is deliberately a flat white shape on transparency rather than the
+     full-colour brand mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55 -2.21,0 -4,1.79 -4,4s1.79,4 4,4 4,-1.79 4,-4V7h4V3h-6z"/>
+</vector>

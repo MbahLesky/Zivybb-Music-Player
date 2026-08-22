@@ -58,10 +58,17 @@ class ZivybbAudioHandler extends BaseAudioHandler
     // reported `updatePosition` + playing/speed, per audio_service's own
     // guidance. Only push when something the notification actually
     // displays has changed.
+    //
+    // The current song is part of that test, not just the index: restoring a
+    // saved session loads a track at index 0 while paused, so neither
+    // `isPlaying` nor `currentIndex` moves, and without this the handler
+    // stayed at `AudioProcessingState.idle` — which audio_service reads as
+    // "nothing to show" — until the user pressed play.
     final shouldBroadcast =
         previous == null ||
         previous.isPlaying != next.isPlaying ||
-        previous.currentIndex != next.currentIndex;
+        previous.currentIndex != next.currentIndex ||
+        previous.currentSong != next.currentSong;
     if (!shouldBroadcast) return;
 
     _broadcast(next);
