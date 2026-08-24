@@ -5,22 +5,7 @@ import 'package:zivybb/data/datasources/app_database.dart';
 import 'package:zivybb/data/models/song.dart';
 import 'package:zivybb/data/repositories/song_repository.dart';
 
-/// Returns whatever it was built with, so a "device rescan" can be staged
-/// with an exact date-added on each pass.
-class _FakeScanner implements MediaScannerService {
-  _FakeScanner(this.songs);
-
-  final List<Song> songs;
-
-  @override
-  Future<bool> hasLibraryAccess() async => true;
-
-  @override
-  Future<List<Song>> scanLibrary({bool includeVideos = false}) async => songs;
-
-  @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+import 'support/fake_scanner.dart';
 
 Song _song({required String id, DateTime? dateAdded}) => Song(
   id: id,
@@ -73,7 +58,7 @@ void main() {
       final scanned = DateTime(2026, 5, 4);
       await SongRepository(
         database: database,
-        scanner: _FakeScanner([_song(id: 'a', dateAdded: scanned)]),
+        scanner: FakeScanner([_song(id: 'a', dateAdded: scanned)]),
       ).refreshFromDevice();
 
       expect(await dateAddedOf('a'), scanned);
@@ -83,13 +68,13 @@ void main() {
       final scanned = DateTime(2026, 5, 4);
       await SongRepository(
         database: database,
-        scanner: _FakeScanner([_song(id: 'a', dateAdded: scanned)]),
+        scanner: FakeScanner([_song(id: 'a', dateAdded: scanned)]),
       ).refreshFromDevice();
 
       // Same song, this time with nothing in the media store's column.
       await SongRepository(
         database: database,
-        scanner: _FakeScanner([_song(id: 'a')]),
+        scanner: FakeScanner([_song(id: 'a')]),
       ).refreshFromDevice();
 
       expect(await dateAddedOf('a'), scanned);
@@ -113,7 +98,7 @@ void main() {
       final scanned = DateTime(2026, 5, 4);
       await SongRepository(
         database: database,
-        scanner: _FakeScanner([_song(id: 'a', dateAdded: scanned)]),
+        scanner: FakeScanner([_song(id: 'a', dateAdded: scanned)]),
       ).refreshFromDevice();
 
       expect(await dateAddedOf('a'), scanned);
