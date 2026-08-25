@@ -31,12 +31,22 @@ class SongArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Anything that isn't a plain MediaStore.Audio id gets the placeholder
+    // rather than throwing. `isVideo` already covers the namespaced ids this
+    // app creates, but every row of every song list runs through here now, so
+    // one unexpected id shouldn't take a whole screen down.
+    final artworkId = song.isVideo ? null : int.tryParse(song.id);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
-      child: song.isVideo
-          ? fallback ?? _placeholder(context, Icons.movie_outlined)
+      child: artworkId == null
+          ? fallback ??
+                _placeholder(
+                  context,
+                  song.isVideo ? Icons.movie_outlined : Icons.music_note,
+                )
           : QueryArtworkWidget(
-              id: int.parse(song.id),
+              id: artworkId,
               type: ArtworkType.AUDIO,
               artworkWidth: size,
               artworkHeight: size,
