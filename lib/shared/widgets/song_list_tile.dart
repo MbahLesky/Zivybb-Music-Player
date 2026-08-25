@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/song.dart';
 import '../../data/repositories/song_repository.dart';
+import '../../features/library/presentation/song_delete_actions.dart';
 import '../../features/playback/application/playback_controller.dart';
 import 'song_artwork.dart';
 import 'vibe_chips.dart';
@@ -33,6 +34,57 @@ class SongListTile extends ConsumerWidget {
 
   static const _artworkSize = 48.0;
 
+  /// Offers the destructive actions on long-press rather than from a
+  /// permanent overflow button: they are rare, and a third control on every
+  /// row would crowd out the like toggle that isn't.
+  Future<void> _showActions(BuildContext context, WidgetRef ref) async {
+    final scheme = Theme.of(context).colorScheme;
+    final action = await showModalBottomSheet<_SongTileAction>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(song.title, maxLines: 1),
+              subtitle: Text(song.artist, maxLines: 1),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.playlist_remove_outlined),
+              title: const Text('Remove from library'),
+              subtitle: const Text('Keeps the file on your device'),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SongTileAction.removeFromLibrary),
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_forever_outlined, color: scheme.error),
+              title: Text(
+                'Delete from device',
+                style: TextStyle(color: scheme.error),
+              ),
+              subtitle: const Text('Deletes the file permanently'),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SongTileAction.deleteFromDevice),
+            ),
+          ],
+        ),
+      ),
+    );
+    // The sheet's own context is gone by now, so the confirmations below run
+    // against this tile's context instead.
+    if (!context.mounted || action == null) return;
+
+    switch (action) {
+      case _SongTileAction.removeFromLibrary:
+        await confirmAndRemoveFromLibrary(context, ref, song);
+      case _SongTileAction.deleteFromDevice:
+        await confirmAndDeleteFromDevice(context, ref, song);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -56,6 +108,7 @@ class SongListTile extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
+          onLongPress: () => _showActions(context, ref),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
             child: Row(
@@ -176,3 +229,6 @@ class SongListTile extends ConsumerWidget {
     return '$minutes:$seconds';
   }
 }
+
+/// The choices [SongListTile]'s long-press sheet offers.
+enum _SongTileAction { removeFromLibrary, deleteFromDevice }

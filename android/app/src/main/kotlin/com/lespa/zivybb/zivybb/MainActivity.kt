@@ -1,6 +1,7 @@
 package com.lespa.zivybb.zivybb
 
 import android.content.ContentUris
+import android.content.Intent
 import android.os.Build
 import android.provider.MediaStore
 import com.ryanheise.audioservice.AudioServiceActivity
@@ -13,12 +14,20 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : AudioServiceActivity() {
 
     private var visualizerBridge: AudioVisualizerBridge? = null
+    private var mediaDeleteBridge: MediaDeleteBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
         visualizerBridge =
             AudioVisualizerBridge(flutterEngine.dartExecutor.binaryMessenger)
+
+        // Deleting a media file needs an Activity from Android 10 on — the
+        // user confirms it in a system dialog that answers via
+        // onActivityResult — so this bridge is built here rather than being
+        // a standalone plugin.
+        mediaDeleteBridge =
+            MediaDeleteBridge(this, flutterEngine.dartExecutor.binaryMessenger)
 
         // The bundled media-query plugin only reads MediaStore.Audio, so
         // videos-played-as-music (SRS: video audio playback) need their own
@@ -32,11 +41,22 @@ class MainActivity : AudioServiceActivity() {
             }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // Answers the Flutter side's pending delete first; anything the
+        // bridge doesn't recognise belongs to a plugin further down.
+        if (mediaDeleteBridge?.onActivityResult(requestCode, resultCode) == true) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
     override fun onDestroy() {
         // Releases the system Visualizer effect. Leaking it would keep the
         // audio session captured for the life of the process.
         visualizerBridge?.dispose()
         visualizerBridge = null
+        mediaDeleteBridge?.dispose()
+        mediaDeleteBridge = null
         super.onDestroy()
     }
 
@@ -47,6 +67,7 @@ class MainActivity : AudioServiceActivity() {
             MediaStore.Video.Media.TITLE,
             MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Video.Media.DATE_ADDED,
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             columns.add(MediaStore.Video.Media.ARTIST)
@@ -74,6 +95,8 @@ class MainActivity : AudioServiceActivity() {
                 cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
             val bucketColumn =
                 cursor.getColumnIndex(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
+            val dateAddedColumn =
+                cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED)
             val artistColumn = cursor.getColumnIndex("artist")
 
             while (cursor.moveToNext()) {
@@ -97,6 +120,13 @@ class MainActivity : AudioServiceActivity() {
                         },
                         "artist" to if (artistColumn >= 0) {
                             cursor.getString(artistColumn)
+                        } else {
+                            null
+                        },
+                        // Seconds since the epoch, per MediaStore; Dart
+                        // normalizes the devices that report milliseconds.
+                        "dateAdded" to if (dateAddedColumn >= 0) {
+                            cursor.getLong(dateAddedColumn)
                         } else {
                             null
                         },

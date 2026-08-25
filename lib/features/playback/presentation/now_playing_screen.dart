@@ -23,6 +23,7 @@ import '../../../shared/widgets/seek_step_icon.dart';
 import '../../../shared/widgets/song_artwork.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/vibe_chips.dart';
+import '../../library/presentation/song_delete_actions.dart';
 import '../../playlists/presentation/save_to_playlist_sheet.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../settings/presentation/equalizer_screen.dart';
@@ -428,8 +429,24 @@ class NowPlayingScreen extends ConsumerWidget {
               .read(playlistRepositoryProvider)
               .removeSong(sourcePlaylistId, song.id);
         }
-      case NowPlayingMoreAction.delete:
-        await _confirmAndDelete(context, ref, song);
+      case NowPlayingMoreAction.removeFromLibrary:
+        if (await confirmAndRemoveFromLibrary(context, ref, song)) {
+          await _skipPastDeleted(ref);
+        }
+      case NowPlayingMoreAction.deleteFromDevice:
+        if (await confirmAndDeleteFromDevice(context, ref, song)) {
+          await _skipPastDeleted(ref);
+        }
+    }
+  }
+
+  /// Moves off a song that has just left the library, so Now Playing isn't
+  /// left showing a track that no longer exists.
+  Future<void> _skipPastDeleted(WidgetRef ref) async {
+    try {
+      await ref.read(playbackControllerProvider.notifier).next();
+    } catch (_) {
+      // Nothing left to skip to.
     }
   }
 
@@ -476,40 +493,6 @@ class NowPlayingScreen extends ConsumerWidget {
       messenger.showSnackBar(
         SnackBar(content: Text('Could not set ringtone: $e')),
       );
-    }
-  }
-
-  Future<void> _confirmAndDelete(
-    BuildContext context,
-    WidgetRef ref,
-    Song song,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete "${song.title}"?'),
-        content: const Text(
-          'This removes the song from your library. The file on your '
-          'device is not deleted.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await ref.read(songRepositoryProvider).deleteFromLibrary(song.id);
-    try {
-      await ref.read(playbackControllerProvider.notifier).next();
-    } catch (_) {
-      // Nothing left to skip to.
     }
   }
 }
@@ -634,9 +617,7 @@ class _ProgressBar extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final slider = Slider(
       min: 0,
-      max: duration.inMilliseconds > 0
-          ? duration.inMilliseconds.toDouble()
-          : 1,
+      max: duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1,
       value: position.inMilliseconds
           .clamp(0, duration.inMilliseconds)
           .toDouble(),

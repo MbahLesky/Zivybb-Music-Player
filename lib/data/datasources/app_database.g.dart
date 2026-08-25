@@ -809,6 +809,17 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dateAddedMeta = const VerificationMeta(
+    'dateAdded',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dateAdded = GeneratedColumn<DateTime>(
+    'date_added',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -822,6 +833,7 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
     isMissing,
     playCount,
     lastPlayedAt,
+    dateAdded,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -913,6 +925,12 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
         ),
       );
     }
+    if (data.containsKey('date_added')) {
+      context.handle(
+        _dateAddedMeta,
+        dateAdded.isAcceptableOrUnknown(data['date_added']!, _dateAddedMeta),
+      );
+    }
     return context;
   }
 
@@ -966,6 +984,10 @@ class $SongsTable extends Songs with TableInfo<$SongsTable, SongRow> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_played_at'],
       ),
+      dateAdded: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date_added'],
+      ),
     );
   }
 
@@ -991,6 +1013,15 @@ class SongRow extends DataClass implements Insertable<SongRow> {
   final bool isMissing;
   final int playCount;
   final DateTime? lastPlayedAt;
+
+  /// When the device's media store first saw this file, which is what the
+  /// "Newest added" sort orders by.
+  ///
+  /// Nullable, and treated as "unknown" rather than "very old" everywhere it
+  /// is read: it only arrives with a device scan, so rows cached before this
+  /// column existed carry null until the next refresh, and MediaStore itself
+  /// leaves the column empty on some devices.
+  final DateTime? dateAdded;
   const SongRow({
     required this.id,
     required this.filePath,
@@ -1003,6 +1034,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     required this.isMissing,
     required this.playCount,
     this.lastPlayedAt,
+    this.dateAdded,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1019,6 +1051,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     map['play_count'] = Variable<int>(playCount);
     if (!nullToAbsent || lastPlayedAt != null) {
       map['last_played_at'] = Variable<DateTime>(lastPlayedAt);
+    }
+    if (!nullToAbsent || dateAdded != null) {
+      map['date_added'] = Variable<DateTime>(dateAdded);
     }
     return map;
   }
@@ -1038,6 +1073,9 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       lastPlayedAt: lastPlayedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastPlayedAt),
+      dateAdded: dateAdded == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dateAdded),
     );
   }
 
@@ -1058,6 +1096,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       isMissing: serializer.fromJson<bool>(json['isMissing']),
       playCount: serializer.fromJson<int>(json['playCount']),
       lastPlayedAt: serializer.fromJson<DateTime?>(json['lastPlayedAt']),
+      dateAdded: serializer.fromJson<DateTime?>(json['dateAdded']),
     );
   }
   @override
@@ -1075,6 +1114,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       'isMissing': serializer.toJson<bool>(isMissing),
       'playCount': serializer.toJson<int>(playCount),
       'lastPlayedAt': serializer.toJson<DateTime?>(lastPlayedAt),
+      'dateAdded': serializer.toJson<DateTime?>(dateAdded),
     };
   }
 
@@ -1090,6 +1130,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     bool? isMissing,
     int? playCount,
     Value<DateTime?> lastPlayedAt = const Value.absent(),
+    Value<DateTime?> dateAdded = const Value.absent(),
   }) => SongRow(
     id: id ?? this.id,
     filePath: filePath ?? this.filePath,
@@ -1102,6 +1143,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     isMissing: isMissing ?? this.isMissing,
     playCount: playCount ?? this.playCount,
     lastPlayedAt: lastPlayedAt.present ? lastPlayedAt.value : this.lastPlayedAt,
+    dateAdded: dateAdded.present ? dateAdded.value : this.dateAdded,
   );
   SongRow copyWithCompanion(SongsCompanion data) {
     return SongRow(
@@ -1120,6 +1162,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
       lastPlayedAt: data.lastPlayedAt.present
           ? data.lastPlayedAt.value
           : this.lastPlayedAt,
+      dateAdded: data.dateAdded.present ? data.dateAdded.value : this.dateAdded,
     );
   }
 
@@ -1136,7 +1179,8 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           ..write('isLiked: $isLiked, ')
           ..write('isMissing: $isMissing, ')
           ..write('playCount: $playCount, ')
-          ..write('lastPlayedAt: $lastPlayedAt')
+          ..write('lastPlayedAt: $lastPlayedAt, ')
+          ..write('dateAdded: $dateAdded')
           ..write(')'))
         .toString();
   }
@@ -1154,6 +1198,7 @@ class SongRow extends DataClass implements Insertable<SongRow> {
     isMissing,
     playCount,
     lastPlayedAt,
+    dateAdded,
   );
   @override
   bool operator ==(Object other) =>
@@ -1169,7 +1214,8 @@ class SongRow extends DataClass implements Insertable<SongRow> {
           other.isLiked == this.isLiked &&
           other.isMissing == this.isMissing &&
           other.playCount == this.playCount &&
-          other.lastPlayedAt == this.lastPlayedAt);
+          other.lastPlayedAt == this.lastPlayedAt &&
+          other.dateAdded == this.dateAdded);
 }
 
 class SongsCompanion extends UpdateCompanion<SongRow> {
@@ -1184,6 +1230,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
   final Value<bool> isMissing;
   final Value<int> playCount;
   final Value<DateTime?> lastPlayedAt;
+  final Value<DateTime?> dateAdded;
   final Value<int> rowid;
   const SongsCompanion({
     this.id = const Value.absent(),
@@ -1197,6 +1244,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.isMissing = const Value.absent(),
     this.playCount = const Value.absent(),
     this.lastPlayedAt = const Value.absent(),
+    this.dateAdded = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SongsCompanion.insert({
@@ -1211,6 +1259,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     this.isMissing = const Value.absent(),
     this.playCount = const Value.absent(),
     this.lastPlayedAt = const Value.absent(),
+    this.dateAdded = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        filePath = Value(filePath),
@@ -1230,6 +1279,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Expression<bool>? isMissing,
     Expression<int>? playCount,
     Expression<DateTime>? lastPlayedAt,
+    Expression<DateTime>? dateAdded,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1244,6 +1294,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       if (isMissing != null) 'is_missing': isMissing,
       if (playCount != null) 'play_count': playCount,
       if (lastPlayedAt != null) 'last_played_at': lastPlayedAt,
+      if (dateAdded != null) 'date_added': dateAdded,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1260,6 +1311,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     Value<bool>? isMissing,
     Value<int>? playCount,
     Value<DateTime?>? lastPlayedAt,
+    Value<DateTime?>? dateAdded,
     Value<int>? rowid,
   }) {
     return SongsCompanion(
@@ -1274,6 +1326,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
       isMissing: isMissing ?? this.isMissing,
       playCount: playCount ?? this.playCount,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+      dateAdded: dateAdded ?? this.dateAdded,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1314,6 +1367,9 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
     if (lastPlayedAt.present) {
       map['last_played_at'] = Variable<DateTime>(lastPlayedAt.value);
     }
+    if (dateAdded.present) {
+      map['date_added'] = Variable<DateTime>(dateAdded.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1334,6 +1390,7 @@ class SongsCompanion extends UpdateCompanion<SongRow> {
           ..write('isMissing: $isMissing, ')
           ..write('playCount: $playCount, ')
           ..write('lastPlayedAt: $lastPlayedAt, ')
+          ..write('dateAdded: $dateAdded, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5159,6 +5216,7 @@ typedef $$SongsTableCreateCompanionBuilder =
       Value<bool> isMissing,
       Value<int> playCount,
       Value<DateTime?> lastPlayedAt,
+      Value<DateTime?> dateAdded,
       Value<int> rowid,
     });
 typedef $$SongsTableUpdateCompanionBuilder =
@@ -5174,6 +5232,7 @@ typedef $$SongsTableUpdateCompanionBuilder =
       Value<bool> isMissing,
       Value<int> playCount,
       Value<DateTime?> lastPlayedAt,
+      Value<DateTime?> dateAdded,
       Value<int> rowid,
     });
 
@@ -5237,6 +5296,11 @@ class $$SongsTableFilterComposer extends Composer<_$AppDatabase, $SongsTable> {
 
   ColumnFilters<DateTime> get lastPlayedAt => $composableBuilder(
     column: $table.lastPlayedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dateAdded => $composableBuilder(
+    column: $table.dateAdded,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5304,6 +5368,11 @@ class $$SongsTableOrderingComposer
     column: $table.lastPlayedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get dateAdded => $composableBuilder(
+    column: $table.dateAdded,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SongsTableAnnotationComposer
@@ -5351,6 +5420,9 @@ class $$SongsTableAnnotationComposer
     column: $table.lastPlayedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get dateAdded =>
+      $composableBuilder(column: $table.dateAdded, builder: (column) => column);
 }
 
 class $$SongsTableTableManager
@@ -5392,6 +5464,7 @@ class $$SongsTableTableManager
                 Value<bool> isMissing = const Value.absent(),
                 Value<int> playCount = const Value.absent(),
                 Value<DateTime?> lastPlayedAt = const Value.absent(),
+                Value<DateTime?> dateAdded = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SongsCompanion(
                 id: id,
@@ -5405,6 +5478,7 @@ class $$SongsTableTableManager
                 isMissing: isMissing,
                 playCount: playCount,
                 lastPlayedAt: lastPlayedAt,
+                dateAdded: dateAdded,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5420,6 +5494,7 @@ class $$SongsTableTableManager
                 Value<bool> isMissing = const Value.absent(),
                 Value<int> playCount = const Value.absent(),
                 Value<DateTime?> lastPlayedAt = const Value.absent(),
+                Value<DateTime?> dateAdded = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SongsCompanion.insert(
                 id: id,
@@ -5433,6 +5508,7 @@ class $$SongsTableTableManager
                 isMissing: isMissing,
                 playCount: playCount,
                 lastPlayedAt: lastPlayedAt,
+                dateAdded: dateAdded,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

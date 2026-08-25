@@ -158,6 +158,15 @@ void main() {
         reason: 'songs scanned before v10 are audio',
       );
 
+      // v14 adds date-added. It can only come from a device scan, so every
+      // upgraded row starts unknown rather than being dated to the epoch —
+      // which is what keeps them out of the front of "Newest added".
+      expect(
+        songs.every((song) => song.dateAdded == null),
+        isTrue,
+        reason: 'songs cached before v14 have no date-added until a rescan',
+      );
+
       // v13 replaces the show/hide boolean with a placement. The fixture had
       // it switched off, so the user must not find the visualizer back.
       expect(
@@ -204,10 +213,7 @@ void main() {
       'mood',
       reason: 'a surviving built-in vibe should land in its original folder',
     );
-    expect(
-      vibes.firstWhere((v) => v.id == 'happy').categoryId,
-      'feeling',
-    );
+    expect(vibes.firstWhere((v) => v.id == 'happy').categoryId, 'feeling');
   });
 
   test('a fresh install creates the current schema directly', () async {

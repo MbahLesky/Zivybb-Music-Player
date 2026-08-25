@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../data/models/song.dart';
 import '../../../data/repositories/equalizer_preset_repository.dart';
@@ -42,11 +44,37 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       // instead of after a full rescan.
       await ref.read(playbackControllerProvider.notifier).restoreSession();
       await ref.read(libraryControllerProvider.notifier).refresh();
+      // Strictly after the library scan's own permission prompt, and never
+      // from main(): permission_handler rejects a request made while another
+      // is still in flight, so firing this at startup raced the media prompt
+      // and was the request that tended to lose — leaving Android 13+ with no
+      // permission to post the playback notification and no second ask.
+      await _requestNotificationPermission();
       await ref.read(songRepositoryProvider).detectMissingFiles();
       await ref.read(vibeTagRepositoryProvider).ensureSeeded();
       await ref.read(equalizerPresetRepositoryProvider).ensureSeeded();
       await ref.read(vibePlaylistGeneratorProvider).regenerateAll();
     });
+  }
+
+  /// Asks for POST_NOTIFICATIONS (Android 13+), which the playback
+  /// notification and its lock-screen controls cannot appear without.
+  ///
+  /// Best-effort by design: playback itself works either way, so a refusal
+  /// is not worth blocking the library on. Only ever prompts when the
+  /// permission is still undecided — `request()` on a permanently denied
+  /// permission returns immediately without a dialog, and re-asking every
+  /// launch would be noise.
+  Future<void> _requestNotificationPermission() async {
+    try {
+      if (await Permission.notification.isDenied) {
+        await Permission.notification.request();
+      }
+    } on MissingPluginException {
+      // No permission plugin on this platform (or in tests).
+    } on PlatformException {
+      // Nothing actionable — the notification simply won't appear.
+    }
   }
 
   @override

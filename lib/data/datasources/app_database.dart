@@ -112,6 +112,15 @@ class Songs extends Table {
   IntColumn get playCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastPlayedAt => dateTime().nullable()();
 
+  /// When the device's media store first saw this file, which is what the
+  /// "Newest added" sort orders by.
+  ///
+  /// Nullable, and treated as "unknown" rather than "very old" everywhere it
+  /// is read: it only arrives with a device scan, so rows cached before this
+  /// column existed carry null until the next refresh, and MediaStore itself
+  /// leaves the column empty on some devices.
+  DateTimeColumn get dateAdded => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -271,11 +280,13 @@ class Settings extends Table {
   /// `VisualizerTuning`, which owns the meaning and the valid ranges.
   RealColumn get visualizerSensitivity =>
       real().withDefault(const Constant(1.0))();
-  RealColumn get visualizerContrast => real().withDefault(const Constant(1.0))();
+  RealColumn get visualizerContrast =>
+      real().withDefault(const Constant(1.0))();
   RealColumn get visualizerFloor => real().withDefault(const Constant(0.12))();
   RealColumn get visualizerResponsiveness =>
       real().withDefault(const Constant(0.5))();
-  IntColumn get visualizerBarCount => integer().withDefault(const Constant(40))();
+  IntColumn get visualizerBarCount =>
+      integer().withDefault(const Constant(40))();
 
   /// How far Now Playing's seek-back/forward buttons jump, in seconds.
   IntColumn get seekStepSeconds => integer().withDefault(const Constant(10))();
@@ -325,7 +336,7 @@ class AppDatabase extends _$AppDatabase {
   // those versions, so the steps below are all guarded by what the database
   // actually contains, and v12 converges the two histories.
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -433,7 +444,10 @@ class AppDatabase extends _$AppDatabase {
             // ignore: experimental_member_use
             TableMigration(
               songs,
-              columnTransformer: {songs.isVideo: const Constant(false)},
+              columnTransformer: {
+                songs.isVideo: const Constant(false),
+                songs.dateAdded: const Constant<DateTime>(null),
+              },
             ),
           );
         }
@@ -489,7 +503,11 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(settings, settings.visualizerPlacement);
           // Carry the boolean this replaces over, so a user who had the
           // visualizer switched off on Now Playing doesn't find it back.
-          if (await _hasColumn(m, 'settings', 'show_visualizer_in_now_playing')) {
+          if (await _hasColumn(
+            m,
+            'settings',
+            'show_visualizer_in_now_playing',
+          )) {
             await m.database.customStatement(
               "UPDATE settings SET visualizer_placement = CASE "
               "WHEN show_visualizer_in_now_playing = 1 THEN 'belowControls' "
@@ -497,7 +515,11 @@ class AppDatabase extends _$AppDatabase {
             );
           }
         }
-        if (!await _hasColumn(m, 'settings', 'visualizer_as_artwork_fallback')) {
+        if (!await _hasColumn(
+          m,
+          'settings',
+          'visualizer_as_artwork_fallback',
+        )) {
           await m.addColumn(settings, settings.visualizerAsArtworkFallback);
         }
         if (!await _hasColumn(m, 'settings', 'visualizer_sensitivity')) {
@@ -514,6 +536,16 @@ class AppDatabase extends _$AppDatabase {
         }
         if (!await _hasColumn(m, 'settings', 'visualizer_bar_count')) {
           await m.addColumn(settings, settings.visualizerBarCount);
+        }
+      }
+      if (from < 14) {
+        if (!await _hasColumn(m, 'songs', 'date_added')) {
+          // Left null for every existing row: the media store's date-added
+          // value is only available from a scan, so the next
+          // `refreshFromDevice` is what backfills it. Until then those songs
+          // sort to the end of "Newest added" rather than pretending to be
+          // the oldest in the library.
+          await m.addColumn(songs, songs.dateAdded);
         }
       }
     },

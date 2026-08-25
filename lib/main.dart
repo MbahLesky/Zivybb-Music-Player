@@ -1,9 +1,6 @@
-import 'dart:async';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'app.dart';
 import 'core/services/audio_handler.dart';
@@ -20,16 +17,17 @@ Future<void> main() async {
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.lespa.zivybb.zivybb.audio',
       androidNotificationChannelName: 'Zivybb playback',
+      // Must be a flat monochrome drawable. The default — mipmap/ic_launcher —
+      // is an adaptive icon on Android 8+, which SystemUI cannot turn into a
+      // status-bar icon: it fails to create the icon and shows no notification
+      // at all.
+      androidNotificationIcon: 'drawable/ic_notification',
       // Keeps the foreground service alive through pause (rather than the
       // default of stopping it) so resuming playback from the lock screen
       // never hits Android 12+'s ForegroundServiceStartNotAllowedException.
       androidStopForegroundOnPause: false,
     ),
   );
-
-  // Best-effort: without this the notification silently never shows on
-  // Android 13+, but playback must still work if it's denied.
-  unawaited(Permission.notification.request());
 
   runApp(
     UncontrolledProviderScope(container: container, child: const ZivybbApp()),
