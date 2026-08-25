@@ -221,6 +221,44 @@ class SettingsRepository {
     );
   }
 
+  /// Writes every setting in one row write, used by `BackupRepository` on
+  /// restore.
+  ///
+  /// Driving the individual setters instead would emit twenty-odd settings
+  /// updates back to back, each one restyling the whole app and restarting
+  /// the visualizer on its way to the state the backup actually describes.
+  ///
+  /// [settings.currentEqualizerPresetId] must name a preset that exists —
+  /// the column is a foreign key, so an unknown id fails the write.
+  Future<void> replaceAll(AppSettings settings) {
+    final tuning = settings.visualizerTuning.clamped();
+    final row = SettingsCompanion(
+      id: const Value(Settings.singletonId),
+      adaptiveDarkModeEnabled: Value(settings.adaptiveDarkModeEnabled),
+      manualThemeOverride: Value(settings.manualThemeOverride?.name),
+      themeSeedColorHex: Value(settings.themeSeedColorHex),
+      visualizerColorHex: Value(settings.visualizerColorHex),
+      crossfadeEnabled: Value(settings.crossfadeEnabled),
+      crossfadeDurationMs: Value(settings.crossfadeDuration.inMilliseconds),
+      currentEqualizerPresetId: Value(settings.currentEqualizerPresetId),
+      visualizerStyle: Value(settings.visualizerStyle.name),
+      showAlbumArtInMiniPlayer: Value(settings.showAlbumArtInMiniPlayer),
+      showVisualizerInMiniPlayer: Value(settings.showVisualizerInMiniPlayer),
+      showAlbumArtInNowPlaying: Value(settings.showAlbumArtInNowPlaying),
+      visualizerPlacement: Value(settings.visualizerPlacement.name),
+      visualizerAsArtworkFallback: Value(settings.visualizerAsArtworkFallback),
+      visualizerSensitivity: Value(tuning.sensitivity),
+      visualizerContrast: Value(tuning.contrast),
+      visualizerFloor: Value(tuning.floor),
+      visualizerResponsiveness: Value(tuning.responsiveness),
+      visualizerBarCount: Value(tuning.barCount),
+      seekStepSeconds: Value(settings.seekStep.inSeconds),
+      includeVideos: Value(settings.includeVideos),
+      realVisualizerEnabled: Value(settings.realVisualizerEnabled),
+    );
+    return _upsert(row, onConflict: (_) => row);
+  }
+
   /// Reads a stored [VisualizerPlacement] name, falling back to the default
   /// rather than throwing. The v13 migration seeds this column from a
   /// boolean, so any row it missed would otherwise take the whole settings
