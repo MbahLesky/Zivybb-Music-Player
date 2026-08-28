@@ -1612,6 +1612,368 @@ class SongVibesCompanion extends UpdateCompanion<SongVibeRow> {
   }
 }
 
+class $GameScoresTable extends GameScores
+    with TableInfo<$GameScoresTable, GameScoreRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GameScoresTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _songIdMeta = const VerificationMeta('songId');
+  @override
+  late final GeneratedColumn<String> songId = GeneratedColumn<String>(
+    'song_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _highScoreMeta = const VerificationMeta(
+    'highScore',
+  );
+  @override
+  late final GeneratedColumn<int> highScore = GeneratedColumn<int>(
+    'high_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _maxComboMeta = const VerificationMeta(
+    'maxCombo',
+  );
+  @override
+  late final GeneratedColumn<int> maxCombo = GeneratedColumn<int>(
+    'max_combo',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _playCountMeta = const VerificationMeta(
+    'playCount',
+  );
+  @override
+  late final GeneratedColumn<int> playCount = GeneratedColumn<int>(
+    'play_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    songId,
+    highScore,
+    maxCombo,
+    playCount,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'game_scores';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GameScoreRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('song_id')) {
+      context.handle(
+        _songIdMeta,
+        songId.isAcceptableOrUnknown(data['song_id']!, _songIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_songIdMeta);
+    }
+    if (data.containsKey('high_score')) {
+      context.handle(
+        _highScoreMeta,
+        highScore.isAcceptableOrUnknown(data['high_score']!, _highScoreMeta),
+      );
+    }
+    if (data.containsKey('max_combo')) {
+      context.handle(
+        _maxComboMeta,
+        maxCombo.isAcceptableOrUnknown(data['max_combo']!, _maxComboMeta),
+      );
+    }
+    if (data.containsKey('play_count')) {
+      context.handle(
+        _playCountMeta,
+        playCount.isAcceptableOrUnknown(data['play_count']!, _playCountMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {songId};
+  @override
+  GameScoreRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GameScoreRow(
+      songId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}song_id'],
+      )!,
+      highScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}high_score'],
+      )!,
+      maxCombo: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_combo'],
+      )!,
+      playCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}play_count'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GameScoresTable createAlias(String alias) {
+    return $GameScoresTable(attachedDatabase, alias);
+  }
+}
+
+class GameScoreRow extends DataClass implements Insertable<GameScoreRow> {
+  final String songId;
+  final int highScore;
+  final int maxCombo;
+
+  /// How many times rhythm mode has been played through on this song.
+  final int playCount;
+  final DateTime updatedAt;
+  const GameScoreRow({
+    required this.songId,
+    required this.highScore,
+    required this.maxCombo,
+    required this.playCount,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['song_id'] = Variable<String>(songId);
+    map['high_score'] = Variable<int>(highScore);
+    map['max_combo'] = Variable<int>(maxCombo);
+    map['play_count'] = Variable<int>(playCount);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  GameScoresCompanion toCompanion(bool nullToAbsent) {
+    return GameScoresCompanion(
+      songId: Value(songId),
+      highScore: Value(highScore),
+      maxCombo: Value(maxCombo),
+      playCount: Value(playCount),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory GameScoreRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GameScoreRow(
+      songId: serializer.fromJson<String>(json['songId']),
+      highScore: serializer.fromJson<int>(json['highScore']),
+      maxCombo: serializer.fromJson<int>(json['maxCombo']),
+      playCount: serializer.fromJson<int>(json['playCount']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'songId': serializer.toJson<String>(songId),
+      'highScore': serializer.toJson<int>(highScore),
+      'maxCombo': serializer.toJson<int>(maxCombo),
+      'playCount': serializer.toJson<int>(playCount),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  GameScoreRow copyWith({
+    String? songId,
+    int? highScore,
+    int? maxCombo,
+    int? playCount,
+    DateTime? updatedAt,
+  }) => GameScoreRow(
+    songId: songId ?? this.songId,
+    highScore: highScore ?? this.highScore,
+    maxCombo: maxCombo ?? this.maxCombo,
+    playCount: playCount ?? this.playCount,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  GameScoreRow copyWithCompanion(GameScoresCompanion data) {
+    return GameScoreRow(
+      songId: data.songId.present ? data.songId.value : this.songId,
+      highScore: data.highScore.present ? data.highScore.value : this.highScore,
+      maxCombo: data.maxCombo.present ? data.maxCombo.value : this.maxCombo,
+      playCount: data.playCount.present ? data.playCount.value : this.playCount,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GameScoreRow(')
+          ..write('songId: $songId, ')
+          ..write('highScore: $highScore, ')
+          ..write('maxCombo: $maxCombo, ')
+          ..write('playCount: $playCount, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(songId, highScore, maxCombo, playCount, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GameScoreRow &&
+          other.songId == this.songId &&
+          other.highScore == this.highScore &&
+          other.maxCombo == this.maxCombo &&
+          other.playCount == this.playCount &&
+          other.updatedAt == this.updatedAt);
+}
+
+class GameScoresCompanion extends UpdateCompanion<GameScoreRow> {
+  final Value<String> songId;
+  final Value<int> highScore;
+  final Value<int> maxCombo;
+  final Value<int> playCount;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const GameScoresCompanion({
+    this.songId = const Value.absent(),
+    this.highScore = const Value.absent(),
+    this.maxCombo = const Value.absent(),
+    this.playCount = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GameScoresCompanion.insert({
+    required String songId,
+    this.highScore = const Value.absent(),
+    this.maxCombo = const Value.absent(),
+    this.playCount = const Value.absent(),
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : songId = Value(songId),
+       updatedAt = Value(updatedAt);
+  static Insertable<GameScoreRow> custom({
+    Expression<String>? songId,
+    Expression<int>? highScore,
+    Expression<int>? maxCombo,
+    Expression<int>? playCount,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (songId != null) 'song_id': songId,
+      if (highScore != null) 'high_score': highScore,
+      if (maxCombo != null) 'max_combo': maxCombo,
+      if (playCount != null) 'play_count': playCount,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GameScoresCompanion copyWith({
+    Value<String>? songId,
+    Value<int>? highScore,
+    Value<int>? maxCombo,
+    Value<int>? playCount,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return GameScoresCompanion(
+      songId: songId ?? this.songId,
+      highScore: highScore ?? this.highScore,
+      maxCombo: maxCombo ?? this.maxCombo,
+      playCount: playCount ?? this.playCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (songId.present) {
+      map['song_id'] = Variable<String>(songId.value);
+    }
+    if (highScore.present) {
+      map['high_score'] = Variable<int>(highScore.value);
+    }
+    if (maxCombo.present) {
+      map['max_combo'] = Variable<int>(maxCombo.value);
+    }
+    if (playCount.present) {
+      map['play_count'] = Variable<int>(playCount.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GameScoresCompanion(')
+          ..write('songId: $songId, ')
+          ..write('highScore: $highScore, ')
+          ..write('maxCombo: $maxCombo, ')
+          ..write('playCount: $playCount, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PlaylistsTable extends Playlists
     with TableInfo<$PlaylistsTable, PlaylistRow> {
   @override
@@ -4789,6 +5151,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $VibeTagsTable vibeTags = $VibeTagsTable(this);
   late final $SongsTable songs = $SongsTable(this);
   late final $SongVibesTable songVibes = $SongVibesTable(this);
+  late final $GameScoresTable gameScores = $GameScoresTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistSongsTable playlistSongs = $PlaylistSongsTable(this);
   late final $EqualizerPresetsTable equalizerPresets = $EqualizerPresetsTable(
@@ -4808,6 +5171,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     vibeTags,
     songs,
     songVibes,
+    gameScores,
     playlists,
     playlistSongs,
     equalizerPresets,
@@ -5674,6 +6038,206 @@ typedef $$SongVibesTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $SongVibesTable, SongVibeRow>,
       ),
       SongVibeRow,
+      PrefetchHooks Function()
+    >;
+typedef $$GameScoresTableCreateCompanionBuilder =
+    GameScoresCompanion Function({
+      required String songId,
+      Value<int> highScore,
+      Value<int> maxCombo,
+      Value<int> playCount,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$GameScoresTableUpdateCompanionBuilder =
+    GameScoresCompanion Function({
+      Value<String> songId,
+      Value<int> highScore,
+      Value<int> maxCombo,
+      Value<int> playCount,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$GameScoresTableFilterComposer
+    extends Composer<_$AppDatabase, $GameScoresTable> {
+  $$GameScoresTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get highScore => $composableBuilder(
+    column: $table.highScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get maxCombo => $composableBuilder(
+    column: $table.maxCombo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get playCount => $composableBuilder(
+    column: $table.playCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GameScoresTableOrderingComposer
+    extends Composer<_$AppDatabase, $GameScoresTable> {
+  $$GameScoresTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get songId => $composableBuilder(
+    column: $table.songId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get highScore => $composableBuilder(
+    column: $table.highScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get maxCombo => $composableBuilder(
+    column: $table.maxCombo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get playCount => $composableBuilder(
+    column: $table.playCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GameScoresTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GameScoresTable> {
+  $$GameScoresTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get songId =>
+      $composableBuilder(column: $table.songId, builder: (column) => column);
+
+  GeneratedColumn<int> get highScore =>
+      $composableBuilder(column: $table.highScore, builder: (column) => column);
+
+  GeneratedColumn<int> get maxCombo =>
+      $composableBuilder(column: $table.maxCombo, builder: (column) => column);
+
+  GeneratedColumn<int> get playCount =>
+      $composableBuilder(column: $table.playCount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$GameScoresTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GameScoresTable,
+          GameScoreRow,
+          $$GameScoresTableFilterComposer,
+          $$GameScoresTableOrderingComposer,
+          $$GameScoresTableAnnotationComposer,
+          $$GameScoresTableCreateCompanionBuilder,
+          $$GameScoresTableUpdateCompanionBuilder,
+          (
+            GameScoreRow,
+            BaseReferences<_$AppDatabase, $GameScoresTable, GameScoreRow>,
+          ),
+          GameScoreRow,
+          PrefetchHooks Function()
+        > {
+  $$GameScoresTableTableManager(_$AppDatabase db, $GameScoresTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GameScoresTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GameScoresTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GameScoresTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> songId = const Value.absent(),
+                Value<int> highScore = const Value.absent(),
+                Value<int> maxCombo = const Value.absent(),
+                Value<int> playCount = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GameScoresCompanion(
+                songId: songId,
+                highScore: highScore,
+                maxCombo: maxCombo,
+                playCount: playCount,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String songId,
+                Value<int> highScore = const Value.absent(),
+                Value<int> maxCombo = const Value.absent(),
+                Value<int> playCount = const Value.absent(),
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => GameScoresCompanion.insert(
+                songId: songId,
+                highScore: highScore,
+                maxCombo: maxCombo,
+                playCount: playCount,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GameScoresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GameScoresTable,
+      GameScoreRow,
+      $$GameScoresTableFilterComposer,
+      $$GameScoresTableOrderingComposer,
+      $$GameScoresTableAnnotationComposer,
+      $$GameScoresTableCreateCompanionBuilder,
+      $$GameScoresTableUpdateCompanionBuilder,
+      (
+        GameScoreRow,
+        BaseReferences<_$AppDatabase, $GameScoresTable, GameScoreRow>,
+      ),
+      GameScoreRow,
       PrefetchHooks Function()
     >;
 typedef $$PlaylistsTableCreateCompanionBuilder =
@@ -7248,6 +7812,8 @@ class $AppDatabaseManager {
       $$SongsTableTableManager(_db, _db.songs);
   $$SongVibesTableTableManager get songVibes =>
       $$SongVibesTableTableManager(_db, _db.songVibes);
+  $$GameScoresTableTableManager get gameScores =>
+      $$GameScoresTableTableManager(_db, _db.gameScores);
   $$PlaylistsTableTableManager get playlists =>
       $$PlaylistsTableTableManager(_db, _db.playlists);
   $$PlaylistSongsTableTableManager get playlistSongs =>

@@ -167,6 +167,10 @@ void main() {
         reason: 'songs cached before v14 have no date-added until a rescan',
       );
 
+      // v15 adds rhythm-mode high scores. An upgraded database gets the
+      // table but no rows — nobody has played the game on these songs.
+      expect(await database.select(database.gameScores).get(), isEmpty);
+
       // v13 replaces the show/hide boolean with a placement. The fixture had
       // it switched off, so the user must not find the visualizer back.
       expect(

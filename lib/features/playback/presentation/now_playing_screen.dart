@@ -23,6 +23,7 @@ import '../../../shared/widgets/seek_step_icon.dart';
 import '../../../shared/widgets/song_artwork.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/vibe_chips.dart';
+import '../../game/presentation/rhythm_game_screen.dart';
 import '../../library/presentation/song_delete_actions.dart';
 import '../../playlists/presentation/save_to_playlist_sheet.dart';
 import '../../settings/application/settings_controller.dart';
@@ -81,11 +82,14 @@ class NowPlayingScreen extends ConsumerWidget {
                 .togglePreviewMode(),
           ),
           AppBarIconAction(
-            icon: const Icon(Icons.equalizer),
-            tooltip: 'Equalizer',
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen())),
+            icon: const Icon(Icons.videogame_asset_outlined),
+            tooltip: 'Rhythm mode',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                settings: const RouteSettings(name: AppRoutes.rhythmGame),
+                builder: (_) => const RhythmGameScreen(),
+              ),
+            ),
           ),
           AppBarIconAction(
             icon: const Icon(Icons.queue_music),
@@ -421,6 +425,10 @@ class NowPlayingScreen extends ConsumerWidget {
         await Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => TagEditorScreen(song: song)));
+      case NowPlayingMoreAction.equalizer:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const EqualizerScreen()));
       case NowPlayingMoreAction.setRingtone:
         await _setAsRingtone(context, song);
       case NowPlayingMoreAction.removeFromPlaylist:

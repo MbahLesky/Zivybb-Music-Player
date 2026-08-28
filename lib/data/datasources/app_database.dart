@@ -125,6 +125,35 @@ class Songs extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A song's best rhythm-mode result (SRS: gamification).
+///
+/// One row per song, written only when a run beats what is stored, so the
+/// table stays the size of "songs the user has actually played the game on"
+/// rather than the size of the library.
+///
+/// `SongRepository.deleteFromLibrary` clears these itself: the cascade below
+/// only exists on databases created after this table landed, and SQLite
+/// cannot retrofit a foreign key onto an older install.
+@DataClassName('GameScoreRow')
+class GameScores extends Table {
+  TextColumn get songId =>
+      text().references(Songs, #id, onDelete: KeyAction.cascade)();
+  IntColumn get highScore => integer().withDefault(const Constant(0))();
+  IntColumn get maxCombo => integer().withDefault(const Constant(0))();
+
+  /// How many times rhythm mode has been played through on this song.
+  IntColumn get playCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {songId};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE',
+  ];
+}
+
 /// A user-created or auto-generated collection of songs.
 @DataClassName('PlaylistRow')
 class Playlists extends Table {
@@ -316,6 +345,7 @@ class Settings extends Table {
     VibeTags,
     SongVibes,
     Songs,
+    GameScores,
     Playlists,
     PlaylistSongs,
     Settings,
@@ -336,7 +366,7 @@ class AppDatabase extends _$AppDatabase {
   // those versions, so the steps below are all guarded by what the database
   // actually contains, and v12 converges the two histories.
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -546,6 +576,13 @@ class AppDatabase extends _$AppDatabase {
           // sort to the end of "Newest added" rather than pretending to be
           // the oldest in the library.
           await m.addColumn(songs, songs.dateAdded);
+        }
+      }
+      if (from < 15) {
+        // A new table rather than columns on `songs`, so nothing here has to
+        // be threaded through the v9 rebuild's column transformer.
+        if (!await _hasTable(m, 'game_scores')) {
+          await m.createTable(gameScores);
         }
       }
     },

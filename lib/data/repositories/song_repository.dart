@@ -113,6 +113,9 @@ class SongRepository {
         _database.playlistSongs,
       )..where((t) => t.songId.isIn(videoIds))).go();
       await (_database.delete(
+        _database.gameScores,
+      )..where((t) => t.songId.isIn(videoIds))).go();
+      await (_database.delete(
         _database.songs,
       )..where((t) => t.isVideo.equals(true))).go();
     });
@@ -167,6 +170,9 @@ class SongRepository {
       )..where((t) => t.songId.equals(songId))).go();
       await (_database.delete(
         _database.playlistSongs,
+      )..where((t) => t.songId.equals(songId))).go();
+      await (_database.delete(
+        _database.gameScores,
       )..where((t) => t.songId.equals(songId))).go();
       await (_database.delete(
         _database.songs,

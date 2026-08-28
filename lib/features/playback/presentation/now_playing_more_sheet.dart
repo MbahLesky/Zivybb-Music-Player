@@ -9,6 +9,7 @@ enum NowPlayingMoreAction {
   share,
   playbackSpeed,
   editTags,
+  equalizer,
   setRingtone,
   removeFromPlaylist,
   removeFromLibrary,
@@ -73,6 +74,12 @@ class NowPlayingMoreSheet extends ConsumerWidget {
             title: const Text('Edit tags'),
             onTap: () =>
                 Navigator.of(context).pop(NowPlayingMoreAction.editTags),
+          ),
+          ListTile(
+            leading: const Icon(Icons.equalizer),
+            title: const Text('Equalizer'),
+            onTap: () =>
+                Navigator.of(context).pop(NowPlayingMoreAction.equalizer),
           ),
           ListTile(
             leading: const Icon(Icons.ring_volume),

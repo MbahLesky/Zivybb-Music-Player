@@ -69,6 +69,24 @@ Screen widgets are suffixed `Screen` (e.g., `PlaylistDetailScreen`); reusable wi
 - See `git-and-versioning` conventions for commit message format and branching model.
 - Commits should be scoped to a single logical change; avoid mixing formatting-only changes with functional changes in the same commit.
 
+### 10.1 Version Numbering
+
+The app version lives in `pubspec.yaml` as `version: <major>.<minor>.<patch>+<build>`, which Flutter maps to Android's `versionName` and `versionCode`.
+
+**Every change that alters behaviour updates the version**, in the same commit as the change itself — the version is part of the change, not a release chore done later. Weight the bump by what the change does:
+
+| Bump | When | Examples |
+|---|---|---|
+| **Patch** (`1.2.0` → `1.2.1`) | A fix, or an internal change with no visible effect | Fixing the media notification, a crash fix, a wrong sort order, refactors, test-only work |
+| **Minor** (`1.2.0` → `1.3.0`) | Something new the user can do, added without breaking what came before | A new screen or mode, a new sort option, a new setting, a new export format |
+| **Major** (`1.2.0` → `2.0.0`) | A break in continuity for the user or their data | Removing a feature people rely on, a schema migration that cannot be rolled back, a redesign that relocates most of the app |
+
+`+<build>` increments on **every** version change, without exception and never decreasing — Android refuses to install an APK whose `versionCode` is not higher than the installed one, so a repeated build number makes an update silently unavailable on a real device.
+
+Record the change in `CHANGELOG.md` under the new version at the same time. Group entries by what they do for the user (Added / Changed / Fixed / Removed) rather than by the files touched.
+
+A database schema bump is not by itself a major version — schema migrations are expected and are covered by the migration tests. It becomes major only when the migration is one-way, i.e. an older build can no longer open the upgraded database.
+
 ## 11. Performance
 
 - Avoid rebuilding expensive widgets (e.g., the wave visualizer) more often than necessary — isolate it with appropriate widget boundaries and `RepaintBoundary` where applicable.
