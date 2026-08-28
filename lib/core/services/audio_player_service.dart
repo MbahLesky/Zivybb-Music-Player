@@ -33,6 +33,57 @@ Duration effectiveCrossfadeFor(Duration configured, Duration trackLength) {
   return configured < third ? configured : third;
 }
 
+/// The overlap to use when moving from a track of [currentLength] into one of
+/// [nextLength].
+///
+/// Both tracks get a say, because the overlap is time the incoming track
+/// spends playing before it becomes the active one. Capping against the
+/// outgoing track alone lets a long track fade into a short one for longer
+/// than the short one can afford: the incoming track arrives already most of
+/// the way through itself, is immediately past its own ramp point, and fades
+/// straight out again into the track after it. That chain is what makes a
+/// short track sound like it was skipped.
+///
+/// A zero or unknown [nextLength] falls back to the outgoing track's cap
+/// rather than to no crossfade — an unknown duration is not a short track.
+Duration crossfadeBetween(
+  Duration configured,
+  Duration currentLength,
+  Duration nextLength,
+) {
+  final forCurrent = effectiveCrossfadeFor(configured, currentLength);
+  if (nextLength <= Duration.zero) return forCurrent;
+  final forNext = effectiveCrossfadeFor(configured, nextLength);
+  return forCurrent < forNext ? forCurrent : forNext;
+}
+
+/// Whether a `completed` event should move the queue on.
+///
+/// [fromActivePlayer] is the load-bearing one. The crossfade engine runs two
+/// players, and the one being faded *out* reaches its natural end at almost
+/// exactly the moment the swap completes. By then the queue position has
+/// already advanced to the incoming track, so treating that stale completion
+/// as "the current track finished" advances a second time and lands on the
+/// track *after* the one that just faded in.
+/// Whether another track should be auto-skipped after a playback error.
+///
+/// An error on the active track skips forward, but the track it lands on can
+/// fail too — a folder that has moved, an SD card pulled out, a run of files
+/// the device cannot decode. Unbounded, that recurses through the whole queue
+/// as fast as the engine can load, which presents as a player that has
+/// stopped responding rather than as an error.
+bool shouldKeepSkippingAfterError(int consecutiveSkips, {int limit = 5}) {
+  return consecutiveSkips < limit;
+}
+
+bool shouldAdvanceOnCompletion({
+  required bool crossfadeEnabled,
+  required bool rampInProgress,
+  required bool fromActivePlayer,
+}) {
+  return crossfadeEnabled && !rampInProgress && fromActivePlayer;
+}
+
 /// Thin wrapper around the underlying audio engine ([AudioPlayer]).
 ///
 /// Keeps `just_audio` out of the feature/application layer so the engine
@@ -72,6 +123,10 @@ class AudioPlayerService {
   StreamSubscription<PlayerException>? _fadeBErrorSubscription;
   bool _fadeActiveIsA = true;
   bool _fadeRampInProgress = false;
+
+  /// Tracks skipped back-to-back because they failed, reset as soon as
+  /// anything actually plays. Bounds the error-skip recursion below.
+  int _consecutiveErrorSkips = 0;
   Timer? _fadeRampTimer;
 
   /// Index (into [_queue]) loaded into the current standby fade player, or
@@ -164,6 +219,13 @@ class AudioPlayerService {
     final index = isActive ? _currentIndex : _standbyIndex;
     if (index != null) _errorIndexController.add(index);
     if (isActive) {
+      _consecutiveErrorSkips++;
+      if (!shouldKeepSkippingAfterError(_consecutiveErrorSkips)) {
+        // Stop rather than race on through the rest of the queue. The user
+        // gets a paused player they can act on instead of a dead-looking one.
+        unawaited(pause());
+        return;
+      }
       unawaited(seekToNext());
     } else if (_fadeRampInProgress) {
       _cancelRamp();
@@ -210,6 +272,10 @@ class AudioPlayerService {
     _cancelForwarding();
     final active = _activeFadePlayer!;
     _fwdPosition = active.positionStream.listen((position) {
+      // Proof that a track is really playing, which is what makes the
+      // error-skip budget above a run of *consecutive* failures rather than a
+      // lifetime total.
+      if (position > const Duration(seconds: 1)) _consecutiveErrorSkips = 0;
       _positionController.add(position);
       _maybeStartCrossfadeRamp(position, active.duration);
     });
@@ -220,7 +286,7 @@ class AudioPlayerService {
         .listen((state) {
           _processingStateController.add(state);
           if (state == ProcessingState.completed) {
-            _onCrossfadeTrackCompleted();
+            _onCrossfadeTrackCompleted(active);
           }
         });
     _fwdSessionId = active.androidAudioSessionIdStream.listen(
@@ -581,10 +647,14 @@ class AudioPlayerService {
   void _maybeStartCrossfadeRamp(Duration position, Duration? duration) {
     if (_fadeRampInProgress) return;
     if (duration == null || duration <= Duration.zero) return;
-    final fade = effectiveCrossfadeFor(_crossfadeDuration, duration);
-    if (position < duration - fade) return;
     final nextIndex = _peekNextIndex();
     if (nextIndex == null) return;
+    final fade = crossfadeBetween(
+      _crossfadeDuration,
+      duration,
+      _queue[nextIndex].duration,
+    );
+    if (position < duration - fade) return;
     unawaited(_beginCrossfadeRamp(nextIndex, fade));
   }
 
@@ -594,8 +664,17 @@ class AudioPlayerService {
   /// missed — a stalled position stream, a track whose reported duration
   /// turns out to be wrong. In crossfade mode nothing else moves the queue
   /// on, so without this the engine would sit silent on a finished track.
-  void _onCrossfadeTrackCompleted() {
-    if (!_crossfadeEnabled || _fadeRampInProgress) return;
+  void _onCrossfadeTrackCompleted(AudioPlayer source) {
+    if (!shouldAdvanceOnCompletion(
+      crossfadeEnabled: _crossfadeEnabled,
+      rampInProgress: _fadeRampInProgress,
+      // The outgoing player finishes a moment after the swap has already
+      // moved the queue on, so its completion is the tail of the transition,
+      // not the end of the track now playing.
+      fromActivePlayer: identical(source, _activeFadePlayer),
+    )) {
+      return;
+    }
     final nextIndex = _peekNextIndex();
     // Genuinely the end of the queue: stopping is correct.
     if (nextIndex == null) return;
@@ -611,12 +690,27 @@ class AudioPlayerService {
     final active = _activeFadePlayer!;
     final standby = _standbyFadePlayer!;
     _standbyIndex = nextIndex;
-    await standby.setAudioSource(
-      AudioSource.uri(Uri.file(_queue[nextIndex].filePath)),
-    );
-    await standby.seek(Duration.zero);
-    await standby.setVolume(0);
-    unawaited(standby.play());
+
+    // Loading the next file is the one step here that can fail outright — a
+    // file deleted or unplugged since the scan, or a codec the device won't
+    // take. It has to be caught: this runs unawaited, so a thrown error would
+    // otherwise be swallowed with `_fadeRampInProgress` left true forever,
+    // which silently disables the automatic advance *and* every control that
+    // checks it. That is a wedged player, not a skipped track.
+    try {
+      await standby.setAudioSource(
+        AudioSource.uri(Uri.file(_queue[nextIndex].filePath)),
+      );
+      await standby.seek(Duration.zero);
+      await standby.setVolume(0);
+      unawaited(standby.play());
+    } catch (_) {
+      _cancelRamp();
+      _errorIndexController.add(nextIndex);
+      // Skip past the track that wouldn't load rather than stopping on it.
+      unawaited(seekToNext());
+      return;
+    }
 
     final rampMs = fade.inMilliseconds;
     final stopwatch = Stopwatch()..start();

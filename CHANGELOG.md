@@ -10,6 +10,21 @@ The 1.0.0 and 1.1.0 sections below are reconstructed from git history — the ve
 number was not maintained per-change before this policy existed, so they summarise a
 range of work rather than a single release.
 
+## 1.2.1 — 2026-08-27
+
+### Fixed
+- Crossfade landing on the wrong track. The outgoing player reaches its end
+  just after the swap has already moved the queue on, so its "finished" event
+  was read as the *current* track ending and advanced a second time — playing
+  the track after the one that had just faded in.
+- A short track following a long one being skipped through. The overlap was
+  capped against the outgoing track only, so a short incoming track arrived
+  already past its own fade point and immediately faded out again.
+- The player wedging silently when the next file failed to load. The failure
+  left the crossfade mid-ramp forever, which disables the automatic advance
+  and every control that checks it.
+- A run of unplayable tracks racing through the queue instead of stopping.
+
 ## 1.2.0 — 2026-08-27
 
 ### Added

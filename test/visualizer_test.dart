@@ -113,10 +113,12 @@ void main() {
     const flat = VisualizerTuning(contrast: 1, sensitivity: 1, floor: 0);
 
     test('the neutral tuning passes levels through untouched', () {
-      expect(
-        VisualizerMath.shape([0.0, 0.25, 0.5, 1.0], flat),
-        [0.0, 0.25, 0.5, 1.0],
-      );
+      expect(VisualizerMath.shape([0.0, 0.25, 0.5, 1.0], flat), [
+        0.0,
+        0.25,
+        0.5,
+        1.0,
+      ]);
     });
 
     test('raising contrast widens the gap between quiet and loud', () {
@@ -154,19 +156,20 @@ void main() {
     });
 
     test('sensitivity scales levels up and clamps at the ceiling', () {
-      final boosted = VisualizerMath.shape(
-        [0.2, 0.9],
-        flat.copyWith(sensitivity: 2),
-      );
+      final boosted = VisualizerMath.shape([
+        0.2,
+        0.9,
+      ], flat.copyWith(sensitivity: 2));
       expect(boosted[0], closeTo(0.4, 1e-9));
       expect(boosted[1], 1.0, reason: 'gain must not overshoot the box');
     });
 
     test('the floor lifts the whole range rather than clamping it', () {
-      final shaped = VisualizerMath.shape(
-        [0.0, 0.5, 1.0],
-        flat.copyWith(floor: 0.2),
-      );
+      final shaped = VisualizerMath.shape([
+        0.0,
+        0.5,
+        1.0,
+      ], flat.copyWith(floor: 0.2));
       expect(shaped.first, closeTo(0.2, 1e-9));
       expect(shaped.last, closeTo(1.0, 1e-9));
       // A clamp would have flattened this to the floor; a lift keeps it

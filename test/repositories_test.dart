@@ -291,7 +291,10 @@ void main() {
       await repository.deleteVibeCategory('mood');
 
       final categories = await repository.watchVibeCategories().first;
-      expect(categories.map((category) => category.id), isNot(contains('mood')));
+      expect(
+        categories.map((category) => category.id),
+        isNot(contains('mood')),
+      );
 
       final tags = await repository.watchVibeTags().first;
       final chill = tags.firstWhere((tag) => tag.id == 'chill');

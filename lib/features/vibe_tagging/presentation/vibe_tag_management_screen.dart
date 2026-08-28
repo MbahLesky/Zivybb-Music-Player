@@ -176,9 +176,9 @@ class _VibeGroupSection extends ConsumerWidget {
       for (final other in allGroups)
         ...(other.category?.id == group.category?.id ? reordered : other.vibes),
     ];
-    ref
-        .read(vibeTagRepositoryProvider)
-        .reorderVibeTags([for (final tag in flattened) tag.id]);
+    ref.read(vibeTagRepositoryProvider).reorderVibeTags([
+      for (final tag in flattened) tag.id,
+    ]);
   }
 }
 

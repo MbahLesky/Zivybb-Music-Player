@@ -277,7 +277,8 @@ class _ResponseCardState extends ConsumerState<_ResponseCard> {
                 ),
                 _TuningSlider(
                   label: 'Responsiveness',
-                  help: 'Smooth and flowing at the low end, twitchy at the top.',
+                  help:
+                      'Smooth and flowing at the low end, twitchy at the top.',
                   value: tuning.responsiveness,
                   range: VisualizerTuning.responsivenessRange,
                   format: (value) => '${(value * 100).round()}%',

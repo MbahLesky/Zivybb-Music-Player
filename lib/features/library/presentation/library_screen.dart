@@ -453,7 +453,8 @@ class _VibeFolderMenuButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categories = ref.watch(vibeCategoriesStreamProvider).value ?? const [];
+    final categories =
+        ref.watch(vibeCategoriesStreamProvider).value ?? const [];
     if (categories.isEmpty) return const SizedBox.shrink();
 
     final selected = ref.watch(libraryVibeCategoryFilterProvider);

@@ -338,7 +338,9 @@ class _LibrarySection extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.mood_outlined),
           title: const Text('Manage Vibes'),
-          subtitle: const Text('Add, rename, recolor, or file vibes in folders'),
+          subtitle: const Text(
+            'Add, rename, recolor, or file vibes in folders',
+          ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const VibeTagManagementScreen()),
@@ -404,8 +406,7 @@ class _DisplaySection extends ConsumerWidget {
           // The visualizer is occupying that slot, so this switch would have
           // no visible effect — say so rather than leave it looking broken.
           subtitle:
-              settings.visualizerPlacement ==
-                  VisualizerPlacement.replaceArtwork
+              settings.visualizerPlacement == VisualizerPlacement.replaceArtwork
               ? const Text(
                   'The visualizer is set to replace the artwork — change '
                   'that under Visualizer ▸ Where it appears.',
@@ -413,8 +414,7 @@ class _DisplaySection extends ConsumerWidget {
               : null,
           value: settings.showAlbumArtInNowPlaying,
           onChanged:
-              settings.visualizerPlacement ==
-                  VisualizerPlacement.replaceArtwork
+              settings.visualizerPlacement == VisualizerPlacement.replaceArtwork
               ? null
               : controller.setShowAlbumArtInNowPlaying,
         ),

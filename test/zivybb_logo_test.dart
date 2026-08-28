@@ -84,7 +84,10 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        MaterialApp(theme: light, home: const Center(child: ZivybbLogo())),
+        MaterialApp(
+          theme: light,
+          home: const Center(child: ZivybbLogo()),
+        ),
       );
 
       final (fill, border) = platePaint(tester);

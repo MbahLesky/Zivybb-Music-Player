@@ -54,19 +54,16 @@ class VibeCategoryManagementScreen extends ConsumerWidget {
             onReorderItem: (oldIndex, newIndex) {
               final reordered = [...items];
               reordered.insert(newIndex, reordered.removeAt(oldIndex));
-              ref
-                  .read(vibeTagRepositoryProvider)
-                  .reorderVibeCategories([
-                    for (final category in reordered) category.id,
-                  ]);
+              ref.read(vibeTagRepositoryProvider).reorderVibeCategories([
+                for (final category in reordered) category.id,
+              ]);
             },
             itemBuilder: (context, index) {
               final category = items[index];
               final count = groups
                   .firstWhere(
                     (group) => group.category?.id == category.id,
-                    orElse: () =>
-                        const VibeGroup(category: null, vibes: []),
+                    orElse: () => const VibeGroup(category: null, vibes: []),
                   )
                   .vibes
                   .length;
@@ -97,8 +94,7 @@ class VibeCategoryManagementScreen extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
                       tooltip: 'Delete',
-                      onPressed: () =>
-                          _delete(context, ref, category, count),
+                      onPressed: () => _delete(context, ref, category, count),
                     ),
                     const Icon(Icons.drag_handle),
                   ],

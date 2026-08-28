@@ -287,19 +287,15 @@ class VibeTagRepository {
   }
 
   Future<void> renameVibeCategory(String id, String name) {
-    return (_database.update(
-      _database.vibeCategories,
-    )..where((t) => t.id.equals(id))).write(
-      VibeCategoriesCompanion(name: Value(name)),
-    );
+    return (_database.update(_database.vibeCategories)
+          ..where((t) => t.id.equals(id)))
+        .write(VibeCategoriesCompanion(name: Value(name)));
   }
 
   Future<void> recolorVibeCategory(String id, String colorHex) {
-    return (_database.update(
-      _database.vibeCategories,
-    )..where((t) => t.id.equals(id))).write(
-      VibeCategoriesCompanion(colorHex: Value(colorHex)),
-    );
+    return (_database.update(_database.vibeCategories)
+          ..where((t) => t.id.equals(id)))
+        .write(VibeCategoriesCompanion(colorHex: Value(colorHex)));
   }
 
   /// Deletes the folder. Its vibes survive, uncategorised — a folder is a way
@@ -311,11 +307,9 @@ class VibeTagRepository {
   /// after vibe folders landed.
   Future<void> deleteVibeCategory(String id) async {
     await _database.transaction(() async {
-      await (_database.update(
-        _database.vibeTags,
-      )..where((t) => t.categoryId.equals(id))).write(
-        const VibeTagsCompanion(categoryId: Value(null)),
-      );
+      await (_database.update(_database.vibeTags)
+            ..where((t) => t.categoryId.equals(id)))
+          .write(const VibeTagsCompanion(categoryId: Value(null)));
       await (_database.delete(
         _database.vibeCategories,
       )..where((t) => t.id.equals(id))).go();
