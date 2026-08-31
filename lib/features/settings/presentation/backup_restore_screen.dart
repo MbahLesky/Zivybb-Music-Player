@@ -1,10 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../data/repositories/backup_repository.dart';
-import '../../playlists/application/mood_playlist_generator.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
+import '../../../shared/widgets/gradient_button.dart';
+import '../../playlists/application/vibe_playlist_generator.dart';
 
-/// Back up or restore playlists, liked songs, mood tags, and settings
+/// Back up or restore playlists, liked songs, vibes, and settings
 /// (Screens.md #13, SRS F-5.1/F-5.2).
 class BackupRestoreScreen extends ConsumerStatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -32,7 +38,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Restore backup?'),
         content: const Text(
-          'This adds back the playlists, liked songs, and mood tags from '
+          'This adds back the playlists, liked songs, and vibes from '
           'this backup, and applies its settings. It won\'t remove anything '
           'you\'ve added since.',
         ),
@@ -53,7 +59,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     setState(() => _busy = true);
     try {
       await ref.read(backupRepositoryProvider).restoreBackup(backupId);
-      await ref.read(moodPlaylistGeneratorProvider).regenerateAll();
+      await ref.read(vibePlaylistGeneratorProvider).regenerateAll();
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -69,15 +75,16 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     final backups = ref.watch(backupsStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Backup & Restore')),
+      bottomNavigationBar: const MiniPlayer(),
+      appBar: const GradientAppBar(title: Text('Backup & Restore')),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: FilledButton.icon(
+            child: GradientButton(
               onPressed: _busy ? null : _backUpNow,
-              icon: const Icon(Icons.backup),
-              label: const Text('Back Up Now'),
+              icon: Icons.backup,
+              child: const Text('Back Up Now'),
             ),
           ),
           if (_busy) const LinearProgressIndicator(),
@@ -94,12 +101,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                     return ListTile(
                       leading: const Icon(Icons.history),
                       title: Text(_formatTimestamp(entry.createdAt)),
+                      subtitle: const Text('Tap Export to keep a copy'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           TextButton(
                             onPressed: _busy ? null : () => _restore(entry.id),
                             child: const Text('Restore'),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.ios_share),
+                            tooltip: 'Export backup',
+                            onPressed: _busy ? null : () => _export(entry),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
@@ -122,6 +135,28 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Hands the backup file to Android's share sheet.
+  ///
+  /// Backups otherwise live in app-private storage, which Android wipes on
+  /// uninstall — exporting is what makes them survive reinstalling the app
+  /// or moving to a new phone (SRS F-5.1).
+  Future<void> _export(BackupEntry entry) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final file = File(entry.filePath);
+    if (!await file.exists()) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('That backup file is missing.')),
+      );
+      return;
+    }
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(entry.filePath, mimeType: 'application/json')],
+        subject: 'Zivybb backup ${_formatTimestamp(entry.createdAt)}',
       ),
     );
   }

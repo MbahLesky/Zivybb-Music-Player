@@ -6,12 +6,16 @@ Zivybb is a Flutter-based local music player for Android. Version 1 is built for
 
 Zivybb combines dependable local playback with a highly customizable, mood-aware listening experience:
 
-- **Playback:** play, pause, skip, shuffle, crossfade, gapless playback, equalizer presets.
-- **Organization:** browse by playlist or folder, sort by attributes like duration, create and manage playlists, mark favorites, tag songs by mood/energy.
-- **Customization:** color themes, beat-reactive wave visualizers with customizable colors, adaptive dark mode based on time of day.
+- **Playback:** play, pause, skip, shuffle, repeat, playback speed, crossfade, gapless playback, equalizer presets, and a sleep timer.
+- **Background playback:** keeps playing with a lock-screen and notification media control, including a like button.
+- **Organization:** browse by playlist or folder, search by title/artist/album, sort by title, artist, album, duration, or listening history, create and manage playlists, mark favorites, tag songs by mood/energy.
+- **Queue:** see what's up next, reorder it, remove tracks, or jump straight to one.
+- **Customization:** color themes, seven wave-visualizer styles with customizable colors, adaptive dark mode based on time of day.
+- **Visualizer:** simulated by default; opt into real audio reactivity in Theme Customization (see the note below).
 - **Smart features:** mood-based 30-second preview clips, auto-generated mood/energy playlists, song discovery for deep cuts from known artists.
-- **Library protection:** backup and restore of playlists/favorites/settings, graceful handling of missing files, auto-detection and re-linking of relocated files.
+- **Library protection:** backup, restore, and export of playlists/favorites/settings, graceful handling of missing files, auto-detection and re-linking of relocated files.
 - **Tag editing:** edit song metadata (artist, album, title) directly in the app.
+- **Resume:** reopens on the track, position, and transport settings you left off with.
 
 Streaming integration, offline downloads, and other larger features are planned for future releases — see [`docs/SRS.md`](docs/SRS.md) for the full future-considerations list.
 
@@ -23,6 +27,70 @@ Streaming integration, offline downloads, and other larger features are planned 
 
 - **Framework:** Flutter / Dart
 - **Platform:** Android (Version 1)
+
+## Brand mark
+
+The mark is a gradient **Z** whose descending diagonal and kicked-up tail
+also read as a **V**. It is authored artwork, not code:
+
+- `assets/images/zivybb_logo.png` — the bare mark on transparency.
+- `assets/images/zivybb_icon.png` — the same mark on its launcher tile.
+
+Everything else is cut from those two files, so there is one thing to edit
+when the branding changes:
+
+- [`tool/generate_icons.dart`](tool/generate_icons.dart) rescales them into
+  the Android launcher icons and adaptive-icon layers. Run it with
+  `flutter test tool/generate_icons.dart` — it is a test file only because
+  `flutter test` is the shortest route to a working rasterizer; it asserts
+  nothing about the app. The splash screen reuses the generated adaptive
+  foreground, so it follows automatically.
+- [`lib/shared/widgets/zivybb_logo.dart`](lib/shared/widgets/zivybb_logo.dart)
+  renders `zivybb_logo.png` in-app (the Library app bar, and anywhere else
+  it's needed).
+
+Replace the two PNGs, re-run the generator, and every surface updates
+together.
+
+## Visualizer and the microphone permission
+
+The visualizer runs off a simulated waveform by default — a deterministic
+animation seeded by the track, not an analysis of the audio.
+
+Turning on **React to real audio** (Settings → Theme → Theme Customization)
+switches it to real frequency bands read from the audio actually playing, via
+`android.media.audiofx.Visualizer` bound to the current audio session. Android
+gates that API behind `RECORD_AUDIO` because it can observe the output mix,
+so enabling the toggle prompts for the microphone permission. **Zivybb never
+records anything and never opens the microphone**; the permission exists
+solely to read levels from its own playback.
+
+Two things worth knowing:
+
+- The permission is only *requested* when you enable the toggle, but it has to
+  be *declared* in the manifest for the feature to exist at all — and Play
+  Store builds its permissions list from the manifest. So the listing mentions
+  microphone access whether or not you ever switch it on. Deleting the
+  `RECORD_AUDIO` line from `AndroidManifest.xml` removes it from the listing
+  and leaves the visualizer permanently simulated, which is a reasonable trade
+  if you'd rather not explain it to users.
+- If the capture can't start — permission declined, the effect unavailable on
+  the device, or another app holding the session — the visualizer silently
+  falls back to the simulation rather than failing.
+
+## Building a release
+
+Debug and profile builds need no setup. For a signed release build:
+
+1. Generate a keystore:
+   `keytool -genkey -v -keystore ~/zivybb-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias zivybb`
+2. Copy [`android/key.properties.example`](android/key.properties.example) to
+   `android/key.properties` and fill it in. That file, and any `.jks` /
+   `.keystore`, are gitignored — never commit them.
+3. `flutter build appbundle --release`
+
+Without `android/key.properties`, release builds fall back to the debug
+signing key so `flutter run --release` still works locally.
 
 ## Documentation
 

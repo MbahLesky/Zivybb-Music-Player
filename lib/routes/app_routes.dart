@@ -4,5 +4,9 @@
 abstract final class AppRoutes {
   static const library = '/library';
   static const nowPlaying = '/now-playing';
+  static const queue = '/now-playing/queue';
+  static const fullScreenVisualizer = '/now-playing/visualizer';
+  static const rhythmGame = '/now-playing/rhythm';
+  static const discovery = '/discovery';
   static const settings = '/settings';
 }

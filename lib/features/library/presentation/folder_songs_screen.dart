@@ -3,82 +3,96 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../data/models/song.dart';
+import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
+import '../../../shared/widgets/play_shuffle_header.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
+import '../../vibe_tagging/application/vibe_tagging_controller.dart';
+import '../application/library_controller.dart';
+import '../application/library_view_controller.dart';
+import 'library_view_sheet.dart';
 
-enum _DurationFilter { all, underOneMinute, oneMinuteOrMore }
-
-/// Songs within a single device folder, with a duration sort/filter control
-/// (SRS F-2.3: sort by duration, e.g. above or below one minute).
-class FolderSongsScreen extends StatefulWidget {
-  const FolderSongsScreen({
-    super.key,
-    required this.folderPath,
-    required this.songs,
-  });
+/// Songs within a single device folder, with play/shuffle-all header actions
+/// and the same search, sort and filter controls every other list has.
+///
+/// It used to carry its own private sort and duration-filter menus, which
+/// meant "sort by length" here and "sort by length" on the library were two
+/// different controls with two different sets of options. It now shares
+/// [libraryViewProvider] with the rest of the app.
+///
+/// The folder's songs are re-derived from the live library rather than kept
+/// as the snapshot passed in: liking a track here, or editing its tags, has
+/// to be reflected on the row that was just tapped.
+class FolderSongsScreen extends ConsumerWidget {
+  const FolderSongsScreen({super.key, required this.folderPath});
 
   final String folderPath;
-  final List<Song> songs;
 
   @override
-  State<FolderSongsScreen> createState() => _FolderSongsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final library = ref.watch(libraryStreamProvider).value ?? const <Song>[];
+    final folderSongs = [
+      for (final song in library)
+        if (p.dirname(song.filePath) == folderPath) song,
+    ];
 
-class _FolderSongsScreenState extends State<FolderSongsScreen> {
-  _DurationFilter _filter = _DurationFilter.all;
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = widget.songs.where((song) {
-      return switch (_filter) {
-        _DurationFilter.all => true,
-        _DurationFilter.underOneMinute =>
-          song.duration < const Duration(minutes: 1),
-        _DurationFilter.oneMinuteOrMore =>
-          song.duration >= const Duration(minutes: 1),
-      };
-    }).toList();
+    final query = ref.watch(librarySearchQueryProvider);
+    final view = ref.watch(libraryViewProvider);
+    final visible = applyLibraryView(
+      folderSongs,
+      query: query,
+      // The screen *is* the folder, so the shared folder narrowing would only
+      // ever empty it — dropped here and hidden in the sheet.
+      view: view.copyWith(deviceFolder: null),
+      vibeTaggedSongIds: ref.watch(vibeTaggedSongIdsProvider),
+      restrictToSongIds: ref.watch(libraryVibeCategoryRestrictionProvider),
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(p.basename(widget.folderPath)),
-        actions: [
-          PopupMenuButton<_DurationFilter>(
-            initialValue: _filter,
-            onSelected: (value) => setState(() => _filter = value),
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _DurationFilter.all,
-                child: Text('All durations'),
-              ),
-              PopupMenuItem(
-                value: _DurationFilter.underOneMinute,
-                child: Text('Under 1 minute'),
-              ),
-              PopupMenuItem(
-                value: _DurationFilter.oneMinuteOrMore,
-                child: Text('1 minute or more'),
-              ),
-            ],
+      bottomNavigationBar: const MiniPlayer(),
+      appBar: GradientAppBar(title: Text(p.basename(folderPath))),
+      body: Column(
+        children: [
+          PlayShuffleHeader(songs: visible),
+          const LibraryViewControls(
+            hint: 'Search in folder',
+            showFolderFilter: false,
+          ),
+          Expanded(
+            child: visible.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        folderSongs.isEmpty
+                            ? 'This folder has no songs.'
+                            : noMatchMessage(
+                                query: query,
+                                view: view.copyWith(deviceFolder: null),
+                                vibeFolderName: ref.watch(
+                                  libraryVibeCategoryNameProvider,
+                                ),
+                              ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: visible.length,
+                    itemBuilder: (context, index) {
+                      final song = visible[index];
+                      return SongListTile(
+                        song: song,
+                        onTap: () => ref
+                            .read(playbackControllerProvider.notifier)
+                            .playQueue(visible, startIndex: index),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
-      body: filtered.isEmpty
-          ? const Center(child: Text('No songs match this filter.'))
-          : Consumer(
-              builder: (context, ref, _) => ListView.builder(
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final song = filtered[index];
-                  return SongListTile(
-                    song: song,
-                    onTap: () => ref
-                        .read(playbackControllerProvider.notifier)
-                        .playQueue(filtered, startIndex: index),
-                  );
-                },
-              ),
-            ),
     );
   }
 }

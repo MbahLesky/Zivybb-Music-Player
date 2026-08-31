@@ -4,15 +4,90 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'app_database.g.dart';
 
-/// Preset mood/energy label a song can be tagged with (SRS F-2.6).
-@DataClassName('MoodTagRow')
-class MoodTags extends Table {
+// Every table below that references another one also spells its foreign key
+// out in `customConstraints`. That is not belt-and-braces: the bundled
+// `drift_dev` cannot resolve the table argument of a `.references()` call
+// against the analyzer version the Flutter SDK pins ("This parameter should
+// be a simple class name"), and silently emits no `REFERENCES` clause at
+// all — so every `onDelete:` here was dead code until the explicit
+// constraints were added. The `.references(...)` calls are kept because
+// drift still uses them to order `createAll` and they document intent at the
+// column.
+//
+// This only fixes databases created from here on: SQLite cannot add a
+// foreign key to an existing table, so installs predating this keep
+// unconstrained tables. Every repository that deletes a referenced row
+// therefore cleans up its own dependents rather than trusting the database
+// to cascade.
+
+/// A folder grouping related vibes — Mood, Place, Time, Genre and so on —
+/// so a long vibe list stays navigable. Seeded with a starting set, then
+/// fully user-manageable.
+@DataClassName('VibeCategoryRow')
+class VibeCategories extends Table {
   TextColumn get id => text()();
-  TextColumn get label => text()();
+  TextColumn get name => text()();
   TextColumn get colorHex => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// A vibe (mood/energy) label songs can be tagged with (SRS F-2.6). Starts
+/// out with a handful of built-in presets, but is fully user-manageable.
+@DataClassName('VibeTagRow')
+class VibeTags extends Table {
+  TextColumn get id => text()();
+  TextColumn get label => text()();
+  TextColumn get colorHex => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  /// The folder this vibe sits in, or null for "Uncategorised". A vibe
+  /// belongs to at most one folder.
+  ///
+  /// `VibeTagRepository.deleteVibeCategory` clears this itself rather than
+  /// trusting the constraint below: it only exists on databases created after
+  /// the category feature landed, and `ALTER TABLE ... ADD COLUMN` can't
+  /// retrofit it onto older installs.
+  TextColumn get categoryId => text().nullable().references(
+    VibeCategories,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (category_id) REFERENCES vibe_categories (id) '
+        'ON DELETE SET NULL',
+  ];
+}
+
+/// Join entity between [Songs] and [VibeTags] — a song can carry any number
+/// of vibes.
+///
+/// The repositories still delete these rows themselves when a song or vibe
+/// goes away: the cascade below only exists on databases created after the
+/// explicit constraints were added, so older installs would otherwise keep
+/// orphans.
+@DataClassName('SongVibeRow')
+class SongVibes extends Table {
+  TextColumn get songId =>
+      text().references(Songs, #id, onDelete: KeyAction.cascade)();
+  TextColumn get vibeTagId =>
+      text().references(VibeTags, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {songId, vibeTagId};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE',
+    'FOREIGN KEY (vibe_tag_id) REFERENCES vibe_tags (id) ON DELETE CASCADE',
+  ];
 }
 
 /// Cached local-library metadata, keyed by the device media store ID.
@@ -27,16 +102,56 @@ class Songs extends Table {
   TextColumn get artist => text()();
   TextColumn get album => text()();
   IntColumn get durationMs => integer()();
-  TextColumn get moodTagId => text().nullable().references(
-    MoodTags,
-    #id,
-    onDelete: KeyAction.setNull,
-  )();
+
+  /// Whether this entry is a video file played as music (SRS: audio-only
+  /// video playback). Video ids are namespaced — see `MediaScannerService` —
+  /// since MediaStore numbers audio and video rows independently.
+  BoolColumn get isVideo => boolean().withDefault(const Constant(false))();
   BoolColumn get isLiked => boolean().withDefault(const Constant(false))();
   BoolColumn get isMissing => boolean().withDefault(const Constant(false))();
+  IntColumn get playCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastPlayedAt => dateTime().nullable()();
+
+  /// When the device's media store first saw this file, which is what the
+  /// "Newest added" sort orders by.
+  ///
+  /// Nullable, and treated as "unknown" rather than "very old" everywhere it
+  /// is read: it only arrives with a device scan, so rows cached before this
+  /// column existed carry null until the next refresh, and MediaStore itself
+  /// leaves the column empty on some devices.
+  DateTimeColumn get dateAdded => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// A song's best rhythm-mode result (SRS: gamification).
+///
+/// One row per song, written only when a run beats what is stored, so the
+/// table stays the size of "songs the user has actually played the game on"
+/// rather than the size of the library.
+///
+/// `SongRepository.deleteFromLibrary` clears these itself: the cascade below
+/// only exists on databases created after this table landed, and SQLite
+/// cannot retrofit a foreign key onto an older install.
+@DataClassName('GameScoreRow')
+class GameScores extends Table {
+  TextColumn get songId =>
+      text().references(Songs, #id, onDelete: KeyAction.cascade)();
+  IntColumn get highScore => integer().withDefault(const Constant(0))();
+  IntColumn get maxCombo => integer().withDefault(const Constant(0))();
+
+  /// How many times rhythm mode has been played through on this song.
+  IntColumn get playCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {songId};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE',
+  ];
 }
 
 /// A user-created or auto-generated collection of songs.
@@ -46,15 +161,22 @@ class Playlists extends Table {
   TextColumn get name => text()();
   BoolColumn get isAutoGenerated =>
       boolean().withDefault(const Constant(false))();
-  TextColumn get sourceMoodTagId => text().nullable().references(
-    MoodTags,
+  TextColumn get sourceVibeTagId => text().nullable().references(
+    VibeTags,
     #id,
     onDelete: KeyAction.setNull,
   )();
   DateTimeColumn get createdAt => dateTime()();
+  TextColumn get coverImagePath => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (source_vibe_tag_id) REFERENCES vibe_tags (id) '
+        'ON DELETE SET NULL',
+  ];
 }
 
 /// Join entity between [Playlists] and [Songs], preserving manual ordering.
@@ -68,6 +190,12 @@ class PlaylistSongs extends Table {
 
   @override
   Set<Column> get primaryKey => {playlistId, songId};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (playlist_id) REFERENCES playlists (id) ON DELETE CASCADE',
+    'FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE',
+  ];
 }
 
 /// A named set of equalizer band gains the user can select (SRS F-1.6).
@@ -95,6 +223,43 @@ class Backups extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Single-row snapshot of what was playing when the app was last closed, so
+/// launching it can pick up where the user left off.
+///
+/// Deliberately separate from [Settings]: this is transient session state,
+/// not configuration, and it is intentionally left out of backups — restoring
+/// a months-old backup should not yank the user back to whatever track was
+/// playing when it was taken.
+@DataClassName('PlaybackSessionRow')
+class PlaybackSessions extends Table {
+  static const singletonId = 'default';
+
+  TextColumn get id => text()();
+
+  /// JSON-encoded `List<String>` of song IDs, in queue order.
+  TextColumn get songIdsJson => text().withDefault(const Constant('[]'))();
+  IntColumn get currentIndex => integer().withDefault(const Constant(0))();
+  IntColumn get positionMs => integer().withDefault(const Constant(0))();
+  BoolColumn get shuffleEnabled =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get repeatMode => text().withDefault(const Constant('off'))();
+  RealColumn get speed => real().withDefault(const Constant(1.0))();
+  TextColumn get sourcePlaylistId => text().nullable().references(
+    Playlists,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (source_playlist_id) REFERENCES playlists (id) '
+        'ON DELETE SET NULL',
+  ];
+}
+
 /// Single-row app configuration. [id] is always [Settings.singletonId].
 @DataClassName('SettingsRow')
 class Settings extends Table {
@@ -117,20 +282,96 @@ class Settings extends Table {
     #id,
     onDelete: KeyAction.setNull,
   )();
+  TextColumn get visualizerStyle =>
+      text().withDefault(const Constant('bars'))();
+  BoolColumn get showAlbumArtInMiniPlayer =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get showVisualizerInMiniPlayer =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showAlbumArtInNowPlaying =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Where the visualizer sits on Now Playing — a [VisualizerPlacement] name.
+  ///
+  /// Supersedes the `show_visualizer_in_now_playing` boolean, which the v13
+  /// migration reads once to seed this and then leaves behind: SQLite makes
+  /// dropping a column awkward, and nothing reads it any more. Databases
+  /// created from v13 on never have it.
+  TextColumn get visualizerPlacement =>
+      text().withDefault(const Constant('belowControls'))();
+
+  /// Draw the visualizer where a song's artwork would go when that song has
+  /// no artwork, rather than the generic music-note placeholder.
+  BoolColumn get visualizerAsArtworkFallback =>
+      boolean().withDefault(const Constant(false))();
+
+  /// How the raw levels are shaped before they are drawn — see
+  /// `VisualizerTuning`, which owns the meaning and the valid ranges.
+  RealColumn get visualizerSensitivity =>
+      real().withDefault(const Constant(1.0))();
+  RealColumn get visualizerContrast =>
+      real().withDefault(const Constant(1.0))();
+  RealColumn get visualizerFloor => real().withDefault(const Constant(0.12))();
+  RealColumn get visualizerResponsiveness =>
+      real().withDefault(const Constant(0.5))();
+  IntColumn get visualizerBarCount =>
+      integer().withDefault(const Constant(40))();
+
+  /// How far Now Playing's seek-back/forward buttons jump, in seconds.
+  IntColumn get seekStepSeconds => integer().withDefault(const Constant(10))();
+
+  /// Whether the library scan also picks up video files, played as audio.
+  BoolColumn get includeVideos =>
+      boolean().withDefault(const Constant(false))();
+
+  /// Opt-in: drive the visualizer from the real audio signal rather than the
+  /// simulated waveform. Off by default because it needs RECORD_AUDIO.
+  BoolColumn get realVisualizerEnabled =>
+      boolean().withDefault(const Constant(false))();
+
+  /// Skip folders whose name says they hold voice notes, recordings, or
+  /// ringtones rather than music — see `LibrarySourceFilter`.
+  BoolColumn get autoExcludeNonMusicFolders =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Audio shorter than this is not a track. 0 keeps everything.
+  IntColumn get minimumTrackSeconds =>
+      integer().withDefault(const Constant(30))();
+
+  /// The user's per-folder include/exclude decisions, as the JSON object
+  /// `LibrarySourceFilter.overridesToJson` writes. One column rather than two
+  /// because the two sets are only ever read and written together.
+  TextColumn get libraryFolderOverridesJson =>
+      text().withDefault(const Constant('{}'))();
+
+  /// Show the stripped-back Now Playing layout — artwork, title, and the
+  /// three transport buttons.
+  BoolColumn get compactNowPlaying =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const [
+    'FOREIGN KEY (current_equalizer_preset_id) REFERENCES '
+        'equalizer_presets (id) ON DELETE SET NULL',
+  ];
 }
 
 @DriftDatabase(
   tables: [
-    MoodTags,
+    VibeCategories,
+    VibeTags,
+    SongVibes,
     Songs,
+    GameScores,
     Playlists,
     PlaylistSongs,
     Settings,
     EqualizerPresets,
     Backups,
+    PlaybackSessions,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -139,15 +380,36 @@ class AppDatabase extends _$AppDatabase {
   /// Used to inject an in-memory executor for tests.
   AppDatabase.connect(super.executor);
 
+  // Two lines of development each defined their own v8 and v9 — one adding
+  // the seek step then the vibe tables, the other the playback session then
+  // the real-visualizer flag. A device may therefore sit at either meaning of
+  // those versions, so the steps below are all guarded by what the database
+  // actually contains, and v12 converges the two histories.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      // The Mood → Vibe rename (v9) runs before the versioned steps so every
+      // older step below can target the new table/column names no matter
+      // which version the device starts from.
+      if (from < 9) {
+        if (await _hasTable(m, 'mood_tags')) {
+          await m.database.customStatement(
+            'ALTER TABLE mood_tags RENAME TO vibe_tags',
+          );
+        }
+        if (await _hasColumn(m, 'playlists', 'source_mood_tag_id')) {
+          await m.database.customStatement(
+            'ALTER TABLE playlists '
+            'RENAME COLUMN source_mood_tag_id TO source_vibe_tag_id',
+          );
+        }
+      }
       if (from < 2) {
-        await m.createTable(moodTags);
+        await m.createTable(vibeTags);
         await m.createTable(playlists);
         await m.createTable(playlistSongs);
         await m.createTable(settings);
@@ -163,8 +425,271 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(backups);
         await m.addColumn(settings, settings.currentEqualizerPresetId);
       }
+      if (from < 5) {
+        await m.addColumn(vibeTags, vibeTags.sortOrder);
+        await m.addColumn(settings, settings.visualizerStyle);
+      }
+      if (from < 6) {
+        await m.addColumn(playlists, playlists.coverImagePath);
+        await m.addColumn(settings, settings.showAlbumArtInMiniPlayer);
+        await m.addColumn(settings, settings.showVisualizerInMiniPlayer);
+        await m.addColumn(settings, settings.showAlbumArtInNowPlaying);
+        // `show_visualizer_in_now_playing` was added here too, until v13
+        // replaced it with `visualizer_placement`. Adding a column no longer
+        // in the table only to have v13 read it back would be pointless
+        // ceremony: a database this old has no preference recorded there
+        // anyway, so it takes the placement default instead.
+        await m.addColumn(songs, songs.playCount);
+        await m.addColumn(songs, songs.lastPlayedAt);
+      }
+      if (from < 7) {
+        // Some devices reached user_version 6 before the songs.playCount /
+        // songs.lastPlayedAt addColumn calls above existed, so the `from < 6`
+        // block above never (and will never again) add them for those
+        // devices. Add whichever of the two are still actually missing.
+        if (!await _hasColumn(m, 'songs', 'play_count')) {
+          await m.addColumn(songs, songs.playCount);
+        }
+        if (!await _hasColumn(m, 'songs', 'last_played_at')) {
+          await m.addColumn(songs, songs.lastPlayedAt);
+        }
+      }
+      if (from < 8) {
+        // v8 means "seek step" in one history and "playback sessions" in the
+        // other; do whichever is actually missing.
+        if (!await _hasColumn(m, 'settings', 'seek_step_seconds')) {
+          await m.addColumn(settings, settings.seekStepSeconds);
+        }
+        if (!await _hasTable(m, 'playback_sessions')) {
+          await m.createTable(playbackSessions);
+        }
+      }
+      if (from < 9) {
+        if (!await _hasTable(m, 'song_vibes')) {
+          await m.createTable(songVibes);
+        }
+        if (await _hasColumn(m, 'songs', 'mood_tag_id')) {
+          // Carry each song's single mood over as its first vibe. The join
+          // guards against dangling tag ids (possible historically, since
+          // foreign keys aren't enforced on this connection).
+          await m.database.customStatement(
+            'INSERT OR IGNORE INTO song_vibes (song_id, vibe_tag_id) '
+            'SELECT s.id, s.mood_tag_id FROM songs s '
+            'INNER JOIN vibe_tags v ON v.id = s.mood_tag_id '
+            'WHERE s.mood_tag_id IS NOT NULL',
+          );
+          // SQLite can't DROP a column that carries a foreign-key clause, so
+          // rebuild the songs table into the current (column-less) shape.
+          // TableMigration is flagged experimental but is drift's documented
+          // route for this, and the alternative — leaving a dead column
+          // behind — would keep a foreign key pointing at vibe_tags forever.
+          //
+          // The rebuild copies today's column list, which already includes
+          // later additions like `is_video` — absent from the table being
+          // copied. Each one needs an explicit default here, because SQLite
+          // reads an unresolved double-quoted identifier as a string literal
+          // rather than failing, which would smuggle 'is_video' into a
+          // boolean column.
+          await m.alterTable(
+            // ignore: experimental_member_use
+            TableMigration(
+              songs,
+              columnTransformer: {
+                songs.isVideo: const Constant(false),
+                songs.dateAdded: const Constant<DateTime>(null),
+              },
+            ),
+          );
+        }
+      }
+      if (from < 10) {
+        // The v9 rebuild above already creates this column when it runs, so
+        // only add it on databases that skipped that path.
+        if (!await _hasColumn(m, 'songs', 'is_video')) {
+          await m.addColumn(songs, songs.isVideo);
+        }
+        if (!await _hasColumn(m, 'settings', 'include_videos')) {
+          await m.addColumn(settings, settings.includeVideos);
+        }
+      }
+      if (from < 12) {
+        // Convergence step. A device arriving from either v8/v9 history is
+        // missing a different subset of the above, so add whatever is still
+        // absent rather than assuming which path it took.
+        if (!await _hasTable(m, 'playback_sessions')) {
+          await m.createTable(playbackSessions);
+        }
+        if (!await _hasTable(m, 'song_vibes')) {
+          await m.createTable(songVibes);
+        }
+        if (!await _hasColumn(m, 'settings', 'seek_step_seconds')) {
+          await m.addColumn(settings, settings.seekStepSeconds);
+        }
+        if (!await _hasColumn(m, 'settings', 'include_videos')) {
+          await m.addColumn(settings, settings.includeVideos);
+        }
+        if (!await _hasColumn(m, 'songs', 'is_video')) {
+          await m.addColumn(songs, songs.isVideo);
+        }
+        if (!await _hasColumn(m, 'settings', 'real_visualizer_enabled')) {
+          await m.addColumn(settings, settings.realVisualizerEnabled);
+        }
+        // Runs last: it reads the vibe tables, which only exist for certain
+        // once every step above has been applied.
+        await _purgeOrphanedRows();
+      }
+      if (from < 13) {
+        if (!await _hasTable(m, 'vibe_categories')) {
+          await m.createTable(vibeCategories);
+        }
+        if (!await _hasColumn(m, 'vibe_tags', 'category_id')) {
+          // No REFERENCES clause comes with this: SQLite can't retrofit a
+          // foreign key onto an existing table, so the repository clears
+          // dangling category ids itself. `VibeTagRepository.ensureSeeded`
+          // backfills the built-in vibes into the seeded folders.
+          await m.addColumn(vibeTags, vibeTags.categoryId);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_placement')) {
+          await m.addColumn(settings, settings.visualizerPlacement);
+          // Carry the boolean this replaces over, so a user who had the
+          // visualizer switched off on Now Playing doesn't find it back.
+          if (await _hasColumn(
+            m,
+            'settings',
+            'show_visualizer_in_now_playing',
+          )) {
+            await m.database.customStatement(
+              "UPDATE settings SET visualizer_placement = CASE "
+              "WHEN show_visualizer_in_now_playing = 1 THEN 'belowControls' "
+              "ELSE 'off' END",
+            );
+          }
+        }
+        if (!await _hasColumn(
+          m,
+          'settings',
+          'visualizer_as_artwork_fallback',
+        )) {
+          await m.addColumn(settings, settings.visualizerAsArtworkFallback);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_sensitivity')) {
+          await m.addColumn(settings, settings.visualizerSensitivity);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_contrast')) {
+          await m.addColumn(settings, settings.visualizerContrast);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_floor')) {
+          await m.addColumn(settings, settings.visualizerFloor);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_responsiveness')) {
+          await m.addColumn(settings, settings.visualizerResponsiveness);
+        }
+        if (!await _hasColumn(m, 'settings', 'visualizer_bar_count')) {
+          await m.addColumn(settings, settings.visualizerBarCount);
+        }
+      }
+      if (from < 14) {
+        if (!await _hasColumn(m, 'songs', 'date_added')) {
+          // Left null for every existing row: the media store's date-added
+          // value is only available from a scan, so the next
+          // `refreshFromDevice` is what backfills it. Until then those songs
+          // sort to the end of "Newest added" rather than pretending to be
+          // the oldest in the library.
+          await m.addColumn(songs, songs.dateAdded);
+        }
+      }
+      if (from < 15) {
+        // A new table rather than columns on `songs`, so nothing here has to
+        // be threaded through the v9 rebuild's column transformer.
+        if (!await _hasTable(m, 'game_scores')) {
+          await m.createTable(gameScores);
+        }
+      }
+      if (from < 16) {
+        if (!await _hasColumn(
+          m,
+          'settings',
+          'auto_exclude_non_music_folders',
+        )) {
+          await m.addColumn(settings, settings.autoExcludeNonMusicFolders);
+        }
+        if (!await _hasColumn(m, 'settings', 'minimum_track_seconds')) {
+          await m.addColumn(settings, settings.minimumTrackSeconds);
+        }
+        if (!await _hasColumn(m, 'settings', 'library_folder_overrides_json')) {
+          await m.addColumn(settings, settings.libraryFolderOverridesJson);
+        }
+        if (!await _hasColumn(m, 'settings', 'compact_now_playing')) {
+          await m.addColumn(settings, settings.compactNowPlaying);
+        }
+      }
+    },
+    beforeOpen: (details) async {
+      // SQLite enforces foreign keys only when this pragma is on, and it
+      // defaults to *off* — every `onDelete:` in the table definitions above
+      // was silently inert until this was added. Without it, deleting a
+      // playlist left its playlist_songs rows behind, and deleting a vibe tag
+      // left songs pointing at a tag that no longer existed (which resurfaced
+      // as phantom tags once the built-in presets were re-seeded under their
+      // fixed IDs). It has to be set per connection, not once at creation.
+      //
+      // Set here rather than around the migration on purpose: drift runs
+      // `onUpgrade` before this, so the v9 table rebuild still happens with
+      // enforcement off, which is what lets it recreate `songs` without
+      // tripping the references pointing at it.
+      await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Clears rows left dangling by the years the foreign keys weren't being
+  /// enforced. Turning the pragma on doesn't retroactively validate existing
+  /// data, so without this the old orphans would linger indefinitely.
+  Future<void> _purgeOrphanedRows() async {
+    await customStatement(
+      'DELETE FROM playlist_songs WHERE playlist_id NOT IN '
+      '(SELECT id FROM playlists) OR song_id NOT IN (SELECT id FROM songs)',
+    );
+    // The mood_tag_id column this once cleaned up is gone; its replacement is
+    // the song_vibes join, which can dangle at either end.
+    await customStatement(
+      'DELETE FROM song_vibes WHERE song_id NOT IN (SELECT id FROM songs) '
+      'OR vibe_tag_id NOT IN (SELECT id FROM vibe_tags)',
+    );
+    await customStatement(
+      'UPDATE playlists SET source_vibe_tag_id = NULL '
+      'WHERE source_vibe_tag_id IS NOT NULL AND source_vibe_tag_id NOT IN '
+      '(SELECT id FROM vibe_tags)',
+    );
+    await customStatement(
+      'UPDATE settings SET current_equalizer_preset_id = NULL '
+      'WHERE current_equalizer_preset_id IS NOT NULL AND '
+      'current_equalizer_preset_id NOT IN (SELECT id FROM equalizer_presets)',
+    );
+  }
+
+  static Future<bool> _hasTable(Migrator m, String table) async {
+    final row = await m.database
+        .customSelect(
+          "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+          variables: [Variable.withString(table)],
+        )
+        .getSingleOrNull();
+    return row != null;
+  }
+
+  static Future<bool> _hasColumn(
+    Migrator m,
+    String table,
+    String column,
+  ) async {
+    final row = await m.database
+        .customSelect(
+          "SELECT 1 FROM pragma_table_info('$table') WHERE name = ?",
+          variables: [Variable.withString(column)],
+        )
+        .getSingleOrNull();
+    return row != null;
+  }
 
   static QueryExecutor _openConnection() => driftDatabase(name: 'zivybb');
 }

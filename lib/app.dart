@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/theme/app_theme.dart';
 import 'features/library/presentation/library_screen.dart';
 import 'features/settings/application/settings_controller.dart';
 import 'routes/app_routes.dart';
@@ -16,20 +17,20 @@ class ZivybbApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final seedColor = ref.watch(themeSeedColorProvider);
+    final style = ref.watch(appThemeStyleProvider);
 
     return MaterialApp(
       title: 'Zivybb',
       themeMode: themeMode,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
-        useMaterial3: true,
+      theme: buildAppTheme(
+        brightness: Brightness.light,
+        style: style,
+        seedColor: seedColor,
       ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: seedColor,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
+      darkTheme: buildAppTheme(
+        brightness: Brightness.dark,
+        style: style,
+        seedColor: seedColor,
       ),
       initialRoute: AppRoutes.library,
       routes: {AppRoutes.library: (_) => const LibraryScreen()},

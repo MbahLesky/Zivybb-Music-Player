@@ -1,0 +1,15 @@
+# Copy this file to android/key.properties and fill in your own values to
+# produce a signed release build. That file is gitignored — the keystore and
+# its passwords must never be committed.
+#
+# Generate a keystore first:
+#   keytool -genkey -v -keystore ~/zivybb-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias zivybb
+#
+# Then build with:
+#   flutter build appbundle --release
+
+storeFile=/absolute/path/to/zivybb-release.jks
+storePassword=
+keyAlias=zivybb
+keyPassword=
