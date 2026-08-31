@@ -8,6 +8,7 @@ import '../../../data/repositories/vibe_tag_repository.dart';
 import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../playlists/application/vibe_playlist_generator.dart';
 import '../application/vibe_tagging_controller.dart';
@@ -30,6 +31,7 @@ class VibeTagManagementScreen extends ConsumerWidget {
     final groups = ref.watch(vibeGroupsProvider);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: GradientAppBar(
         title: const Text('Manage Vibes'),
         actions: [

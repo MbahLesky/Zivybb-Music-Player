@@ -18,7 +18,7 @@ This document lists every screen in Version 1 of Zivybb, its purpose, key UI ele
 
 ### 3. Folder Browser Screen
 - **Purpose:** Browse music using the device's actual folder structure.
-- **Key elements:** Folder list/tree, song count per folder, sort control (e.g., by duration).
+- **Key elements:** Folder list/tree, song count per folder. A folder's song list carries the shared search box and "Sort & filter" sheet (see Notes).
 - **Navigates to:** Song list within a folder, Now Playing.
 
 ### 4. Playlist List Screen
@@ -28,13 +28,13 @@ This document lists every screen in Version 1 of Zivybb, its purpose, key UI ele
 
 ### 5. Playlist Detail Screen
 - **Purpose:** View and manage the songs within a specific playlist.
-- **Key elements:** Song list, reorder controls, add/remove songs, play-all/shuffle-all actions.
+- **Key elements:** Song list, reorder controls, add/remove songs, play-all/shuffle-all actions, and the shared search box and "Sort & filter" sheet (see Notes). The playlist's stored order stands until a sort is actually chosen, so opening one never silently reorders it.
 - **Navigates to:** Now Playing, Song Discovery (add songs).
 
 ### 6. Now Playing Screen
 - **Purpose:** Full playback experience for the current track.
-- **Key elements:** Beat-reactive wave visualizer, album art (if available), transport controls (play/pause/skip), progress bar, shuffle/crossfade indicators, mood tag display, quick-access to Equalizer and Tag Editor.
-- **Navigates to:** Tag Editor, Equalizer, Mood Tagging.
+- **Key elements:** Beat-reactive wave visualizer, album art (if available), transport controls (play/pause/skip), progress bar, shuffle/crossfade indicators, mood tag display, quick-access to Equalizer and Tag Editor. A compact layout, toggled from the app bar, keeps only the artwork, title and three transport buttons and moves shuffle, repeat, like and save to playlist into the "more" sheet. Swiping across the artwork area changes track sideways and the device media volume vertically. The visualizer can also stand in for the progress bar: the wide styles become the track itself (played in colour, the rest grey), and the circular ones become a ring around the artwork with the artwork inside it.
+- **Navigates to:** Tag Editor, Equalizer, Mood Tagging, Rhythm Mode.
 
 ### 7. Mood Tagging Screen / Modal
 - **Purpose:** Assign or edit a mood/energy label for a song.
@@ -58,8 +58,13 @@ This document lists every screen in Version 1 of Zivybb, its purpose, key UI ele
 
 ### 11. Settings Screen
 - **Purpose:** Central hub for app configuration.
-- **Key elements:** Theme/color customization, adaptive dark mode toggle, visualizer color settings, backup & restore entry point, about/version info.
-- **Navigates to:** Theme Customization, Backup & Restore.
+- **Key elements:** Theme/color customization, adaptive dark mode toggle, visualizer color settings, library sources, backup & restore entry point, about/version info.
+- **Navigates to:** Theme Customization, Library Sources, Backup & Restore.
+
+### 11a. Library Sources Screen
+- **Purpose:** Decide which of the device's audio files count as music, so voice notes, call recordings and ringtones stay out of the library and out of shuffle.
+- **Key elements:** "Skip non-music folders" toggle, minimum track length chips, and a switch per device folder showing its file count; every change rescans immediately.
+- **Navigates to:** Returns to Settings.
 
 ### 12. Theme Customization Screen
 - **Purpose:** Choose color themes and visualizer colors.
@@ -98,5 +103,12 @@ Splash
 
 ## Notes
 
-- The mini-player is persistent across Home, Folder Browser, Playlist, and Discovery screens, expanding into the full Now Playing screen on tap.
+- The mini-player is persistent across Home, Folder Browser, Playlist, Discovery, and Settings screens, expanding into the full Now Playing screen on tap.
+- **Sort & filter is one shared control, not one per screen.** Every song list
+  shows the same search box and the same "Sort & filter" sheet, backed by a
+  single `LibraryView`, so a choice made on one list applies to all of them.
+  Filters combine (Liked only, Has a vibe, No vibe, Never played, a vibe
+  folder, a device folder) and the button is badged with how many are active.
+  Sorting is a field (date added, title, length, artist, album, times played,
+  last played) plus a direction, labelled in the words of the chosen field.
 - Screens deferred to future releases (search with filters, lyrics display, social sharing) are intentionally excluded — see `SRS.md` Section 5.

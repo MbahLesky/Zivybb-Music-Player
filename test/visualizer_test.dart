@@ -77,6 +77,192 @@ void main() {
     });
   });
 
+  group('VisualizerMath beat response', () {
+    List<double> at(double t, {double bpm = 120, int bars = 16}) =>
+        VisualizerMath.amplitudesAt(
+          elapsedSeconds: t,
+          barPhases: VisualizerMath.barPhasesFor(7, bars),
+          beatsPerMinute: bpm,
+        );
+
+    test('the low bars punch on the beat and fall away between beats', () {
+      // 120 BPM is a beat every 0.5s, so t=0 is on one and t=0.4 is nearly
+      // all the way to the next.
+      final onBeat = at(0)[0];
+      final between = at(0.4)[0];
+      expect(
+        onBeat,
+        greaterThan(between),
+        reason: 'a beat has to be visible as a rise and a fall, not a hum',
+      );
+    });
+
+    test('a faster tempo pulses more often', () {
+      // Count the local maxima of the lowest bar over four seconds.
+      int pulses(double bpm) {
+        var count = 0;
+        var previous = at(0, bpm: bpm)[0];
+        var rising = false;
+        for (var t = 0.02; t < 4; t += 0.02) {
+          final value = at(t, bpm: bpm)[0];
+          if (value > previous) {
+            rising = true;
+          } else if (rising) {
+            count++;
+            rising = false;
+          }
+          previous = value;
+        }
+        return count;
+      }
+
+      expect(
+        pulses(160),
+        greaterThan(pulses(80)),
+        reason: 'a glance should say whether a song is slow or driving',
+      );
+    });
+
+    test('low bars move more than high bars', () {
+      double swing(int bar) {
+        var low = 1.0;
+        var high = 0.0;
+        for (var t = 0.0; t < 2; t += 0.02) {
+          final value = at(t)[bar];
+          if (value < low) low = value;
+          if (value > high) high = value;
+        }
+        return high - low;
+      }
+
+      expect(
+        swing(0),
+        greaterThan(swing(15)),
+        reason: 'the kick should read louder than the hats',
+      );
+    });
+
+    test('a track-seeded tempo is stable and varies between tracks', () {
+      expect(
+        VisualizerMath.simulatedTempoFor(42),
+        VisualizerMath.simulatedTempoFor(42),
+      );
+      expect(
+        VisualizerMath.simulatedTempoFor(1),
+        isNot(VisualizerMath.simulatedTempoFor(2)),
+      );
+      for (final seed in [0, 1, 99, -4, 100000]) {
+        final tempo = VisualizerMath.simulatedTempoFor(seed);
+        expect(tempo, greaterThanOrEqualTo(78));
+        expect(tempo, lessThanOrEqualTo(140));
+      }
+    });
+  });
+
+  group('VisualizerMath.positionEnvelope', () {
+    const duration = Duration(minutes: 3);
+
+    test('holds at full through the body of a track', () {
+      expect(
+        VisualizerMath.positionEnvelope(
+          position: const Duration(minutes: 1),
+          duration: duration,
+        ),
+        1.0,
+      );
+    });
+
+    test('drops away across the last seconds', () {
+      final sixOut = VisualizerMath.positionEnvelope(
+        position: duration - const Duration(seconds: 6),
+        duration: duration,
+      );
+      final threeOut = VisualizerMath.positionEnvelope(
+        position: duration - const Duration(seconds: 3),
+        duration: duration,
+      );
+      final atEnd = VisualizerMath.positionEnvelope(
+        position: duration,
+        duration: duration,
+      );
+
+      expect(sixOut, greaterThan(threeOut));
+      expect(threeOut, greaterThan(atEnd));
+    });
+
+    test('never falls to nothing', () {
+      expect(
+        VisualizerMath.positionEnvelope(position: duration, duration: duration),
+        greaterThan(0),
+        reason: 'the end of a track is a hush, not a blank box',
+      );
+    });
+
+    test('builds in rather than starting at full', () {
+      final start = VisualizerMath.positionEnvelope(
+        position: Duration.zero,
+        duration: duration,
+      );
+      final soonAfter = VisualizerMath.positionEnvelope(
+        position: const Duration(milliseconds: 800),
+        duration: duration,
+      );
+      expect(soonAfter, greaterThan(start));
+    });
+
+    test('stays out of the way when the duration is unknown', () {
+      expect(
+        VisualizerMath.positionEnvelope(
+          position: const Duration(seconds: 5),
+          duration: Duration.zero,
+        ),
+        1.0,
+      );
+    });
+  });
+
+  group('VisualizerMath.emphasiseTransients', () {
+    test('a band that jumped is drawn taller than one merely sitting loud', () {
+      final result = VisualizerMath.emphasiseTransients([0.6, 0.6], [0.1, 0.6]);
+      expect(
+        result[0],
+        greaterThan(result[1]),
+        reason: 'a hit and a sustained note must not look the same',
+      );
+    });
+
+    test('a falling band is left to the decay easing', () {
+      expect(VisualizerMath.emphasiseTransients([0.3], [0.9]).single, 0.3);
+    });
+
+    test('passes levels through when there is nothing to compare against', () {
+      expect(VisualizerMath.emphasiseTransients([0.4], null), [0.4]);
+      expect(VisualizerMath.emphasiseTransients([0.4], [0.1, 0.2]), [0.4]);
+    });
+
+    test('stays drawable whatever it is fed', () {
+      final result = VisualizerMath.emphasiseTransients(
+        [double.nan, 4.0, -2.0],
+        [0.0, double.infinity, 0.5],
+      );
+      for (final value in result) {
+        expect(value, inInclusiveRange(0.0, 1.0));
+      }
+    });
+  });
+
+  group('VisualizerMath.normalise', () {
+    test('a quiet passage is scaled up to fill the space', () {
+      final result = VisualizerMath.normalise([0.1, 0.2], 0.2);
+      expect(result[1], closeTo(1.0, 1e-9));
+      expect(result[0], closeTo(0.5, 1e-9));
+    });
+
+    test('silence is left silent rather than amplified into noise', () {
+      expect(VisualizerMath.normalise([0.01, 0.02], 0.02), [0.01, 0.02]);
+    });
+  });
+
   group('VisualizerMath simulated waveform', () {
     test('is deterministic for a given seed', () {
       expect(

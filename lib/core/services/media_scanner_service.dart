@@ -52,10 +52,7 @@ class MediaScannerService {
       ignoreCase: true,
     );
 
-    final audioTracks = songs
-        .where((song) => song.isMusic ?? true)
-        .map(_toSong)
-        .toList();
+    final audioTracks = songs.where(_isMusic).map(_toSong).toList();
     if (!includeVideos) return List.unmodifiable(audioTracks);
 
     // Videos sort in among the audio tracks rather than into a section of
@@ -64,6 +61,27 @@ class MediaScannerService {
     final combined = [...audioTracks, ...videos]
       ..sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
     return List.unmodifiable(combined);
+  }
+
+  /// Whether the media store presents this entry as music at all.
+  ///
+  /// `is_music` alone isn't enough: a device that leaves it unset (null) has
+  /// historically been given the benefit of the doubt, which is how ringtones
+  /// and notification blips ended up in the library. The type flags are
+  /// checked too, and any of them being set rules the entry out even when
+  /// `is_music` is also true — some media providers set both.
+  ///
+  /// Anything the media store *hasn't* categorised (voice notes, recordings)
+  /// still reaches the library from here; `LibrarySourceFilter` is what catches
+  /// those, by folder and by length.
+  bool _isMusic(SongModel model) {
+    final isExcludedType =
+        (model.isRingtone ?? false) ||
+        (model.isNotification ?? false) ||
+        (model.isAlarm ?? false) ||
+        (model.isPodcast ?? false) ||
+        (model.isAudioBook ?? false);
+    return !isExcludedType && (model.isMusic ?? true);
   }
 
   Song _toSong(SongModel model) {

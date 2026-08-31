@@ -4,27 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/utils/song_search.dart';
 import '../../../data/models/playlist.dart';
 import '../../../data/models/song.dart';
 import '../../../data/repositories/playlist_repository.dart';
 import '../../../shared/widgets/app_bar_icon_action.dart';
-import '../../../shared/widgets/app_search_field.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/play_shuffle_header.dart';
 import '../../../shared/widgets/song_list_tile.dart';
+import '../../library/application/library_view_controller.dart';
+import '../../library/presentation/library_view_sheet.dart';
 import '../../playback/application/playback_controller.dart';
+import '../../vibe_tagging/application/vibe_tagging_controller.dart';
 import '../application/playlist_controller.dart';
 import 'add_songs_sheet.dart';
 import 'playlist_edit_dialog.dart';
 
-enum _PlaylistSort { playlistOrder, title, artist, duration }
-
 /// View and manage the songs within a specific playlist (Screens.md #5),
-/// with play/shuffle header actions, search, and view sorting. Drag
-/// reordering (which edits the stored order) is only available in the
-/// default playlist-order view with no search active.
+/// with play/shuffle header actions and the same search, sort and filter
+/// controls every other list has.
+///
+/// The playlist's own stored order is what shows until the user actually
+/// picks a sort — see [LibraryView.sortChosen] — because arranging a playlist
+/// by hand is the point of having one. Drag reordering (which edits that
+/// stored order) is therefore only available while nothing is narrowing or
+/// reordering the view.
 class PlaylistDetailScreen extends ConsumerStatefulWidget {
   const PlaylistDetailScreen({super.key, required this.playlistId});
 
@@ -36,39 +40,29 @@ class PlaylistDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
-  String _query = '';
-  _PlaylistSort _sort = _PlaylistSort.playlistOrder;
-
-  bool get _isCustomView =>
-      _query.trim().isNotEmpty || _sort != _PlaylistSort.playlistOrder;
-
-  List<Song> _visibleSongs(List<Song> songs) {
-    final visible = songs
-        .where((song) => songMatchesQuery(song, _query))
-        .toList();
-    switch (_sort) {
-      case _PlaylistSort.playlistOrder:
-        break;
-      case _PlaylistSort.title:
-        visible.sort(
-          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-        );
-      case _PlaylistSort.artist:
-        visible.sort(
-          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()),
-        );
-      case _PlaylistSort.duration:
-        visible.sort((a, b) => a.duration.compareTo(b.duration));
-    }
-    return visible;
-  }
+  /// Whether the list on screen is still the playlist's own order. Only then
+  /// can a drag mean "move this song within the playlist".
+  bool _isCustomView = false;
 
   @override
   Widget build(BuildContext context) {
     final detail = ref.watch(playlistDetailProvider(widget.playlistId));
     final playlist = detail.value?.playlist;
     final songs = detail.value?.songs ?? const <Song>[];
-    final scheme = Theme.of(context).colorScheme;
+    final query = ref.watch(librarySearchQueryProvider);
+    final view = ref.watch(libraryViewProvider);
+    final vibeTagged = ref.watch(vibeTaggedSongIdsProvider);
+    final vibeRestriction = ref.watch(libraryVibeCategoryRestrictionProvider);
+    _isCustomView = query.trim().isNotEmpty || !view.isDefault;
+
+    List<Song> visibleOf(List<Song> all) => applyLibraryView(
+      all,
+      query: query,
+      view: view,
+      vibeTaggedSongIds: vibeTagged,
+      restrictToSongIds: vibeRestriction,
+      preserveOrder: !view.sortChosen,
+    );
 
     return Scaffold(
       bottomNavigationBar: const MiniPlayer(),
@@ -107,7 +101,7 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
           if (value == null) {
             return const Center(child: Text('Playlist not found.'));
           }
-          final visible = _visibleSongs(value.songs);
+          final visible = visibleOf(value.songs);
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -119,53 +113,8 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                   sourcePlaylistId: widget.playlistId,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: AppSearchField(
-                          hint: 'Search in playlist',
-                          onChanged: (query) => setState(() => _query = query),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: scheme.surfaceContainerHighest.withValues(
-                            alpha: 0.6,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: PopupMenuButton<_PlaylistSort>(
-                          icon: Icon(Icons.sort, color: scheme.primary),
-                          tooltip: 'Sort',
-                          initialValue: _sort,
-                          onSelected: (value) => setState(() => _sort = value),
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(
-                              value: _PlaylistSort.playlistOrder,
-                              child: Text('Playlist order'),
-                            ),
-                            PopupMenuItem(
-                              value: _PlaylistSort.title,
-                              child: Text('Title'),
-                            ),
-                            PopupMenuItem(
-                              value: _PlaylistSort.artist,
-                              child: Text('Artist'),
-                            ),
-                            PopupMenuItem(
-                              value: _PlaylistSort.duration,
-                              child: Text('Length'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              const SliverToBoxAdapter(
+                child: LibraryViewControls(hint: 'Search in playlist'),
               ),
               if (value.songs.isEmpty)
                 const SliverToBoxAdapter(

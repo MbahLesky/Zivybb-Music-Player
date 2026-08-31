@@ -156,7 +156,7 @@ void main() {
       expect(file.existsSync(), isTrue);
       final data =
           jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      expect(data['version'], 4);
+      expect(data['version'], 5);
 
       final listed = await backups.watchBackups().first;
       expect(listed.map((backup) => backup.id), [entry.id]);

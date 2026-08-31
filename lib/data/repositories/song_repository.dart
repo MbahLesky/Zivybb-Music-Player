@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../../core/services/media_delete_service.dart';
 import '../../core/services/media_scanner_service.dart';
 import '../datasources/app_database.dart';
+import '../models/library_source_filter.dart';
 import '../models/song.dart';
 
 /// Single access point for the local song library.
@@ -72,8 +74,20 @@ class SongRepository {
   /// With [includeVideos] off, any video previously scanned in is dropped
   /// from the library — otherwise turning the setting back off would leave
   /// the videos behind with no way to clear them.
-  Future<List<Song>> refreshFromDevice({bool includeVideos = false}) async {
-    final songs = await _scanner.scanLibrary(includeVideos: includeVideos);
+  ///
+  /// [filter] decides which scanned files count as music. It is applied to
+  /// the cache as well as to the scan: narrowing it (excluding a folder,
+  /// raising the minimum length) has to clear out what a previous, wider
+  /// scan already let in, or the voice notes the user just switched off
+  /// would sit in the library until they wiped it by hand.
+  Future<List<Song>> refreshFromDevice({
+    bool includeVideos = false,
+    LibrarySourceFilter filter = const LibrarySourceFilter(),
+  }) async {
+    final scanned = await _scanner.scanLibrary(includeVideos: includeVideos);
+    final songs = scanned
+        .where((song) => filter.allows(song.filePath, song.duration))
+        .toList(growable: false);
     await _database.batch((batch) {
       batch.insertAll(
         _database.songs,
@@ -93,7 +107,34 @@ class SongRepository {
       );
     });
     if (!includeVideos) await _removeVideos();
+    await _pruneFiltered(filter);
     return songs;
+  }
+
+  /// Every folder the device holds audio in, with how many tracks are in
+  /// each, ignoring the current filter — the Library Sources screen has to
+  /// list the folders that are switched *off* as well, or there would be no
+  /// way to switch one back on.
+  ///
+  /// Reads the device rather than the cache for the same reason. Videos are
+  /// left out: they are governed by their own setting.
+  Future<List<({String path, int trackCount})>> deviceFolders() async {
+    final songs = await _scanner.scanLibrary();
+    final counts = <String, int>{};
+    for (final song in songs) {
+      final folder = p.dirname(song.filePath);
+      counts[folder] = (counts[folder] ?? 0) + 1;
+    }
+    final folders = counts.entries
+        .map((entry) => (path: entry.key, trackCount: entry.value))
+        .toList();
+    folders.sort(
+      (a, b) => p
+          .basename(a.path)
+          .toLowerCase()
+          .compareTo(p.basename(b.path).toLowerCase()),
+    );
+    return List.unmodifiable(folders);
   }
 
   /// Clears out video entries and everything referencing them, so a library
@@ -103,21 +144,45 @@ class SongRepository {
     final videoIds = await (_database.select(
       _database.songs,
     )..where((t) => t.isVideo.equals(true))).map((row) => row.id).get();
-    if (videoIds.isEmpty) return;
+    await _removeSongs(videoIds);
+  }
 
+  /// Drops cached songs the current [filter] no longer admits.
+  ///
+  /// Decided from the cached row's own path and duration rather than from
+  /// what the scan returned: a song absent from a scan may simply be on
+  /// storage that isn't mounted, and that case belongs to missing-file
+  /// detection, not here.
+  Future<void> _pruneFiltered(LibrarySourceFilter filter) async {
+    final rows = await _database.select(_database.songs).get();
+    final doomed = [
+      for (final row in rows)
+        if (!row.isVideo &&
+            !filter.allows(
+              row.filePath,
+              Duration(milliseconds: row.durationMs),
+            ))
+          row.id,
+    ];
+    await _removeSongs(doomed);
+  }
+
+  /// Deletes [songIds] and everything pointing at them, in one transaction.
+  Future<void> _removeSongs(List<String> songIds) async {
+    if (songIds.isEmpty) return;
     await _database.transaction(() async {
       await (_database.delete(
         _database.songVibes,
-      )..where((t) => t.songId.isIn(videoIds))).go();
+      )..where((t) => t.songId.isIn(songIds))).go();
       await (_database.delete(
         _database.playlistSongs,
-      )..where((t) => t.songId.isIn(videoIds))).go();
+      )..where((t) => t.songId.isIn(songIds))).go();
       await (_database.delete(
         _database.gameScores,
-      )..where((t) => t.songId.isIn(videoIds))).go();
+      )..where((t) => t.songId.isIn(songIds))).go();
       await (_database.delete(
         _database.songs,
-      )..where((t) => t.isVideo.equals(true))).go();
+      )..where((t) => t.id.isIn(songIds))).go();
     });
   }
 

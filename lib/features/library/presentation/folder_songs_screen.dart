@@ -2,158 +2,91 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
-import '../../../core/utils/song_search.dart';
 import '../../../data/models/song.dart';
-import '../../../shared/widgets/app_search_field.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
 import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/play_shuffle_header.dart';
 import '../../../shared/widgets/song_list_tile.dart';
 import '../../playback/application/playback_controller.dart';
-import '../../library/application/library_controller.dart';
+import '../../vibe_tagging/application/vibe_tagging_controller.dart';
+import '../application/library_controller.dart';
+import '../application/library_view_controller.dart';
+import 'library_view_sheet.dart';
 
-enum _DurationFilter { all, underOneMinute, oneMinuteOrMore }
-
-enum _SongSort { folderOrder, title, artist, duration }
-
-/// Songs within a single device folder, with play/shuffle-all header
-/// actions, search, sort, and a duration sort/filter control (SRS F-2.3:
-/// sort by duration, e.g. above or below one minute).
+/// Songs within a single device folder, with play/shuffle-all header actions
+/// and the same search, sort and filter controls every other list has.
+///
+/// It used to carry its own private sort and duration-filter menus, which
+/// meant "sort by length" here and "sort by length" on the library were two
+/// different controls with two different sets of options. It now shares
+/// [libraryViewProvider] with the rest of the app.
 ///
 /// The folder's songs are re-derived from the live library rather than kept
 /// as the snapshot passed in: liking a track here, or editing its tags, has
 /// to be reflected on the row that was just tapped.
-class FolderSongsScreen extends ConsumerStatefulWidget {
+class FolderSongsScreen extends ConsumerWidget {
   const FolderSongsScreen({super.key, required this.folderPath});
 
   final String folderPath;
 
   @override
-  ConsumerState<FolderSongsScreen> createState() => _FolderSongsScreenState();
-}
-
-class _FolderSongsScreenState extends ConsumerState<FolderSongsScreen> {
-  _DurationFilter _filter = _DurationFilter.all;
-  _SongSort _sort = _SongSort.folderOrder;
-  String _query = '';
-
-  List<Song> _visibleSongs(List<Song> folderSongs) {
-    final songs = folderSongs.where((song) {
-      final durationOk = switch (_filter) {
-        _DurationFilter.all => true,
-        _DurationFilter.underOneMinute =>
-          song.duration < const Duration(minutes: 1),
-        _DurationFilter.oneMinuteOrMore =>
-          song.duration >= const Duration(minutes: 1),
-      };
-      return durationOk && songMatchesQuery(song, _query);
-    }).toList();
-
-    switch (_sort) {
-      case _SongSort.folderOrder:
-        break;
-      case _SongSort.title:
-        songs.sort(
-          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-        );
-      case _SongSort.artist:
-        songs.sort(
-          (a, b) => a.artist.toLowerCase().compareTo(b.artist.toLowerCase()),
-        );
-      case _SongSort.duration:
-        songs.sort((a, b) => a.duration.compareTo(b.duration));
-    }
-    return songs;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(libraryStreamProvider).value ?? const <Song>[];
     final folderSongs = [
       for (final song in library)
-        if (p.dirname(song.filePath) == widget.folderPath) song,
+        if (p.dirname(song.filePath) == folderPath) song,
     ];
-    final filtered = _visibleSongs(folderSongs);
-    final scheme = Theme.of(context).colorScheme;
+
+    final query = ref.watch(librarySearchQueryProvider);
+    final view = ref.watch(libraryViewProvider);
+    final visible = applyLibraryView(
+      folderSongs,
+      query: query,
+      // The screen *is* the folder, so the shared folder narrowing would only
+      // ever empty it — dropped here and hidden in the sheet.
+      view: view.copyWith(deviceFolder: null),
+      vibeTaggedSongIds: ref.watch(vibeTaggedSongIdsProvider),
+      restrictToSongIds: ref.watch(libraryVibeCategoryRestrictionProvider),
+    );
 
     return Scaffold(
       bottomNavigationBar: const MiniPlayer(),
-      appBar: GradientAppBar(
-        title: Text(p.basename(widget.folderPath)),
-        actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              shape: BoxShape.circle,
-            ),
-            child: PopupMenuButton<_SongSort>(
-              icon: Icon(Icons.sort, color: scheme.primary),
-              tooltip: 'Sort',
-              initialValue: _sort,
-              onSelected: (value) => setState(() => _sort = value),
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: _SongSort.folderOrder,
-                  child: Text('Folder order'),
-                ),
-                PopupMenuItem(value: _SongSort.title, child: Text('Title')),
-                PopupMenuItem(value: _SongSort.artist, child: Text('Artist')),
-                PopupMenuItem(value: _SongSort.duration, child: Text('Length')),
-              ],
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              shape: BoxShape.circle,
-            ),
-            child: PopupMenuButton<_DurationFilter>(
-              icon: Icon(Icons.filter_list, color: scheme.primary),
-              tooltip: 'Filter by duration',
-              initialValue: _filter,
-              onSelected: (value) => setState(() => _filter = value),
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: _DurationFilter.all,
-                  child: Text('All durations'),
-                ),
-                PopupMenuItem(
-                  value: _DurationFilter.underOneMinute,
-                  child: Text('Under 1 minute'),
-                ),
-                PopupMenuItem(
-                  value: _DurationFilter.oneMinuteOrMore,
-                  child: Text('1 minute or more'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      appBar: GradientAppBar(title: Text(p.basename(folderPath))),
       body: Column(
         children: [
-          PlayShuffleHeader(songs: filtered),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: AppSearchField(
-              hint: 'Search in folder',
-              onChanged: (query) => setState(() => _query = query),
-            ),
+          PlayShuffleHeader(songs: visible),
+          const LibraryViewControls(
+            hint: 'Search in folder',
+            showFolderFilter: false,
           ),
           Expanded(
-            child: filtered.isEmpty
-                ? const Center(child: Text('No songs match.'))
+            child: visible.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        folderSongs.isEmpty
+                            ? 'This folder has no songs.'
+                            : noMatchMessage(
+                                query: query,
+                                view: view.copyWith(deviceFolder: null),
+                                vibeFolderName: ref.watch(
+                                  libraryVibeCategoryNameProvider,
+                                ),
+                              ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
                 : ListView.builder(
-                    itemCount: filtered.length,
+                    itemCount: visible.length,
                     itemBuilder: (context, index) {
-                      final song = filtered[index];
+                      final song = visible[index];
                       return SongListTile(
                         song: song,
                         onTap: () => ref
                             .read(playbackControllerProvider.notifier)
-                            .playQueue(filtered, startIndex: index),
+                            .playQueue(visible, startIndex: index),
                       );
                     },
                   ),

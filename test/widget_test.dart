@@ -51,6 +51,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // Scrolled to rather than tapped where it sits: Display is the last card,
+    // and the list can be taller than the 800x600 test viewport.
+    await tester.ensureVisible(find.text('Display'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Display'));
     await tester.pumpAndSettle();
 

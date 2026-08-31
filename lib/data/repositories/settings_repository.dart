@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../datasources/app_database.dart';
 import '../models/app_settings.dart';
+import '../models/library_source_filter.dart';
 
 /// Single access point for app-wide settings: adaptive dark mode, theme and
 /// visualizer color, crossfade, and the selected equalizer preset.
@@ -221,6 +222,37 @@ class SettingsRepository {
     );
   }
 
+  Future<void> setCompactNowPlaying(bool enabled) {
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        compactNowPlaying: Value(enabled),
+      ),
+      onConflict: (_) => SettingsCompanion(compactNowPlaying: Value(enabled)),
+    );
+  }
+
+  /// Writes the whole [LibrarySourceFilter] at once. Its three parts are always
+  /// changed together from the Library Sources screen, and each write kicks
+  /// off a rescan — one write means one rescan.
+  Future<void> setLibrarySourceFilter(LibrarySourceFilter filter) {
+    final seconds = filter.minimumDuration.inSeconds;
+    final overrides = filter.overridesToJson();
+    return _upsert(
+      SettingsCompanion.insert(
+        id: Settings.singletonId,
+        autoExcludeNonMusicFolders: Value(filter.autoExcludeNonMusicFolders),
+        minimumTrackSeconds: Value(seconds),
+        libraryFolderOverridesJson: Value(overrides),
+      ),
+      onConflict: (_) => SettingsCompanion(
+        autoExcludeNonMusicFolders: Value(filter.autoExcludeNonMusicFolders),
+        minimumTrackSeconds: Value(seconds),
+        libraryFolderOverridesJson: Value(overrides),
+      ),
+    );
+  }
+
   /// Writes every setting in one row write, used by `BackupRepository` on
   /// restore.
   ///
@@ -255,6 +287,16 @@ class SettingsRepository {
       seekStepSeconds: Value(settings.seekStep.inSeconds),
       includeVideos: Value(settings.includeVideos),
       realVisualizerEnabled: Value(settings.realVisualizerEnabled),
+      autoExcludeNonMusicFolders: Value(
+        settings.librarySourceFilter.autoExcludeNonMusicFolders,
+      ),
+      minimumTrackSeconds: Value(
+        settings.librarySourceFilter.minimumDuration.inSeconds,
+      ),
+      libraryFolderOverridesJson: Value(
+        settings.librarySourceFilter.overridesToJson(),
+      ),
+      compactNowPlaying: Value(settings.compactNowPlaying),
     );
     return _upsert(row, onConflict: (_) => row);
   }
@@ -307,6 +349,22 @@ class SettingsRepository {
       seekStep: Duration(seconds: row.seekStepSeconds),
       includeVideos: row.includeVideos,
       realVisualizerEnabled: row.realVisualizerEnabled,
+      librarySourceFilter: _librarySourceFilterFrom(row),
+      compactNowPlaying: row.compactNowPlaying,
+    );
+  }
+
+  static LibrarySourceFilter _librarySourceFilterFrom(SettingsRow row) {
+    final overrides = LibrarySourceFilter.overridesFromJson(
+      row.libraryFolderOverridesJson,
+    );
+    return LibrarySourceFilter(
+      autoExcludeNonMusicFolders: row.autoExcludeNonMusicFolders,
+      // Clamped rather than trusted: a negative value would mean "shorter
+      // than nothing", and an hour-long floor would empty the library.
+      minimumDuration: Duration(seconds: row.minimumTrackSeconds.clamp(0, 600)),
+      includedFolders: overrides.included,
+      excludedFolders: overrides.excluded,
     );
   }
 }

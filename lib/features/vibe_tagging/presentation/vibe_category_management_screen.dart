@@ -6,6 +6,7 @@ import '../../../data/models/vibe_tag.dart';
 import '../../../data/repositories/vibe_tag_repository.dart';
 import '../../../shared/widgets/app_bar_icon_action.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../application/vibe_tagging_controller.dart';
 import 'vibe_tag_management_screen.dart';
 
@@ -24,6 +25,7 @@ class VibeCategoryManagementScreen extends ConsumerWidget {
     final groups = ref.watch(vibeGroupsProvider);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: GradientAppBar(
         title: const Text('Vibe Folders'),
         actions: [

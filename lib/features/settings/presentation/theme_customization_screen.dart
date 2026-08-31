@@ -7,6 +7,7 @@ import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../application/settings_controller.dart';
 
 /// Choose the app's theme family and color, with a live preview
@@ -24,6 +25,7 @@ class ThemeCustomizationScreen extends ConsumerWidget {
     final selectedStyle = ref.watch(appThemeStyleProvider);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: const GradientAppBar(title: Text('Theme Customization')),
       body: Container(
         decoration: BoxDecoration(

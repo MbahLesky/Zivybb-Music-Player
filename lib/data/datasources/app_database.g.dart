@@ -3237,6 +3237,59 @@ class $SettingsTable extends Settings
         ),
         defaultValue: const Constant(false),
       );
+  static const VerificationMeta _autoExcludeNonMusicFoldersMeta =
+      const VerificationMeta('autoExcludeNonMusicFolders');
+  @override
+  late final GeneratedColumn<bool> autoExcludeNonMusicFolders =
+      GeneratedColumn<bool>(
+        'auto_exclude_non_music_folders',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("auto_exclude_non_music_folders" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _minimumTrackSecondsMeta =
+      const VerificationMeta('minimumTrackSeconds');
+  @override
+  late final GeneratedColumn<int> minimumTrackSeconds = GeneratedColumn<int>(
+    'minimum_track_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(30),
+  );
+  static const VerificationMeta _libraryFolderOverridesJsonMeta =
+      const VerificationMeta('libraryFolderOverridesJson');
+  @override
+  late final GeneratedColumn<String> libraryFolderOverridesJson =
+      GeneratedColumn<String>(
+        'library_folder_overrides_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      );
+  static const VerificationMeta _compactNowPlayingMeta = const VerificationMeta(
+    'compactNowPlaying',
+  );
+  @override
+  late final GeneratedColumn<bool> compactNowPlaying = GeneratedColumn<bool>(
+    'compact_now_playing',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("compact_now_playing" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3261,6 +3314,10 @@ class $SettingsTable extends Settings
     seekStepSeconds,
     includeVideos,
     realVisualizerEnabled,
+    autoExcludeNonMusicFolders,
+    minimumTrackSeconds,
+    libraryFolderOverridesJson,
+    compactNowPlaying,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3468,6 +3525,42 @@ class $SettingsTable extends Settings
         ),
       );
     }
+    if (data.containsKey('auto_exclude_non_music_folders')) {
+      context.handle(
+        _autoExcludeNonMusicFoldersMeta,
+        autoExcludeNonMusicFolders.isAcceptableOrUnknown(
+          data['auto_exclude_non_music_folders']!,
+          _autoExcludeNonMusicFoldersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('minimum_track_seconds')) {
+      context.handle(
+        _minimumTrackSecondsMeta,
+        minimumTrackSeconds.isAcceptableOrUnknown(
+          data['minimum_track_seconds']!,
+          _minimumTrackSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('library_folder_overrides_json')) {
+      context.handle(
+        _libraryFolderOverridesJsonMeta,
+        libraryFolderOverridesJson.isAcceptableOrUnknown(
+          data['library_folder_overrides_json']!,
+          _libraryFolderOverridesJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('compact_now_playing')) {
+      context.handle(
+        _compactNowPlayingMeta,
+        compactNowPlaying.isAcceptableOrUnknown(
+          data['compact_now_playing']!,
+          _compactNowPlayingMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3565,6 +3658,22 @@ class $SettingsTable extends Settings
         DriftSqlType.bool,
         data['${effectivePrefix}real_visualizer_enabled'],
       )!,
+      autoExcludeNonMusicFolders: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_exclude_non_music_folders'],
+      )!,
+      minimumTrackSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}minimum_track_seconds'],
+      )!,
+      libraryFolderOverridesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}library_folder_overrides_json'],
+      )!,
+      compactNowPlaying: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}compact_now_playing'],
+      )!,
     );
   }
 
@@ -3617,6 +3726,22 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
   /// Opt-in: drive the visualizer from the real audio signal rather than the
   /// simulated waveform. Off by default because it needs RECORD_AUDIO.
   final bool realVisualizerEnabled;
+
+  /// Skip folders whose name says they hold voice notes, recordings, or
+  /// ringtones rather than music — see `LibrarySourceFilter`.
+  final bool autoExcludeNonMusicFolders;
+
+  /// Audio shorter than this is not a track. 0 keeps everything.
+  final int minimumTrackSeconds;
+
+  /// The user's per-folder include/exclude decisions, as the JSON object
+  /// `LibrarySourceFilter.overridesToJson` writes. One column rather than two
+  /// because the two sets are only ever read and written together.
+  final String libraryFolderOverridesJson;
+
+  /// Show the stripped-back Now Playing layout — artwork, title, and the
+  /// three transport buttons.
+  final bool compactNowPlaying;
   const SettingsRow({
     required this.id,
     required this.adaptiveDarkModeEnabled,
@@ -3640,6 +3765,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     required this.seekStepSeconds,
     required this.includeVideos,
     required this.realVisualizerEnabled,
+    required this.autoExcludeNonMusicFolders,
+    required this.minimumTrackSeconds,
+    required this.libraryFolderOverridesJson,
+    required this.compactNowPlaying,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3682,6 +3811,14 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     map['seek_step_seconds'] = Variable<int>(seekStepSeconds);
     map['include_videos'] = Variable<bool>(includeVideos);
     map['real_visualizer_enabled'] = Variable<bool>(realVisualizerEnabled);
+    map['auto_exclude_non_music_folders'] = Variable<bool>(
+      autoExcludeNonMusicFolders,
+    );
+    map['minimum_track_seconds'] = Variable<int>(minimumTrackSeconds);
+    map['library_folder_overrides_json'] = Variable<String>(
+      libraryFolderOverridesJson,
+    );
+    map['compact_now_playing'] = Variable<bool>(compactNowPlaying);
     return map;
   }
 
@@ -3713,6 +3850,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       seekStepSeconds: Value(seekStepSeconds),
       includeVideos: Value(includeVideos),
       realVisualizerEnabled: Value(realVisualizerEnabled),
+      autoExcludeNonMusicFolders: Value(autoExcludeNonMusicFolders),
+      minimumTrackSeconds: Value(minimumTrackSeconds),
+      libraryFolderOverridesJson: Value(libraryFolderOverridesJson),
+      compactNowPlaying: Value(compactNowPlaying),
     );
   }
 
@@ -3772,6 +3913,16 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       realVisualizerEnabled: serializer.fromJson<bool>(
         json['realVisualizerEnabled'],
       ),
+      autoExcludeNonMusicFolders: serializer.fromJson<bool>(
+        json['autoExcludeNonMusicFolders'],
+      ),
+      minimumTrackSeconds: serializer.fromJson<int>(
+        json['minimumTrackSeconds'],
+      ),
+      libraryFolderOverridesJson: serializer.fromJson<String>(
+        json['libraryFolderOverridesJson'],
+      ),
+      compactNowPlaying: serializer.fromJson<bool>(json['compactNowPlaying']),
     );
   }
   @override
@@ -3814,6 +3965,14 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       'seekStepSeconds': serializer.toJson<int>(seekStepSeconds),
       'includeVideos': serializer.toJson<bool>(includeVideos),
       'realVisualizerEnabled': serializer.toJson<bool>(realVisualizerEnabled),
+      'autoExcludeNonMusicFolders': serializer.toJson<bool>(
+        autoExcludeNonMusicFolders,
+      ),
+      'minimumTrackSeconds': serializer.toJson<int>(minimumTrackSeconds),
+      'libraryFolderOverridesJson': serializer.toJson<String>(
+        libraryFolderOverridesJson,
+      ),
+      'compactNowPlaying': serializer.toJson<bool>(compactNowPlaying),
     };
   }
 
@@ -3840,6 +3999,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     int? seekStepSeconds,
     bool? includeVideos,
     bool? realVisualizerEnabled,
+    bool? autoExcludeNonMusicFolders,
+    int? minimumTrackSeconds,
+    String? libraryFolderOverridesJson,
+    bool? compactNowPlaying,
   }) => SettingsRow(
     id: id ?? this.id,
     adaptiveDarkModeEnabled:
@@ -3873,6 +4036,12 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     seekStepSeconds: seekStepSeconds ?? this.seekStepSeconds,
     includeVideos: includeVideos ?? this.includeVideos,
     realVisualizerEnabled: realVisualizerEnabled ?? this.realVisualizerEnabled,
+    autoExcludeNonMusicFolders:
+        autoExcludeNonMusicFolders ?? this.autoExcludeNonMusicFolders,
+    minimumTrackSeconds: minimumTrackSeconds ?? this.minimumTrackSeconds,
+    libraryFolderOverridesJson:
+        libraryFolderOverridesJson ?? this.libraryFolderOverridesJson,
+    compactNowPlaying: compactNowPlaying ?? this.compactNowPlaying,
   );
   SettingsRow copyWithCompanion(SettingsCompanion data) {
     return SettingsRow(
@@ -3940,6 +4109,18 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
       realVisualizerEnabled: data.realVisualizerEnabled.present
           ? data.realVisualizerEnabled.value
           : this.realVisualizerEnabled,
+      autoExcludeNonMusicFolders: data.autoExcludeNonMusicFolders.present
+          ? data.autoExcludeNonMusicFolders.value
+          : this.autoExcludeNonMusicFolders,
+      minimumTrackSeconds: data.minimumTrackSeconds.present
+          ? data.minimumTrackSeconds.value
+          : this.minimumTrackSeconds,
+      libraryFolderOverridesJson: data.libraryFolderOverridesJson.present
+          ? data.libraryFolderOverridesJson.value
+          : this.libraryFolderOverridesJson,
+      compactNowPlaying: data.compactNowPlaying.present
+          ? data.compactNowPlaying.value
+          : this.compactNowPlaying,
     );
   }
 
@@ -3967,7 +4148,11 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           ..write('visualizerBarCount: $visualizerBarCount, ')
           ..write('seekStepSeconds: $seekStepSeconds, ')
           ..write('includeVideos: $includeVideos, ')
-          ..write('realVisualizerEnabled: $realVisualizerEnabled')
+          ..write('realVisualizerEnabled: $realVisualizerEnabled, ')
+          ..write('autoExcludeNonMusicFolders: $autoExcludeNonMusicFolders, ')
+          ..write('minimumTrackSeconds: $minimumTrackSeconds, ')
+          ..write('libraryFolderOverridesJson: $libraryFolderOverridesJson, ')
+          ..write('compactNowPlaying: $compactNowPlaying')
           ..write(')'))
         .toString();
   }
@@ -3996,6 +4181,10 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
     seekStepSeconds,
     includeVideos,
     realVisualizerEnabled,
+    autoExcludeNonMusicFolders,
+    minimumTrackSeconds,
+    libraryFolderOverridesJson,
+    compactNowPlaying,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -4023,7 +4212,11 @@ class SettingsRow extends DataClass implements Insertable<SettingsRow> {
           other.visualizerBarCount == this.visualizerBarCount &&
           other.seekStepSeconds == this.seekStepSeconds &&
           other.includeVideos == this.includeVideos &&
-          other.realVisualizerEnabled == this.realVisualizerEnabled);
+          other.realVisualizerEnabled == this.realVisualizerEnabled &&
+          other.autoExcludeNonMusicFolders == this.autoExcludeNonMusicFolders &&
+          other.minimumTrackSeconds == this.minimumTrackSeconds &&
+          other.libraryFolderOverridesJson == this.libraryFolderOverridesJson &&
+          other.compactNowPlaying == this.compactNowPlaying);
 }
 
 class SettingsCompanion extends UpdateCompanion<SettingsRow> {
@@ -4049,6 +4242,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
   final Value<int> seekStepSeconds;
   final Value<bool> includeVideos;
   final Value<bool> realVisualizerEnabled;
+  final Value<bool> autoExcludeNonMusicFolders;
+  final Value<int> minimumTrackSeconds;
+  final Value<String> libraryFolderOverridesJson;
+  final Value<bool> compactNowPlaying;
   final Value<int> rowid;
   const SettingsCompanion({
     this.id = const Value.absent(),
@@ -4073,6 +4270,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.seekStepSeconds = const Value.absent(),
     this.includeVideos = const Value.absent(),
     this.realVisualizerEnabled = const Value.absent(),
+    this.autoExcludeNonMusicFolders = const Value.absent(),
+    this.minimumTrackSeconds = const Value.absent(),
+    this.libraryFolderOverridesJson = const Value.absent(),
+    this.compactNowPlaying = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsCompanion.insert({
@@ -4098,6 +4299,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     this.seekStepSeconds = const Value.absent(),
     this.includeVideos = const Value.absent(),
     this.realVisualizerEnabled = const Value.absent(),
+    this.autoExcludeNonMusicFolders = const Value.absent(),
+    this.minimumTrackSeconds = const Value.absent(),
+    this.libraryFolderOverridesJson = const Value.absent(),
+    this.compactNowPlaying = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<SettingsRow> custom({
@@ -4123,6 +4328,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Expression<int>? seekStepSeconds,
     Expression<bool>? includeVideos,
     Expression<bool>? realVisualizerEnabled,
+    Expression<bool>? autoExcludeNonMusicFolders,
+    Expression<int>? minimumTrackSeconds,
+    Expression<String>? libraryFolderOverridesJson,
+    Expression<bool>? compactNowPlaying,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4162,6 +4371,13 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
       if (includeVideos != null) 'include_videos': includeVideos,
       if (realVisualizerEnabled != null)
         'real_visualizer_enabled': realVisualizerEnabled,
+      if (autoExcludeNonMusicFolders != null)
+        'auto_exclude_non_music_folders': autoExcludeNonMusicFolders,
+      if (minimumTrackSeconds != null)
+        'minimum_track_seconds': minimumTrackSeconds,
+      if (libraryFolderOverridesJson != null)
+        'library_folder_overrides_json': libraryFolderOverridesJson,
+      if (compactNowPlaying != null) 'compact_now_playing': compactNowPlaying,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4189,6 +4405,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
     Value<int>? seekStepSeconds,
     Value<bool>? includeVideos,
     Value<bool>? realVisualizerEnabled,
+    Value<bool>? autoExcludeNonMusicFolders,
+    Value<int>? minimumTrackSeconds,
+    Value<String>? libraryFolderOverridesJson,
+    Value<bool>? compactNowPlaying,
     Value<int>? rowid,
   }) {
     return SettingsCompanion(
@@ -4223,6 +4443,12 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
       includeVideos: includeVideos ?? this.includeVideos,
       realVisualizerEnabled:
           realVisualizerEnabled ?? this.realVisualizerEnabled,
+      autoExcludeNonMusicFolders:
+          autoExcludeNonMusicFolders ?? this.autoExcludeNonMusicFolders,
+      minimumTrackSeconds: minimumTrackSeconds ?? this.minimumTrackSeconds,
+      libraryFolderOverridesJson:
+          libraryFolderOverridesJson ?? this.libraryFolderOverridesJson,
+      compactNowPlaying: compactNowPlaying ?? this.compactNowPlaying,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4316,6 +4542,22 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
         realVisualizerEnabled.value,
       );
     }
+    if (autoExcludeNonMusicFolders.present) {
+      map['auto_exclude_non_music_folders'] = Variable<bool>(
+        autoExcludeNonMusicFolders.value,
+      );
+    }
+    if (minimumTrackSeconds.present) {
+      map['minimum_track_seconds'] = Variable<int>(minimumTrackSeconds.value);
+    }
+    if (libraryFolderOverridesJson.present) {
+      map['library_folder_overrides_json'] = Variable<String>(
+        libraryFolderOverridesJson.value,
+      );
+    }
+    if (compactNowPlaying.present) {
+      map['compact_now_playing'] = Variable<bool>(compactNowPlaying.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4347,6 +4589,10 @@ class SettingsCompanion extends UpdateCompanion<SettingsRow> {
           ..write('seekStepSeconds: $seekStepSeconds, ')
           ..write('includeVideos: $includeVideos, ')
           ..write('realVisualizerEnabled: $realVisualizerEnabled, ')
+          ..write('autoExcludeNonMusicFolders: $autoExcludeNonMusicFolders, ')
+          ..write('minimumTrackSeconds: $minimumTrackSeconds, ')
+          ..write('libraryFolderOverridesJson: $libraryFolderOverridesJson, ')
+          ..write('compactNowPlaying: $compactNowPlaying, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6827,6 +7073,10 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<int> seekStepSeconds,
       Value<bool> includeVideos,
       Value<bool> realVisualizerEnabled,
+      Value<bool> autoExcludeNonMusicFolders,
+      Value<int> minimumTrackSeconds,
+      Value<String> libraryFolderOverridesJson,
+      Value<bool> compactNowPlaying,
       Value<int> rowid,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
@@ -6853,6 +7103,10 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<int> seekStepSeconds,
       Value<bool> includeVideos,
       Value<bool> realVisualizerEnabled,
+      Value<bool> autoExcludeNonMusicFolders,
+      Value<int> minimumTrackSeconds,
+      Value<String> libraryFolderOverridesJson,
+      Value<bool> compactNowPlaying,
       Value<int> rowid,
     });
 
@@ -6972,6 +7226,26 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get realVisualizerEnabled => $composableBuilder(
     column: $table.realVisualizerEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoExcludeNonMusicFolders => $composableBuilder(
+    column: $table.autoExcludeNonMusicFolders,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get minimumTrackSeconds => $composableBuilder(
+    column: $table.minimumTrackSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get libraryFolderOverridesJson => $composableBuilder(
+    column: $table.libraryFolderOverridesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get compactNowPlaying => $composableBuilder(
+    column: $table.compactNowPlaying,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7094,6 +7368,26 @@ class $$SettingsTableOrderingComposer
     column: $table.realVisualizerEnabled,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get autoExcludeNonMusicFolders => $composableBuilder(
+    column: $table.autoExcludeNonMusicFolders,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get minimumTrackSeconds => $composableBuilder(
+    column: $table.minimumTrackSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get libraryFolderOverridesJson => $composableBuilder(
+    column: $table.libraryFolderOverridesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get compactNowPlaying => $composableBuilder(
+    column: $table.compactNowPlaying,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -7212,6 +7506,26 @@ class $$SettingsTableAnnotationComposer
     column: $table.realVisualizerEnabled,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get autoExcludeNonMusicFolders => $composableBuilder(
+    column: $table.autoExcludeNonMusicFolders,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get minimumTrackSeconds => $composableBuilder(
+    column: $table.minimumTrackSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get libraryFolderOverridesJson => $composableBuilder(
+    column: $table.libraryFolderOverridesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get compactNowPlaying => $composableBuilder(
+    column: $table.compactNowPlaying,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -7267,6 +7581,10 @@ class $$SettingsTableTableManager
                 Value<int> seekStepSeconds = const Value.absent(),
                 Value<bool> includeVideos = const Value.absent(),
                 Value<bool> realVisualizerEnabled = const Value.absent(),
+                Value<bool> autoExcludeNonMusicFolders = const Value.absent(),
+                Value<int> minimumTrackSeconds = const Value.absent(),
+                Value<String> libraryFolderOverridesJson = const Value.absent(),
+                Value<bool> compactNowPlaying = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion(
                 id: id,
@@ -7291,6 +7609,10 @@ class $$SettingsTableTableManager
                 seekStepSeconds: seekStepSeconds,
                 includeVideos: includeVideos,
                 realVisualizerEnabled: realVisualizerEnabled,
+                autoExcludeNonMusicFolders: autoExcludeNonMusicFolders,
+                minimumTrackSeconds: minimumTrackSeconds,
+                libraryFolderOverridesJson: libraryFolderOverridesJson,
+                compactNowPlaying: compactNowPlaying,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7317,6 +7639,10 @@ class $$SettingsTableTableManager
                 Value<int> seekStepSeconds = const Value.absent(),
                 Value<bool> includeVideos = const Value.absent(),
                 Value<bool> realVisualizerEnabled = const Value.absent(),
+                Value<bool> autoExcludeNonMusicFolders = const Value.absent(),
+                Value<int> minimumTrackSeconds = const Value.absent(),
+                Value<String> libraryFolderOverridesJson = const Value.absent(),
+                Value<bool> compactNowPlaying = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsCompanion.insert(
                 id: id,
@@ -7341,6 +7667,10 @@ class $$SettingsTableTableManager
                 seekStepSeconds: seekStepSeconds,
                 includeVideos: includeVideos,
                 realVisualizerEnabled: realVisualizerEnabled,
+                autoExcludeNonMusicFolders: autoExcludeNonMusicFolders,
+                minimumTrackSeconds: minimumTrackSeconds,
+                libraryFolderOverridesJson: libraryFolderOverridesJson,
+                compactNowPlaying: compactNowPlaying,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

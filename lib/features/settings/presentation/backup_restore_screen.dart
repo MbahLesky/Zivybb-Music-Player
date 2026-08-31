@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../data/repositories/backup_repository.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../playlists/application/vibe_playlist_generator.dart';
 
@@ -74,6 +75,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     final backups = ref.watch(backupsStreamProvider);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: const GradientAppBar(title: Text('Backup & Restore')),
       body: Column(
         children: [

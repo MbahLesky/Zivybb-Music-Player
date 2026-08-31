@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../datasources/app_database.dart';
 import '../models/app_settings.dart';
 import '../models/equalizer_preset.dart';
+import '../models/library_source_filter.dart';
 import '../models/vibe_tag.dart';
 import 'equalizer_preset_repository.dart';
 import 'playlist_repository.dart';
@@ -49,9 +50,11 @@ class BackupEntry {
 /// rather than failing the whole restore, consistent with this app's
 /// missing-file philosophy (SRS F-5.3).
 ///
-/// Format version 4 carries every stored setting rather than the six theme
-/// and crossfade ones earlier versions kept, plus the user's hand-tuned
-/// equalizer curve. Format version 3 adds the vibe folders and each vibe's
+/// Format version 5 adds the library-source filter (which folders and what
+/// minimum track length count as music). Format version 4 carries every
+/// stored setting rather than the six theme and crossfade ones earlier
+/// versions kept, plus the user's hand-tuned equalizer curve. Format
+/// version 3 adds the vibe folders and each vibe's
 /// place in them. Version 2 stores a list of vibes per song plus the vibe
 /// definitions themselves; version 1 (a single `moodTagId` per song, with no
 /// definitions) is still restorable — see [restoreBackup].
@@ -99,7 +102,7 @@ class BackupRepository {
     );
 
     final data = {
-      'version': 4,
+      'version': 5,
       // Every column of the settings row. `AppSettings.themeStyleName` is
       // deliberately absent: it has no column behind it, so there is nothing
       // stored for a backup to carry.
@@ -125,6 +128,13 @@ class BackupRepository {
         'seekStepSeconds': settings.seekStep.inSeconds,
         'includeVideos': settings.includeVideos,
         'realVisualizerEnabled': settings.realVisualizerEnabled,
+        'autoExcludeNonMusicFolders':
+            settings.librarySourceFilter.autoExcludeNonMusicFolders,
+        'minimumTrackSeconds':
+            settings.librarySourceFilter.minimumDuration.inSeconds,
+        'libraryFolderOverrides': settings.librarySourceFilter
+            .overridesToJson(),
+        'compactNowPlaying': settings.compactNowPlaying,
       },
       'equalizer': {
         // Only the hand-tuned curve. The built-in presets are defined in
@@ -421,6 +431,37 @@ class BackupRepository {
       realVisualizerEnabled:
           json['realVisualizerEnabled'] as bool? ??
           current.realVisualizerEnabled,
+      librarySourceFilter: _librarySourceFilterFrom(
+        json,
+        current.librarySourceFilter,
+      ),
+      compactNowPlaying:
+          json['compactNowPlaying'] as bool? ?? current.compactNowPlaying,
+    );
+  }
+
+  /// Reads the library filter out of a backup, falling back field by field
+  /// to [current] — backups written before this setting existed simply
+  /// leave what is already on the device alone.
+  static LibrarySourceFilter _librarySourceFilterFrom(
+    Map<String, Object?> json,
+    LibrarySourceFilter current,
+  ) {
+    final overridesJson = json['libraryFolderOverrides'] as String?;
+    final overrides = overridesJson == null
+        ? (included: current.includedFolders, excluded: current.excludedFolders)
+        : LibrarySourceFilter.overridesFromJson(overridesJson);
+    return LibrarySourceFilter(
+      autoExcludeNonMusicFolders:
+          json['autoExcludeNonMusicFolders'] as bool? ??
+          current.autoExcludeNonMusicFolders,
+      minimumDuration: Duration(
+        seconds:
+            json['minimumTrackSeconds'] as int? ??
+            current.minimumDuration.inSeconds,
+      ),
+      includedFolders: overrides.included,
+      excludedFolders: overrides.excluded,
     );
   }
 

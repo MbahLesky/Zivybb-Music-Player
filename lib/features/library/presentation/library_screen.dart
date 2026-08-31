@@ -23,6 +23,7 @@ import '../../vibe_tagging/application/vibe_tagging_controller.dart';
 import '../application/library_controller.dart';
 import '../application/library_view_controller.dart';
 import 'folder_browser_tab.dart';
+import 'library_view_sheet.dart';
 import 'missing_files_screen.dart';
 
 /// Primary landing screen: entry point to the user's local music
@@ -87,8 +88,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final shuffleable = applyLibraryView(
       library,
       query: ref.watch(librarySearchQueryProvider),
-      sort: ref.watch(librarySortProvider),
-      filter: ref.watch(libraryFilterProvider),
+      view: ref.watch(libraryViewProvider),
       vibeTaggedSongIds: ref.watch(vibeTaggedSongIdsProvider),
       restrictToSongIds: ref.watch(libraryVibeCategoryRestrictionProvider),
     );
@@ -280,13 +280,11 @@ class _SongList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final query = ref.watch(librarySearchQueryProvider);
-    final sort = ref.watch(librarySortProvider);
-    final filter = ref.watch(libraryFilterProvider);
+    final view = ref.watch(libraryViewProvider);
     final visible = applyLibraryView(
       songs,
       query: query,
-      sort: sort,
-      filter: filter,
+      view: view,
       vibeTaggedSongIds: ref.watch(vibeTaggedSongIdsProvider),
       restrictToSongIds: ref.watch(libraryVibeCategoryRestrictionProvider),
     );
@@ -294,7 +292,7 @@ class _SongList extends ConsumerWidget {
 
     return Column(
       children: [
-        const _LibraryViewControls(),
+        const LibraryViewControls(),
         Expanded(
           child: visible.isEmpty
               ? ListView(
@@ -305,7 +303,11 @@ class _SongList extends ConsumerWidget {
                         child: Text(
                           songs.isEmpty
                               ? emptyMessage
-                              : _noMatchMessage(query, filter, folderName),
+                              : noMatchMessage(
+                                  query: query,
+                                  view: view,
+                                  vibeFolderName: folderName,
+                                ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -325,204 +327,6 @@ class _SongList extends ConsumerWidget {
                   },
                 ),
         ),
-      ],
-    );
-  }
-
-  /// Names whichever of the search text, the filter, and the vibe folder are
-  /// actually narrowing the list, so a short list is always explained by the
-  /// controls the user can see.
-  String _noMatchMessage(String query, LibraryFilter filter, String? folder) {
-    final narrowings = [
-      if (query.trim().isNotEmpty) '"${query.trim()}"',
-      if (filter != LibraryFilter.all) '"${filter.label}"',
-      if (folder != null) 'the "$folder" folder',
-    ];
-    if (narrowings.isEmpty) return 'No songs match.';
-    if (narrowings.length == 1) return 'No songs match ${narrowings.first}.';
-    final last = narrowings.removeLast();
-    return 'No songs match ${narrowings.join(', ')} and $last.';
-  }
-}
-
-/// Search field plus filter and sort menus, sitting above the song lists.
-class _LibraryViewControls extends ConsumerStatefulWidget {
-  const _LibraryViewControls();
-
-  @override
-  ConsumerState<_LibraryViewControls> createState() =>
-      _LibraryViewControlsState();
-}
-
-class _LibraryViewControlsState extends ConsumerState<_LibraryViewControls> {
-  late final _controller = TextEditingController(
-    text: ref.read(librarySearchQueryProvider),
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final query = ref.watch(librarySearchQueryProvider);
-    final sort = ref.watch(librarySortProvider);
-    final filter = ref.watch(libraryFilterProvider);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 4, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              textInputAction: TextInputAction.search,
-              onChanged: (value) =>
-                  ref.read(librarySearchQueryProvider.notifier).state = value,
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: 'Search title, artist, album',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: query.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
-                        tooltip: 'Clear search',
-                        onPressed: () {
-                          _controller.clear();
-                          ref.read(librarySearchQueryProvider.notifier).state =
-                              '';
-                        },
-                      ),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.6,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          _MenuButton<LibraryFilter>(
-            icon: Icons.filter_list,
-            tooltipPrefix: 'Filter',
-            selected: filter,
-            options: LibraryFilter.values,
-            labelOf: (value) => value.label,
-            // Highlighted whenever it is actually narrowing the list, so an
-            // unexpectedly short list is easy to explain.
-            isActive: filter != LibraryFilter.all,
-            onSelected: (value) =>
-                ref.read(libraryFilterProvider.notifier).state = value,
-          ),
-          const _VibeFolderMenuButton(),
-          _MenuButton<LibrarySort>(
-            icon: Icons.sort,
-            tooltipPrefix: 'Sort',
-            selected: sort,
-            options: LibrarySort.values,
-            labelOf: (value) => value.label,
-            isActive: sort != LibrarySort.title,
-            onSelected: (value) =>
-                ref.read(librarySortProvider.notifier).state = value,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Narrows the library to songs carrying at least one vibe from a chosen
-/// folder. Hidden entirely when the user has no folders, so it costs nothing
-/// on a library that isn't using them.
-class _VibeFolderMenuButton extends ConsumerWidget {
-  const _VibeFolderMenuButton();
-
-  /// Stands in for "no folder chosen" in the menu.
-  ///
-  /// A `null` menu value cannot be used: [PopupMenuButton] cannot tell a
-  /// null-valued selection from a dismissed menu, and reports both to
-  /// `onCanceled` — so picking "Any folder" would silently do nothing.
-  static const _anyFolder = '';
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categories =
-        ref.watch(vibeCategoriesStreamProvider).value ?? const [];
-    if (categories.isEmpty) return const SizedBox.shrink();
-
-    final selected = ref.watch(libraryVibeCategoryFilterProvider);
-    return _MenuButton<String>(
-      icon: Icons.folder_outlined,
-      tooltipPrefix: 'Vibe folder',
-      selected: selected ?? _anyFolder,
-      options: [_anyFolder, for (final category in categories) category.id],
-      labelOf: (id) {
-        for (final category in categories) {
-          if (category.id == id) return category.name;
-        }
-        return 'Any folder';
-      },
-      isActive: selected != null,
-      onSelected: (value) =>
-          ref.read(libraryVibeCategoryFilterProvider.notifier).state =
-              value == _anyFolder ? null : value,
-    );
-  }
-}
-
-/// A popup menu rendered as an icon button, with a tick beside the current
-/// choice and a tint when that choice is not the default.
-class _MenuButton<T> extends StatelessWidget {
-  const _MenuButton({
-    required this.icon,
-    required this.tooltipPrefix,
-    required this.selected,
-    required this.options,
-    required this.labelOf,
-    required this.isActive,
-    required this.onSelected,
-  });
-
-  final IconData icon;
-  final String tooltipPrefix;
-  final T selected;
-  final List<T> options;
-  final String Function(T) labelOf;
-  final bool isActive;
-  final ValueChanged<T> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return PopupMenuButton<T>(
-      icon: Icon(icon, color: isActive ? theme.colorScheme.primary : null),
-      tooltip: '$tooltipPrefix: ${labelOf(selected)}',
-      initialValue: selected,
-      onSelected: onSelected,
-      itemBuilder: (_) => [
-        for (final option in options)
-          PopupMenuItem(
-            value: option,
-            child: Row(
-              children: [
-                Icon(
-                  option == selected ? Icons.check : null,
-                  size: 18,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 10),
-                Expanded(child: Text(labelOf(option))),
-              ],
-            ),
-          ),
       ],
     );
   }

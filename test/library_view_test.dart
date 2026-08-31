@@ -8,6 +8,7 @@ Song _song({
   String title = 'Song',
   String artist = 'Artist',
   String album = 'Album',
+  String? filePath,
   Duration duration = const Duration(minutes: 3),
   int playCount = 0,
   DateTime? lastPlayedAt,
@@ -16,7 +17,7 @@ Song _song({
 }) {
   return Song(
     id: id,
-    filePath: '/music/$id.mp3',
+    filePath: filePath ?? '/music/$id.mp3',
     title: title,
     artist: artist,
     album: album,
@@ -28,6 +29,28 @@ Song _song({
   );
 }
 
+List<String> _ids(
+  List<Song> songs, {
+  String query = '',
+  LibraryView view = const LibraryView(),
+  Set<String> vibeTaggedSongIds = const {},
+  Set<String>? restrictToSongIds,
+}) => applyLibraryView(
+  songs,
+  query: query,
+  view: view,
+  vibeTaggedSongIds: vibeTaggedSongIds,
+  restrictToSongIds: restrictToSongIds,
+).map((song) => song.id).toList();
+
+List<String> _idsPreservingOrder(List<Song> songs, {String query = ''}) =>
+    applyLibraryView(
+      songs,
+      query: query,
+      view: const LibraryView(),
+      preserveOrder: true,
+    ).map((song) => song.id).toList();
+
 void main() {
   group('applyLibraryView search', () {
     final library = [
@@ -36,286 +59,370 @@ void main() {
       _song(id: '3', title: 'Bluebird', artist: 'Alexi Murdoch', album: 'Time'),
     ];
 
-    List<String> idsFor(String query) => applyLibraryView(
-      library,
-      query: query,
-      sort: LibrarySort.title,
-    ).map((song) => song.id).toList();
-
-    test('an empty query returns everything', () {
-      expect(idsFor('').length, 3);
+    test('an empty query keeps everything', () {
+      expect(_ids(library), ['1', '3', '2']);
     });
 
-    test('matches on title', () {
-      expect(idsFor('blue').toSet(), {'1', '3'});
+    test('matches on title, artist, and album alike', () {
+      expect(_ids(library, query: 'blue'), ['1', '3']);
+      expect(_ids(library, query: 'norah'), ['2']);
+      expect(_ids(library, query: 'power'), ['1']);
     });
 
-    test('matches on artist', () {
-      expect(idsFor('norah'), ['2']);
-    });
-
-    test('matches on album', () {
-      expect(idsFor('power'), ['1']);
-    });
-
-    test('is case insensitive and ignores surrounding whitespace', () {
-      expect(idsFor('  BLUEBIRD  '), ['3']);
-    });
-
-    test('returns nothing when there is no match', () {
-      expect(idsFor('zzzz'), isEmpty);
-    });
-
-    test('leaves the source list untouched', () {
-      applyLibraryView(library, query: 'blue', sort: LibrarySort.artist);
-      expect(library.map((song) => song.id), ['1', '2', '3']);
+    test('ignores case and surrounding space', () {
+      expect(_ids(library, query: '  BLUEBIRD '), ['3']);
     });
   });
 
-  group('applyLibraryView sort', () {
-    final now = DateTime(2026, 8, 4, 12);
+  group('LibraryFilterOption', () {
+    final library = [
+      _song(id: 'liked', isLiked: true, playCount: 4),
+      _song(id: 'tagged', playCount: 2),
+      _song(id: 'fresh'),
+      _song(id: 'likedFresh', isLiked: true),
+    ];
+    const tagged = {'tagged'};
+
+    test('liked keeps only liked songs', () {
+      expect(
+        _ids(
+          library,
+          view: const LibraryView(filters: {LibraryFilterOption.liked}),
+        ),
+        ['liked', 'likedFresh'],
+      );
+    });
+
+    test('has-a-vibe and no-vibe split the library between them', () {
+      expect(
+        _ids(
+          library,
+          view: const LibraryView(filters: {LibraryFilterOption.hasVibe}),
+          vibeTaggedSongIds: tagged,
+        ),
+        ['tagged'],
+      );
+      expect(
+        _ids(
+          library,
+          view: const LibraryView(filters: {LibraryFilterOption.noVibe}),
+          vibeTaggedSongIds: tagged,
+        ),
+        // These all share a title, so the sort is a no-op and the input order
+        // stands.
+        ['liked', 'fresh', 'likedFresh'],
+      );
+    });
+
+    test('never-played keeps songs with no play history', () {
+      expect(
+        _ids(
+          library,
+          view: const LibraryView(filters: {LibraryFilterOption.neverPlayed}),
+        ),
+        ['fresh', 'likedFresh'],
+      );
+    });
+
+    test(
+      'several filters narrow together rather than replacing each other',
+      () {
+        expect(
+          _ids(
+            library,
+            view: const LibraryView(
+              filters: {
+                LibraryFilterOption.liked,
+                LibraryFilterOption.neverPlayed,
+              },
+            ),
+          ),
+          ['likedFresh'],
+          reason: 'the point of a filter set is asking for both at once',
+        );
+      },
+    );
+
+    test('switching on has-a-vibe switches off no-vibe', () {
+      final view = const LibraryView()
+          .toggling(LibraryFilterOption.noVibe)
+          .toggling(LibraryFilterOption.hasVibe);
+
+      expect(view.filters, {LibraryFilterOption.hasVibe});
+      expect(
+        view.filters,
+        isNot(contains(LibraryFilterOption.noVibe)),
+        reason: 'both at once matches nothing, which reads as a broken list',
+      );
+    });
+
+    test('toggling the same option twice clears it', () {
+      final view = const LibraryView()
+          .toggling(LibraryFilterOption.liked)
+          .toggling(LibraryFilterOption.liked);
+      expect(view.filters, isEmpty);
+      expect(view.isDefault, isTrue);
+    });
+  });
+
+  group('folder narrowing', () {
+    final library = [
+      _song(id: '1', filePath: '/music/Albums/One.mp3'),
+      _song(id: '2', filePath: '/music/Albums/Two.mp3'),
+      _song(id: '3', filePath: '/music/Singles/Three.mp3'),
+    ];
+
+    test('a device folder keeps only that folder', () {
+      expect(
+        _ids(library, view: const LibraryView(deviceFolder: '/music/Albums')),
+        ['1', '2'],
+      );
+    });
+
+    test('a vibe folder restriction narrows before anything else', () {
+      expect(_ids(library, restrictToSongIds: {'3'}), ['3']);
+    });
+
+    test('folder and filter combine', () {
+      final withLike = [
+        _song(id: '1', filePath: '/music/Albums/One.mp3', isLiked: true),
+        _song(id: '2', filePath: '/music/Albums/Two.mp3'),
+        _song(id: '3', filePath: '/music/Singles/Three.mp3', isLiked: true),
+      ];
+      expect(
+        _ids(
+          withLike,
+          view: const LibraryView(
+            deviceFolder: '/music/Albums',
+            filters: {LibraryFilterOption.liked},
+          ),
+        ),
+        ['1'],
+      );
+    });
+  });
+
+  group('sorting', () {
     final library = [
       _song(
-        id: 'c',
-        title: 'Charlie',
-        artist: 'Zoe',
-        album: 'Third',
-        duration: const Duration(minutes: 1),
-        playCount: 10,
-        lastPlayedAt: now.subtract(const Duration(days: 5)),
-        dateAdded: now.subtract(const Duration(days: 30)),
+        id: 'b',
+        title: 'Beta',
+        artist: 'Zeta',
+        album: 'Second',
+        duration: const Duration(minutes: 2),
+        playCount: 9,
+        lastPlayedAt: DateTime(2026, 1, 2),
+        dateAdded: DateTime(2026, 3, 1),
       ),
       _song(
         id: 'a',
         title: 'Alpha',
-        artist: 'Yves',
-        album: 'Second',
-        duration: const Duration(minutes: 6),
-        playCount: 2,
-        lastPlayedAt: now,
-        dateAdded: now.subtract(const Duration(days: 1)),
-      ),
-      _song(
-        id: 'b',
-        title: 'Bravo',
-        artist: 'Xander',
+        artist: 'Yankee',
         album: 'First',
-        duration: const Duration(minutes: 3),
+        duration: const Duration(minutes: 5),
+        playCount: 1,
+        lastPlayedAt: DateTime(2026, 5, 6),
+        dateAdded: DateTime(2026, 1, 1),
       ),
+      _song(id: 'c', title: 'Gamma', artist: 'Xray', album: 'Third'),
     ];
 
-    List<String> idsFor(LibrarySort sort) => applyLibraryView(
-      library,
-      query: '',
-      sort: sort,
-    ).map((song) => song.id).toList();
+    List<String> sorted(LibrarySortField field, SortDirection direction) =>
+        _ids(
+          library,
+          view: LibraryView(sortField: field, direction: direction),
+        );
 
-    test('sorts by title', () {
-      expect(idsFor(LibrarySort.title), ['a', 'b', 'c']);
+    test('every field orders both ways', () {
+      expect(sorted(LibrarySortField.title, SortDirection.ascending), [
+        'a',
+        'b',
+        'c',
+      ]);
+      expect(sorted(LibrarySortField.title, SortDirection.descending), [
+        'c',
+        'b',
+        'a',
+      ]);
+      expect(sorted(LibrarySortField.artist, SortDirection.ascending), [
+        'c',
+        'a',
+        'b',
+      ]);
+      expect(sorted(LibrarySortField.album, SortDirection.ascending), [
+        'a',
+        'b',
+        'c',
+      ]);
+      expect(sorted(LibrarySortField.length, SortDirection.ascending), [
+        'b',
+        'c',
+        'a',
+      ]);
+      expect(sorted(LibrarySortField.length, SortDirection.descending), [
+        'a',
+        'c',
+        'b',
+      ]);
+      expect(sorted(LibrarySortField.playCount, SortDirection.descending), [
+        'b',
+        'a',
+        'c',
+      ]);
+      expect(sorted(LibrarySortField.playCount, SortDirection.ascending), [
+        'c',
+        'a',
+        'b',
+      ]);
     });
 
-    test('sorts by artist', () {
-      expect(idsFor(LibrarySort.artist), ['b', 'a', 'c']);
+    test('unknown last-played sorts last whichever way the list points', () {
+      expect(sorted(LibrarySortField.lastPlayed, SortDirection.descending), [
+        'a',
+        'b',
+        'c',
+      ]);
+      expect(sorted(LibrarySortField.lastPlayed, SortDirection.ascending), [
+        'b',
+        'a',
+        'c',
+      ], reason: 'never played is not the same as played longest ago');
     });
 
-    test('sorts by album', () {
-      expect(idsFor(LibrarySort.album), ['b', 'a', 'c']);
+    test('unknown date-added sorts last whichever way the list points', () {
+      expect(sorted(LibrarySortField.dateAdded, SortDirection.descending), [
+        'b',
+        'a',
+        'c',
+      ]);
+      expect(sorted(LibrarySortField.dateAdded, SortDirection.ascending), [
+        'a',
+        'b',
+        'c',
+      ], reason: 'an unknown date is not evidence of an old one');
     });
 
-    test('sorts by duration in both directions', () {
-      expect(idsFor(LibrarySort.durationShortest), ['c', 'b', 'a']);
-      expect(idsFor(LibrarySort.durationLongest), ['a', 'b', 'c']);
-    });
-
-    test('sorts by play count in both directions', () {
-      expect(idsFor(LibrarySort.mostPlayed), ['c', 'a', 'b']);
-      expect(idsFor(LibrarySort.leastPlayed), ['b', 'a', 'c']);
-    });
-
-    test('recently played puts never-played songs last', () {
-      expect(idsFor(LibrarySort.recentlyPlayed), ['a', 'c', 'b']);
-    });
-
-    test('newest added sorts newest first, unknown dates last', () {
-      // 'b' has no date-added — a library cached before the column existed,
-      // or a media store that left it empty — so it lands at the end rather
-      // than reading as the oldest song.
-      expect(idsFor(LibrarySort.newestAdded), ['a', 'c', 'b']);
-    });
-
-    test('newest added falls back to title when dates are unknown', () {
-      final undated = [
+    test('preserveOrder keeps a hand-arranged list as it arrived', () {
+      final arranged = [
         _song(id: 'z', title: 'Zulu'),
+        _song(id: 'a', title: 'Alpha'),
         _song(id: 'm', title: 'Mike'),
       ];
-      final ids = applyLibraryView(
-        undated,
-        query: '',
-        sort: LibrarySort.newestAdded,
-      ).map((song) => song.id);
-      expect(ids, ['m', 'z']);
+
+      expect(_idsPreservingOrder(arranged), [
+        'z',
+        'a',
+        'm',
+      ], reason: 'opening a playlist must not silently alphabetise it');
+      expect(_idsPreservingOrder(arranged, query: 'alpha'), [
+        'a',
+      ], reason: 'searching still narrows, it just does not reorder');
     });
 
-    test('newest added breaks ties on title', () {
-      final sameMoment = DateTime(2026, 8, 1);
+    test('ties break on title, so the order never wobbles', () {
       final tied = [
-        _song(id: 'second', title: 'Bravo', dateAdded: sameMoment),
-        _song(id: 'first', title: 'Alpha', dateAdded: sameMoment),
+        _song(id: '2', title: 'Beta', playCount: 3),
+        _song(id: '1', title: 'Alpha', playCount: 3),
       ];
-      final ids = applyLibraryView(
-        tied,
-        query: '',
-        sort: LibrarySort.newestAdded,
-      ).map((song) => song.id);
-      expect(ids, ['first', 'second']);
+      expect(
+        _ids(
+          tied,
+          view: const LibraryView(
+            sortField: LibrarySortField.playCount,
+            direction: SortDirection.descending,
+          ),
+        ),
+        ['1', '2'],
+      );
+    });
+  });
+
+  group('LibraryView', () {
+    test('picking a field takes that field\'s natural direction', () {
+      final view = const LibraryView().sortedBy(LibrarySortField.lastPlayed);
+      expect(view.direction, SortDirection.descending);
+      expect(
+        view.sortField.directionLabel(view.direction),
+        'Recently played first',
+      );
+
+      final byTitle = view.sortedBy(LibrarySortField.title);
+      expect(byTitle.direction, SortDirection.ascending);
+      expect(byTitle.sortField.directionLabel(byTitle.direction), 'A–Z');
     });
 
-    test('every sort keeps the whole list', () {
-      for (final sort in LibrarySort.values) {
-        expect(idsFor(sort), hasLength(library.length), reason: sort.name);
+    test(
+      're-picking the field already in force leaves the direction alone',
+      () {
+        final reversed = const LibraryView().reversed;
+        expect(
+          reversed.sortedBy(LibrarySortField.title).direction,
+          SortDirection.descending,
+        );
+      },
+    );
+
+    test('every field labels both of its directions', () {
+      for (final field in LibrarySortField.values) {
+        for (final direction in SortDirection.values) {
+          expect(field.directionLabel(direction), isNotEmpty);
+        }
+        expect(
+          field.directionLabel(SortDirection.ascending),
+          isNot(field.directionLabel(SortDirection.descending)),
+        );
       }
     });
-  });
 
-  group('applyLibraryView filter', () {
-    final library = [
-      _song(id: 'liked', isLiked: true, playCount: 3),
-      _song(id: 'tagged', playCount: 1),
-      _song(id: 'fresh'),
-      _song(id: 'short', duration: const Duration(seconds: 40), playCount: 2),
-      _song(id: 'long', duration: const Duration(minutes: 7), playCount: 4),
-    ];
-
-    // Vibes live in a join table rather than on the song, so which songs are
-    // tagged is supplied alongside the library.
-    Set<String> idsFor(LibraryFilter filter) => applyLibraryView(
-      library,
-      query: '',
-      sort: LibrarySort.title,
-      filter: filter,
-      vibeTaggedSongIds: const {'tagged'},
-    ).map((song) => song.id).toSet();
-
-    test('all keeps everything', () {
-      expect(idsFor(LibraryFilter.all), hasLength(library.length));
-    });
-
-    test('liked keeps only liked songs', () {
-      expect(idsFor(LibraryFilter.liked), {'liked'});
-    });
-
-    test('tagged and untagged partition the library', () {
-      expect(idsFor(LibraryFilter.tagged), {'tagged'});
-      expect(idsFor(LibraryFilter.untagged), {
-        'liked',
-        'fresh',
-        'short',
-        'long',
-      });
-    });
-
-    test('never played keeps only songs with no play count', () {
-      expect(idsFor(LibraryFilter.neverPlayed), {'fresh'});
-    });
-
-    test('duration filters use strict thresholds', () {
-      expect(idsFor(LibraryFilter.underOneMinute), {'short'});
-      expect(idsFor(LibraryFilter.overFiveMinutes), {'long'});
-    });
-
-    test('defaults to no filtering when omitted', () {
-      final withoutFilter = applyLibraryView(
-        library,
-        query: '',
-        sort: LibrarySort.title,
+    test('the active count covers filters and both kinds of folder', () {
+      const view = LibraryView(
+        filters: {LibraryFilterOption.liked, LibraryFilterOption.neverPlayed},
+        vibeCategoryId: 'mood',
+        deviceFolder: '/music',
       );
-      expect(withoutFilter, hasLength(library.length));
-    });
-  });
-
-  test('filter, search, and sort compose', () {
-    final library = [
-      _song(id: 'a', title: 'Blue One', isLiked: true, playCount: 1),
-      _song(id: 'b', title: 'Blue Two', isLiked: true, playCount: 9),
-      _song(id: 'c', title: 'Blue Three', playCount: 5),
-      _song(id: 'd', title: 'Red One', isLiked: true, playCount: 7),
-    ];
-
-    final result = applyLibraryView(
-      library,
-      query: 'blue',
-      sort: LibrarySort.mostPlayed,
-      filter: LibraryFilter.liked,
-    );
-
-    // 'c' is filtered out (not liked), 'd' by the search, and what remains
-    // comes back most-played first.
-    expect(result.map((song) => song.id), ['b', 'a']);
-  });
-
-  test('search and sort compose', () {
-    final library = [
-      _song(id: '1', title: 'Blue Two', playCount: 1),
-      _song(id: '2', title: 'Red One', playCount: 9),
-      _song(id: '3', title: 'Blue One', playCount: 5),
-    ];
-
-    final result = applyLibraryView(
-      library,
-      query: 'blue',
-      sort: LibrarySort.mostPlayed,
-    );
-
-    expect(result.map((song) => song.id), ['3', '1']);
-  });
-
-  group('restrictToSongIds (the vibe-folder filter)', () {
-    final library = [
-      _song(id: '1', title: 'Blue Monday', isLiked: true),
-      _song(id: '2', title: 'Blue Skies'),
-      _song(id: '3', title: 'Red Rain', isLiked: true),
-    ];
-
-    test('null leaves the list alone', () {
-      final result = applyLibraryView(
-        library,
-        query: '',
-        sort: LibrarySort.title,
-      );
-      expect(result, hasLength(3));
+      expect(view.activeFilterCount, 4);
+      expect(view.isDefault, isFalse);
     });
 
-    test('narrows to the given ids', () {
-      final result = applyLibraryView(
-        library,
-        query: '',
-        sort: LibrarySort.title,
-        restrictToSongIds: {'1', '3'},
+    test('a fresh view is the default', () {
+      expect(const LibraryView().isDefault, isTrue);
+      expect(const LibraryView().activeFilterCount, 0);
+      expect(
+        const LibraryView().sortChosen,
+        isFalse,
+        reason: 'carrying a default order is not the same as choosing one',
       );
-      expect(result.map((song) => song.id), ['1', '3']);
     });
 
-    test('an empty set means nothing matched, not "no filter"', () {
-      // A folder whose vibes nothing is tagged with must show an empty list
-      // rather than silently falling back to the whole library.
-      final result = applyLibraryView(
-        library,
-        query: '',
-        sort: LibrarySort.title,
-        restrictToSongIds: const {},
+    test('picking a sort, or reversing one, counts as choosing', () {
+      expect(
+        const LibraryView().sortedBy(LibrarySortField.album).sortChosen,
+        isTrue,
       );
-      expect(result, isEmpty);
+      expect(const LibraryView().reversed.sortChosen, isTrue);
+      expect(
+        const LibraryView().toggling(LibraryFilterOption.liked).sortChosen,
+        isFalse,
+        reason: 'filtering a playlist should not also reorder it',
+      );
     });
 
-    test('composes with the search query and the filter', () {
-      final result = applyLibraryView(
-        library,
-        query: 'blue',
-        sort: LibrarySort.title,
-        filter: LibraryFilter.liked,
-        restrictToSongIds: {'1', '2', '3'},
+    test('copyWith can clear a folder back to null', () {
+      const view = LibraryView(deviceFolder: '/music', vibeCategoryId: 'mood');
+      final cleared = view.copyWith(deviceFolder: null, vibeCategoryId: null);
+      expect(cleared.deviceFolder, isNull);
+      expect(cleared.vibeCategoryId, isNull);
+      expect(cleared.isDefault, isTrue);
+    });
+
+    test('describe names what is in force', () {
+      const view = LibraryView(
+        filters: {LibraryFilterOption.liked},
+        sortField: LibrarySortField.playCount,
+        direction: SortDirection.descending,
       );
-      expect(result.map((song) => song.id), ['1']);
+      expect(view.describe(), contains('Liked only'));
+      expect(view.describe(), contains('Most played first'));
     });
   });
 }

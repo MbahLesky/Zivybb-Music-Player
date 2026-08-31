@@ -32,7 +32,7 @@ Song _audioSong(String id, String title) => Song(
   title: title,
   artist: 'Artist',
   album: 'Album',
-  duration: const Duration(seconds: 10),
+  duration: const Duration(minutes: 3),
 );
 
 Song _videoSong(String id, String title) => Song(
@@ -41,7 +41,7 @@ Song _videoSong(String id, String title) => Song(
   title: title,
   artist: 'Artist',
   album: 'Videos',
-  duration: const Duration(seconds: 20),
+  duration: const Duration(minutes: 2, seconds: 30),
   isVideo: true,
 );
 

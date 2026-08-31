@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'library_source_filter.dart';
+
 /// A user-forced light/dark choice that overrides the adaptive schedule.
 enum ThemeOverride { light, dark }
 
@@ -28,6 +30,38 @@ enum VisualizerStyle {
       this == VisualizerStyle.radial ||
       this == VisualizerStyle.bloom ||
       this == VisualizerStyle.particles;
+
+  /// What this style turns into when it is asked to *be* the seek bar.
+  ///
+  /// The wide styles read left-to-right already, so they become the track
+  /// itself. The circular ones become a ring around the artwork. Bloom is a
+  /// single closed blob with no progress direction to read along, so there is
+  /// nothing sensible for it to be — see [VisualizerSeekBarShape.unsupported].
+  VisualizerSeekBarShape get seekBarShape => switch (this) {
+    VisualizerStyle.bars ||
+    VisualizerStyle.mirror ||
+    VisualizerStyle.line ||
+    VisualizerStyle.ribbon => VisualizerSeekBarShape.horizontal,
+    VisualizerStyle.radial ||
+    VisualizerStyle.particles => VisualizerSeekBarShape.circular,
+    VisualizerStyle.bloom => VisualizerSeekBarShape.unsupported,
+  };
+
+  bool get supportsSeekBar =>
+      seekBarShape != VisualizerSeekBarShape.unsupported;
+}
+
+/// How a style renders when it stands in for the seek bar.
+enum VisualizerSeekBarShape {
+  /// A track read left to right, in place of the slider.
+  horizontal,
+
+  /// A ring read clockwise from the top, filling the artwork slot with the
+  /// artwork inside it.
+  circular,
+
+  /// Cannot be a seek bar; the option is offered but disabled.
+  unsupported,
 }
 
 /// Where the visualizer is drawn on the Now Playing screen.
@@ -59,7 +93,7 @@ enum VisualizerPlacement {
     VisualizerPlacement.replaceArtwork =>
       'Fills the artwork slot — no album art shown',
     VisualizerPlacement.seekBar =>
-      'Drawn behind the progress bar, which still scrubs',
+      'The visualizer becomes the progress bar, and still scrubs',
   };
 
   bool get isVisible => this != VisualizerPlacement.off;
@@ -255,6 +289,8 @@ class AppSettings {
     this.seekStep = const Duration(seconds: 10),
     this.includeVideos = false,
     this.realVisualizerEnabled = false,
+    this.librarySourceFilter = const LibrarySourceFilter(),
+    this.compactNowPlaying = false,
   });
 
   final bool adaptiveDarkModeEnabled;
@@ -291,11 +327,51 @@ class AppSettings {
   /// simulated waveform. Opt-in: it needs the RECORD_AUDIO permission.
   final bool realVisualizerEnabled;
 
+  /// Which of the device's audio files count as music — see [LibrarySourceFilter].
+  final LibrarySourceFilter librarySourceFilter;
+
+  /// Strip Now Playing back to artwork, title and the three transport
+  /// buttons. Everything the compact layout drops — shuffle, repeat, like,
+  /// save to playlist — moves into the "more" sheet rather than going away.
+  final bool compactNowPlaying;
+
+  /// The placement actually in force.
+  ///
+  /// [VisualizerPlacement.seekBar] needs a style that can be read as a track;
+  /// bloom cannot, so a saved seek-bar choice degrades to the default rather
+  /// than leaving the screen with no progress bar at all. Settings disables
+  /// the option for that style, but the stored value outlives the style
+  /// choice — someone can pick the seek bar and then switch to bloom.
+  VisualizerPlacement get effectiveVisualizerPlacement {
+    if (visualizerPlacement == VisualizerPlacement.seekBar &&
+        !visualizerStyle.supportsSeekBar) {
+      return VisualizerPlacement.belowControls;
+    }
+    return visualizerPlacement;
+  }
+
+  /// Whether the visualizer is standing in for the progress bar right now.
+  bool get visualizerIsSeekBar =>
+      effectiveVisualizerPlacement == VisualizerPlacement.seekBar;
+
+  /// Whether that stand-in is the ring around the artwork rather than a track
+  /// under the title — which is what decides whether the artwork slot is
+  /// given over to it and whether the linear bar is drawn at all.
+  bool get visualizerIsCircularSeekBar =>
+      visualizerIsSeekBar &&
+      visualizerStyle.seekBarShape == VisualizerSeekBarShape.circular;
+
   /// Whether the artwork slot on Now Playing shows a visualizer for [song]
   /// rather than album art, either because the user asked for that
   /// everywhere or because this particular song has no art to show.
+  ///
+  /// The circular seek bar is the exception: it fills the artwork slot *and*
+  /// shows the artwork, inside the ring.
   bool visualizerFillsArtworkSlot({required bool songHasArtwork}) {
-    if (visualizerPlacement == VisualizerPlacement.replaceArtwork) return true;
+    if (visualizerIsCircularSeekBar) return false;
+    if (effectiveVisualizerPlacement == VisualizerPlacement.replaceArtwork) {
+      return true;
+    }
     return visualizerAsArtworkFallback && !songHasArtwork;
   }
 
@@ -320,6 +396,8 @@ class AppSettings {
     Duration? seekStep,
     bool? includeVideos,
     bool? realVisualizerEnabled,
+    LibrarySourceFilter? librarySourceFilter,
+    bool? compactNowPlaying,
   }) {
     return AppSettings(
       adaptiveDarkModeEnabled:
@@ -350,6 +428,8 @@ class AppSettings {
       includeVideos: includeVideos ?? this.includeVideos,
       realVisualizerEnabled:
           realVisualizerEnabled ?? this.realVisualizerEnabled,
+      librarySourceFilter: librarySourceFilter ?? this.librarySourceFilter,
+      compactNowPlaying: compactNowPlaying ?? this.compactNowPlaying,
     );
   }
 }

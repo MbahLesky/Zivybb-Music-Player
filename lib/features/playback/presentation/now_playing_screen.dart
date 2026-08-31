@@ -31,8 +31,10 @@ import '../../settings/presentation/equalizer_screen.dart';
 import '../../tag_editor/presentation/tag_editor_screen.dart';
 import '../../vibe_tagging/presentation/vibe_tagging_screen.dart';
 import '../../visualizer/presentation/fullscreen_visualizer_screen.dart';
+import '../../visualizer/presentation/visualizer_seek_bar.dart';
 import '../../visualizer/presentation/wave_visualizer.dart';
 import '../application/playback_controller.dart';
+import 'now_playing_gestures.dart';
 import 'now_playing_more_sheet.dart';
 import 'queue_screen.dart';
 import 'sleep_timer_sheet.dart';
@@ -42,12 +44,21 @@ const _speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 /// Full playback experience for the current track.
 ///
 /// Fills the whole view: artwork/visualizer flex in the middle and the
-/// controls anchor at the bottom — one main transport row (seek-back /
-/// previous / play / next / seek-forward, with the seek step configurable in
-/// Settings ▸ Playback) and one secondary row (shuffle / repeat / like /
-/// save / vibes / more). Everything else — share, speed, edit tags, ringtone,
-/// remove, delete — lives in the "more" sheet, and the queue and full-screen
-/// visualizer sit in the app bar.
+/// controls anchor at the bottom. Two layouts, toggled from the app bar and
+/// remembered in settings:
+///
+///  - the full one shows one main transport row (seek-back / previous /
+///    play / next / seek-forward, with the seek step configurable in
+///    Settings ▸ Playback) and one secondary row (shuffle / repeat / like /
+///    save / vibes / more), under the title, artist and vibe chips;
+///  - the compact one keeps the artwork, the title, the three transport
+///    buttons and the vibes/more pair, and hands shuffle, repeat, like and
+///    save to playlist to the "more" sheet rather than dropping them.
+///
+/// Swiping across the artwork area changes track sideways and the device
+/// volume vertically — see [NowPlayingGestureArea]. Everything else — share,
+/// speed, edit tags, ringtone, remove, delete — lives in the "more" sheet,
+/// and the queue and full-screen visualizer sit in the app bar.
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
 
@@ -64,6 +75,7 @@ class NowPlayingScreen extends ConsumerWidget {
         : ref.watch(songStreamProvider(song.id)).value ?? song;
     final isLiked = liveSong?.isLiked ?? song?.isLiked ?? false;
     final seekSeconds = settings.seekStep.inSeconds;
+    final compact = settings.compactNowPlaying;
 
     return Scaffold(
       appBar: GradientAppBar(
@@ -80,6 +92,13 @@ class NowPlayingScreen extends ConsumerWidget {
             onPressed: () => ref
                 .read(playbackControllerProvider.notifier)
                 .togglePreviewMode(),
+          ),
+          AppBarIconAction(
+            icon: Icon(compact ? Icons.unfold_more : Icons.unfold_less),
+            tooltip: compact ? 'Full layout' : 'Compact layout',
+            onPressed: () => ref
+                .read(settingsControllerProvider.notifier)
+                .setCompactNowPlaying(!compact),
           ),
           AppBarIconAction(
             icon: const Icon(Icons.videogame_asset_outlined),
@@ -138,30 +157,51 @@ class NowPlayingScreen extends ConsumerWidget {
                           padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                           child: Column(
                             children: [
-                              Expanded(child: _MediaCenterpiece(song: song)),
-                              const SizedBox(height: 16),
-                              Text(
-                                song.title,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${song.artist} — ${song.album}',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: VibeChips(
-                                  songId: song.id,
-                                  compact: false,
+                              // Artwork and titles share one swipe surface:
+                              // it has to reach past the artwork itself to
+                              // be comfortable, and everything below is
+                              // either the seek bar or a button.
+                              Expanded(
+                                child: NowPlayingGestureArea(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Flexible(
+                                        child: _MediaCenterpiece(song: song),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        song.title,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.headlineSmall,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (!compact) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${song.artist} — ${song.album}',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 8,
+                                          ),
+                                          child: VibeChips(
+                                            songId: song.id,
+                                            compact: false,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ),
                               const _CrossfadeIndicator(),
@@ -169,9 +209,7 @@ class NowPlayingScreen extends ConsumerWidget {
                               _ProgressBar(
                                 position: playback.position,
                                 duration: playback.duration,
-                                showVisualizer:
-                                    settings.visualizerPlacement ==
-                                    VisualizerPlacement.seekBar,
+                                settings: settings,
                                 onSeek: (value) => ref
                                     .read(playbackControllerProvider.notifier)
                                     .seek(value),
@@ -207,19 +245,20 @@ class NowPlayingScreen extends ConsumerWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  IconButton(
-                                    iconSize: 28,
-                                    icon: SeekStepIcon(
-                                      seconds: seekSeconds,
-                                      forward: false,
+                                  if (!compact)
+                                    IconButton(
+                                      iconSize: 28,
+                                      icon: SeekStepIcon(
+                                        seconds: seekSeconds,
+                                        forward: false,
+                                      ),
+                                      tooltip: 'Back ${seekSeconds}s',
+                                      onPressed: () => ref
+                                          .read(
+                                            playbackControllerProvider.notifier,
+                                          )
+                                          .seekBy(-settings.seekStep),
                                     ),
-                                    tooltip: 'Back ${seekSeconds}s',
-                                    onPressed: () => ref
-                                        .read(
-                                          playbackControllerProvider.notifier,
-                                        )
-                                        .seekBy(-settings.seekStep),
-                                  ),
                                   IconButton(
                                     iconSize: 36,
                                     icon: const Icon(Icons.skip_previous),
@@ -254,83 +293,94 @@ class NowPlayingScreen extends ConsumerWidget {
                                         )
                                         .next(),
                                   ),
-                                  IconButton(
-                                    iconSize: 28,
-                                    icon: SeekStepIcon(
-                                      seconds: seekSeconds,
-                                      forward: true,
+                                  if (!compact)
+                                    IconButton(
+                                      iconSize: 28,
+                                      icon: SeekStepIcon(
+                                        seconds: seekSeconds,
+                                        forward: true,
+                                      ),
+                                      tooltip: 'Forward ${seekSeconds}s',
+                                      onPressed: () => ref
+                                          .read(
+                                            playbackControllerProvider.notifier,
+                                          )
+                                          .seekBy(settings.seekStep),
                                     ),
-                                    tooltip: 'Forward ${seekSeconds}s',
-                                    onPressed: () => ref
-                                        .read(
-                                          playbackControllerProvider.notifier,
-                                        )
-                                        .seekBy(settings.seekStep),
-                                  ),
                                 ],
                               ),
                               const SizedBox(height: 8),
                               // Secondary row: playback modes and utilities;
-                              // everything else is in the "more" sheet.
+                              // everything else is in the "more" sheet — and
+                              // in the compact layout, so is most of this row.
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      playback.shuffleEnabled
-                                          ? Icons.shuffle_on_outlined
-                                          : Icons.shuffle,
+                                  if (!compact) ...[
+                                    IconButton(
+                                      icon: Icon(
+                                        playback.shuffleEnabled
+                                            ? Icons.shuffle_on_outlined
+                                            : Icons.shuffle,
+                                      ),
+                                      color: playback.shuffleEnabled
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : null,
+                                      tooltip: playback.shuffleEnabled
+                                          ? 'Shuffle on'
+                                          : 'Shuffle off',
+                                      onPressed: () => ref
+                                          .read(
+                                            playbackControllerProvider.notifier,
+                                          )
+                                          .toggleShuffle(),
                                     ),
-                                    color: playback.shuffleEnabled
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                    tooltip: playback.shuffleEnabled
-                                        ? 'Shuffle on'
-                                        : 'Shuffle off',
-                                    onPressed: () => ref
-                                        .read(
-                                          playbackControllerProvider.notifier,
-                                        )
-                                        .toggleShuffle(),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      playback.repeatMode == RepeatMode.one
-                                          ? Icons.repeat_one
-                                          : Icons.repeat,
+                                    IconButton(
+                                      icon: Icon(
+                                        playback.repeatMode == RepeatMode.one
+                                            ? Icons.repeat_one
+                                            : Icons.repeat,
+                                      ),
+                                      color:
+                                          playback.repeatMode == RepeatMode.off
+                                          ? null
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                      tooltip: switch (playback.repeatMode) {
+                                        RepeatMode.off => 'Repeat off',
+                                        RepeatMode.all => 'Repeat all',
+                                        RepeatMode.one => 'Repeat one',
+                                      },
+                                      onPressed: () => ref
+                                          .read(
+                                            playbackControllerProvider.notifier,
+                                          )
+                                          .cycleRepeatMode(),
                                     ),
-                                    color: playback.repeatMode == RepeatMode.off
-                                        ? null
-                                        : Theme.of(context).colorScheme.primary,
-                                    tooltip: switch (playback.repeatMode) {
-                                      RepeatMode.off => 'Repeat off',
-                                      RepeatMode.all => 'Repeat all',
-                                      RepeatMode.one => 'Repeat one',
-                                    },
-                                    onPressed: () => ref
-                                        .read(
-                                          playbackControllerProvider.notifier,
-                                        )
-                                        .cycleRepeatMode(),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      isLiked
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
+                                    IconButton(
+                                      icon: Icon(
+                                        isLiked
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                      ),
+                                      tooltip: isLiked ? 'Unlike' : 'Like',
+                                      onPressed: () => ref
+                                          .read(songRepositoryProvider)
+                                          .setLiked(song.id, !isLiked),
                                     ),
-                                    tooltip: isLiked ? 'Unlike' : 'Like',
-                                    onPressed: () => ref
-                                        .read(songRepositoryProvider)
-                                        .setLiked(song.id, !isLiked),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.playlist_add),
-                                    tooltip: 'Save to playlist',
-                                    onPressed: () =>
-                                        SaveToPlaylistSheet.show(context, song),
-                                  ),
+                                    IconButton(
+                                      icon: const Icon(Icons.playlist_add),
+                                      tooltip: 'Save to playlist',
+                                      onPressed: () => SaveToPlaylistSheet.show(
+                                        context,
+                                        song,
+                                      ),
+                                    ),
+                                  ],
                                   IconButton(
                                     icon: const Icon(Icons.mood),
                                     tooltip: 'Tag vibes',
@@ -345,11 +395,12 @@ class NowPlayingScreen extends ConsumerWidget {
                                       ref,
                                       song,
                                       playback.sourcePlaylistId,
+                                      compact: compact,
                                     ),
                                   ),
                                 ],
                               ),
-                              if (settings.visualizerPlacement ==
+                              if (settings.effectiveVisualizerPlacement ==
                                   VisualizerPlacement.belowControls) ...[
                                 const SizedBox(height: 16),
                                 WaveVisualizer(
@@ -400,15 +451,31 @@ class NowPlayingScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     Song song,
-    String? sourcePlaylistId,
-  ) async {
+    String? sourcePlaylistId, {
+    required bool compact,
+  }) async {
     final action = await NowPlayingMoreSheet.show(
       context,
       canRemoveFromPlaylist: sourcePlaylistId != null,
+      showTransportExtras: compact,
     );
     if (!context.mounted || action == null) return;
 
+    final playbackController = ref.read(playbackControllerProvider.notifier);
     switch (action) {
+      case NowPlayingMoreAction.toggleLike:
+        // Read fresh rather than reusing the screen's snapshot: the sheet was
+        // open long enough for the like state to have moved under it.
+        final current =
+            ref.read(songStreamProvider(song.id)).value?.isLiked ??
+            song.isLiked;
+        await ref.read(songRepositoryProvider).setLiked(song.id, !current);
+      case NowPlayingMoreAction.saveToPlaylist:
+        await SaveToPlaylistSheet.show(context, song);
+      case NowPlayingMoreAction.toggleShuffle:
+        await playbackController.toggleShuffle();
+      case NowPlayingMoreAction.cycleRepeat:
+        await playbackController.cycleRepeatMode();
       case NowPlayingMoreAction.sleepTimer:
         await SleepTimerSheet.show(context);
       case NowPlayingMoreAction.share:
@@ -524,7 +591,7 @@ class _MediaCenterpiece extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings =
         ref.watch(settingsStreamProvider).value ?? const AppSettings();
-    final placement = settings.visualizerPlacement;
+    final placement = settings.effectiveVisualizerPlacement;
     // Sized from the screen rather than a LayoutBuilder because this sits
     // inside an IntrinsicHeight, which LayoutBuilder doesn't support; the
     // FittedBox below absorbs any squeeze from short viewports.
@@ -532,6 +599,26 @@ class _MediaCenterpiece extends ConsumerWidget {
     final artSize = math.min(screen.width - 72, screen.height * 0.30);
     final showsArtworkSlot =
         settings.showAlbumArtInNowPlaying || !placement.showsArtwork;
+
+    // A circular style standing in for the seek bar takes the artwork slot
+    // outright: the ring is the progress bar and the artwork sits inside it.
+    if (settings.visualizerIsCircularSeekBar) {
+      final playback = ref.watch(playbackControllerProvider);
+      return Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: VisualizerRingSeekBar(
+            song: song,
+            size: artSize,
+            position: playback.position,
+            duration: playback.duration,
+            showArtwork: settings.showAlbumArtInNowPlaying,
+            onSeek: (value) =>
+                ref.read(playbackControllerProvider.notifier).seek(value),
+          ),
+        ),
+      );
+    }
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -599,73 +686,48 @@ class _ArtworkSlotVisualizer extends ConsumerWidget {
   }
 }
 
-/// The seek slider, optionally drawn over the visualizer.
+/// Whatever is showing progress and scrubbing right now.
 ///
-/// The visualizer sits behind the slider rather than replacing it: the bar's
-/// job is still to show progress and to scrub, and a row of bars conveys
-/// neither. It is wrapped in [IgnorePointer] so every touch reaches the
-/// slider underneath it in the hit-test order.
+/// Usually a plain slider. Under [VisualizerPlacement.seekBar] the visualizer
+/// takes the job over instead of merely sitting behind it: a horizontal style
+/// becomes the track itself, and a circular one has already become the ring
+/// around the artwork further up the screen, so there is nothing left to draw
+/// here.
 class _ProgressBar extends ConsumerWidget {
   const _ProgressBar({
     required this.position,
     required this.duration,
-    required this.showVisualizer,
+    required this.settings,
     required this.onSeek,
   });
 
   final Duration position;
   final Duration duration;
-  final bool showVisualizer;
+  final AppSettings settings;
   final ValueChanged<Duration> onSeek;
 
   static const _height = 56.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final slider = Slider(
+    if (settings.visualizerIsCircularSeekBar) return const SizedBox.shrink();
+
+    if (settings.visualizerIsSeekBar) {
+      return VisualizerTrackSeekBar(
+        position: position,
+        duration: duration,
+        onSeek: onSeek,
+        height: _height,
+      );
+    }
+
+    return Slider(
       min: 0,
       max: duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1,
       value: position.inMilliseconds
           .clamp(0, duration.inMilliseconds)
           .toDouble(),
       onChanged: (value) => onSeek(Duration(milliseconds: value.round())),
-    );
-
-    if (!showVisualizer) return slider;
-
-    return SizedBox(
-      height: _height,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: 0.6,
-                  child: WaveVisualizer(
-                    color: ref.watch(visualizerColorProvider),
-                    height: _height,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliderTheme(
-            // A thin track and a solid thumb, so the slider stays readable
-            // as a control against the moving picture behind it.
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 3,
-              activeTrackColor: scheme.primary,
-              inactiveTrackColor: scheme.onSurface.withValues(alpha: 0.28),
-              thumbColor: scheme.primary,
-            ),
-            child: slider,
-          ),
-        ],
-      ),
     );
   }
 }

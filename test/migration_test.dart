@@ -181,6 +181,17 @@ void main() {
       expect(settings.visualizerBarCount, 40);
       expect(settings.visualizerContrast, 1.0);
 
+      // v16 adds the library-source filter. An upgraded database takes the
+      // defaults, which means the next scan starts leaving voice notes and
+      // recordings out — the point of the feature.
+      expect(settings.autoExcludeNonMusicFolders, isTrue);
+      expect(settings.minimumTrackSeconds, 30);
+      expect(
+        settings.libraryFolderOverridesJson,
+        '{}',
+        reason: 'an upgraded database has no per-folder decisions yet',
+      );
+
       // v13 also adds vibe folders. Existing vibes survive uncategorised —
       // the built-in ids are backfilled by VibeTagRepository.ensureSeeded,
       // not by the migration.

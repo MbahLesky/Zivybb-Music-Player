@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zivybb/data/datasources/app_database.dart';
+import 'package:zivybb/data/models/song.dart';
 import 'package:zivybb/features/game/application/tile_geometry.dart';
 import 'package:zivybb/features/game/presentation/rhythm_game_screen.dart';
 import 'package:zivybb/features/game/presentation/rhythm_tile_painter.dart';
@@ -41,6 +42,57 @@ GameTile _tile({
   level: level,
   strength: strength,
 );
+
+/// Runs the board's ticker for a few seconds of game time, returning every
+/// distinct arrival time it saw on the way.
+///
+/// Sampled per frame rather than at the end because tiles expire: by the time
+/// a run finishes, only the last beat or two are still on the board, and a
+/// snapshot then says nothing about whether they arrived spread out.
+///
+/// Long enough to pass the silence window before the stand-in pattern takes
+/// over, which is what most of these assertions are about.
+Future<Set<double>> _run(
+  WidgetTester tester, [
+  Duration total = const Duration(seconds: 4),
+]) async {
+  const frame = Duration(milliseconds: 50);
+  final arrivals = <double>{};
+  for (var elapsed = Duration.zero; elapsed < total; elapsed += frame) {
+    await tester.pump(frame);
+    arrivals.addAll(_boardTiles(tester).map((tile) => tile.hitMs));
+  }
+  return arrivals;
+}
+
+/// A library row for [song], so a finished run has something to hang its high
+/// score off — `game_scores.song_id` is a foreign key.
+Future<void> _seedSong(AppDatabase database, Song song) {
+  return database
+      .into(database.songs)
+      .insert(
+        SongsCompanion.insert(
+          id: song.id,
+          filePath: song.filePath,
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+          durationMs: song.duration.inMilliseconds,
+        ),
+      );
+}
+
+/// The tiles the board is currently holding, read off the painter — the only
+/// place the board's private state is observable from outside.
+List<GameTile> _boardTiles(WidgetTester tester) {
+  for (final paint in tester.widgetList<CustomPaint>(
+    find.byType(CustomPaint),
+  )) {
+    final painter = paint.painter;
+    if (painter is RhythmTilePainter) return painter.tiles;
+  }
+  return const [];
+}
 
 /// Drift schedules a zero-duration cleanup timer on cancellation, so every
 /// widget test has to unmount and pump once or the test ends with a pending
@@ -192,20 +244,79 @@ void main() {
       await _teardown(tester);
     });
 
-    testWidgets('stays quiet when the real feed is live', (tester) async {
+    testWidgets('says the beat is simulated when an attached feed reports '
+        'nothing to follow', (tester) async {
+      // Regression test: the banner used to key off whether a capture was
+      // attached, so a device whose capture attaches and then reports a flat
+      // signal claimed the tiles were following the song while the board sat
+      // empty. It now reports what the board is actually using.
       final database = AppDatabase.connect(NativeDatabase.memory());
       addTearDown(database.close);
+      final song = fakeSong();
+      await _seedSong(database, song);
 
       await tester.pumpWidget(
         wrap(
           database: database,
-          playback: playingState(fakeSong()),
+          playback: playingState(song),
+          // A constant level is no beat at all: onset detection reads a rise
+          // in energy, and there isn't one.
           bands: List<double>.filled(32, 0.4),
         ),
       );
-      await tester.pump();
+      await _run(tester);
 
-      expect(find.textContaining('Simulated beat'), findsNothing);
+      expect(find.textContaining('Simulated beat'), findsOneWidget);
+      await _teardown(tester);
+    });
+
+    testWidgets('an attached feed with no beats still fills the board', (
+      tester,
+    ) async {
+      // The bug the fallback exists for: with the capture attached but silent,
+      // nothing ever spawned and rhythm mode showed an empty board.
+      final database = AppDatabase.connect(NativeDatabase.memory());
+      addTearDown(database.close);
+      final song = fakeSong();
+      await _seedSong(database, song);
+
+      await tester.pumpWidget(
+        wrap(
+          database: database,
+          playback: playingState(song),
+          bands: List<double>.filled(32, 0.4),
+        ),
+      );
+      final arrivals = await _run(tester);
+
+      expect(
+        arrivals,
+        isNotEmpty,
+        reason: 'the stand-in pattern must take over rather than show nothing',
+      );
+      await _teardown(tester);
+    });
+
+    testWidgets('the stand-in beats land spread out, not stacked', (
+      tester,
+    ) async {
+      final database = AppDatabase.connect(NativeDatabase.memory());
+      addTearDown(database.close);
+      final song = fakeSong();
+      await _seedSong(database, song);
+
+      await tester.pumpWidget(
+        wrap(database: database, playback: playingState(song), bands: null),
+      );
+      final arrivals = await _run(tester);
+
+      expect(
+        arrivals.length,
+        greaterThan(3),
+        reason:
+            'a window of beats generated in one frame used to collapse '
+            'onto a single instant, arriving as one unplayable wall',
+      );
       await _teardown(tester);
     });
   });

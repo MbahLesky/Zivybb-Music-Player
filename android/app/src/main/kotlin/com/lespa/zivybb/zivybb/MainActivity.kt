@@ -15,6 +15,7 @@ class MainActivity : AudioServiceActivity() {
 
     private var visualizerBridge: AudioVisualizerBridge? = null
     private var mediaDeleteBridge: MediaDeleteBridge? = null
+    private var systemVolumeBridge: SystemVolumeBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -28,6 +29,11 @@ class MainActivity : AudioServiceActivity() {
         // a standalone plugin.
         mediaDeleteBridge =
             MediaDeleteBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+
+        // Now Playing's vertical swipe moves the system media volume, which
+        // only AudioManager can reach.
+        systemVolumeBridge =
+            SystemVolumeBridge(this, flutterEngine.dartExecutor.binaryMessenger)
 
         // The bundled media-query plugin only reads MediaStore.Audio, so
         // videos-played-as-music (SRS: video audio playback) need their own
@@ -57,6 +63,8 @@ class MainActivity : AudioServiceActivity() {
         visualizerBridge = null
         mediaDeleteBridge?.dispose()
         mediaDeleteBridge = null
+        systemVolumeBridge?.dispose()
+        systemVolumeBridge = null
         super.onDestroy()
     }
 

@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/app_settings.dart';
+import '../../../data/models/library_source_filter.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../../library/application/library_controller.dart';
 import '../../vibe_tagging/presentation/vibe_category_management_screen.dart';
 import '../../vibe_tagging/presentation/vibe_tag_management_screen.dart';
 import '../application/settings_controller.dart';
 import 'backup_restore_screen.dart';
 import 'equalizer_screen.dart';
+import 'library_sources_screen.dart';
 import 'settings_section_screen.dart';
 import 'theme_customization_screen.dart';
 import 'visualizer_settings_screen.dart';
@@ -30,6 +33,7 @@ class SettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: const GradientAppBar(title: Text('Settings')),
       body: Container(
         decoration: BoxDecoration(
@@ -103,7 +107,8 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.library_music_outlined,
                   title: 'Library',
-                  description: 'Vibes, video files, back up your collection',
+                  description:
+                      'Sources, vibes, video files, back up your collection',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const SettingsSectionScreen(
@@ -336,6 +341,15 @@ class _LibrarySection extends ConsumerWidget {
     return Column(
       children: [
         ListTile(
+          leading: const Icon(Icons.rule_folder_outlined),
+          title: const Text('Library sources'),
+          subtitle: Text(_sourcesSummary(settings.librarySourceFilter)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const LibrarySourcesScreen()),
+          ),
+        ),
+        ListTile(
           leading: const Icon(Icons.mood_outlined),
           title: const Text('Manage Vibes'),
           subtitle: const Text(
@@ -381,6 +395,20 @@ class _LibrarySection extends ConsumerWidget {
       ],
     );
   }
+
+  /// One line saying what the filter is currently doing, so the state is
+  /// visible without opening the screen.
+  static String _sourcesSummary(LibrarySourceFilter filter) {
+    final parts = <String>[
+      if (filter.autoExcludeNonMusicFolders) 'Skipping non-music folders',
+      if (filter.minimumDuration > Duration.zero)
+        'over ${filter.minimumDuration.inSeconds}s',
+      if (filter.excludedFolders.isNotEmpty)
+        '${filter.excludedFolders.length} folder'
+            '${filter.excludedFolders.length == 1 ? '' : 's'} off',
+    ];
+    return parts.isEmpty ? 'Everything on the device' : parts.join(' · ');
+  }
 }
 
 /// Display options. See [SettingsScreen] for why this is its own widget.
@@ -396,6 +424,15 @@ class _DisplaySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        SwitchListTile(
+          title: const Text('Compact Now Playing'),
+          subtitle: const Text(
+            'Artwork, title and the three transport buttons — shuffle, '
+            'repeat, like and save move into the "more" sheet',
+          ),
+          value: settings.compactNowPlaying,
+          onChanged: controller.setCompactNowPlaying,
+        ),
         SwitchListTile(
           title: const Text('Album art in mini player'),
           value: settings.showAlbumArtInMiniPlayer,

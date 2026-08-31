@@ -6,6 +6,7 @@ import '../../../core/theme/adaptive_theme.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/color_hex.dart';
 import '../../../data/models/app_settings.dart';
+import '../../../data/models/library_source_filter.dart';
 import '../../../data/repositories/settings_repository.dart';
 
 final settingsStreamProvider = StreamProvider<AppSettings>((ref) {
@@ -233,6 +234,20 @@ class SettingsController extends Notifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
       () => ref.read(settingsRepositoryProvider).setIncludeVideos(enabled),
+    );
+  }
+
+  Future<void> setCompactNowPlaying(bool enabled) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setCompactNowPlaying(enabled),
+    );
+  }
+
+  Future<void> setLibrarySourceFilter(LibrarySourceFilter filter) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(settingsRepositoryProvider).setLibrarySourceFilter(filter),
     );
   }
 }

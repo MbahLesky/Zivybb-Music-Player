@@ -21,10 +21,12 @@ import 'rhythm_tile_painter.dart';
 
 /// Rhythm mode: tap the tiles the music throws at you.
 ///
-/// Three parts, top to bottom — artwork (which will later carry an ad), the
-/// board, then transport and scores. Everything about the tiles' look comes
-/// from the visualizer settings, because this is meant to read as a playable
-/// version of the visualizer rather than a separate game.
+/// Three parts, top to bottom — artwork (which will later carry an ad), then
+/// the title, scores and transport, then the board filling everything left.
+/// The board goes last so it gets the tall end of the screen and so the
+/// controls never move as tiles come and go. Everything about the tiles' look
+/// comes from the visualizer settings, because this is meant to read as a
+/// playable version of the visualizer rather than a separate game.
 ///
 /// **What this is and is not.** The Android capture reports audio that has
 /// already been rendered, so a tile can never land on the beat that created
@@ -47,6 +49,12 @@ class _RhythmGameScreenState extends ConsumerState<RhythmGameScreen> {
   /// them without either rebuilding the other.
   final ValueNotifier<RunScore> _run = ValueNotifier(const RunScore());
 
+  /// Whether the tiles are coming from the stand-in pattern rather than the
+  /// song. Written by the board — only it knows whether the real capture is
+  /// actually producing beats, as opposed to merely being attached — and read
+  /// by the banner.
+  final ValueNotifier<bool> _simulated = ValueNotifier(true);
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +67,7 @@ class _RhythmGameScreenState extends ConsumerState<RhythmGameScreen> {
   void dispose() {
     WakelockPlus.disable();
     _run.dispose();
+    _simulated.dispose();
     super.dispose();
   }
 
@@ -79,11 +88,15 @@ class _RhythmGameScreenState extends ConsumerState<RhythmGameScreen> {
               : Column(
                   children: [
                     _ArtworkPanel(song: song),
-                    const _SimulatedSourceBanner(),
-                    Expanded(
-                      child: _TileField(song: song, run: _run),
-                    ),
                     _TransportAndScores(song: song, run: _run),
+                    _SimulatedSourceBanner(simulated: _simulated),
+                    Expanded(
+                      child: _TileField(
+                        song: song,
+                        run: _run,
+                        simulated: _simulated,
+                      ),
+                    ),
                   ],
                 ),
         ),
@@ -125,21 +138,33 @@ class _ArtworkPanel extends StatelessWidget {
 /// Says plainly when the tiles are not following the song.
 ///
 /// Without the opt-in Android capture there is no real audio to read, and the
-/// visualizer's stand-in waveform has nothing to do with the track. The game
-/// stays playable in that case, but it must not imply it is hearing anything.
+/// stand-in pattern has nothing to do with the track. The game stays playable
+/// in that case, but it must not imply it is hearing anything.
+///
+/// Driven by [simulated] — what the board actually ended up using — rather
+/// than by whether a capture is attached. On some devices the capture attaches
+/// and then reports silence, and a banner keyed off attachment alone would
+/// claim the tiles were following a song they were not.
 class _SimulatedSourceBanner extends ConsumerWidget {
-  const _SimulatedSourceBanner();
+  const _SimulatedSourceBanner({required this.simulated});
+
+  final ValueNotifier<bool> simulated;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // A plain Provider over the source controller's state — Riverpod only
-    // notifies when the computed bool flips, so this rebuilds about twice a
-    // run despite the ~20 Hz feed underneath it.
-    final realActive = ref.watch(realVisualizerActiveProvider);
-    if (realActive) return const SizedBox.shrink();
+    return ValueListenableBuilder<bool>(
+      valueListenable: simulated,
+      builder: (context, isSimulated, _) =>
+          isSimulated ? _banner(context, ref) : const SizedBox.shrink(),
+    );
+  }
 
+  Widget _banner(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final supported = ref.watch(audioVisualizerServiceProvider).isSupported;
+    // Attached but producing nothing is a different situation from never
+    // having been switched on, and only one of the two has a useful button.
+    final attached = ref.watch(realVisualizerActiveProvider);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -158,16 +183,19 @@ class _SimulatedSourceBanner extends ConsumerWidget {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                supported
-                    ? "Simulated beat — these tiles follow a stand-in "
-                          "pattern, not this song."
-                    : 'Simulated beat — reading real audio is only available '
-                          'on Android.',
-                style: TextStyle(color: scheme.onTertiaryContainer),
-              ),
+              child: Text(switch ((supported, attached)) {
+                (false, _) =>
+                  'Simulated beat — reading real audio is only available '
+                      'on Android.',
+                (true, true) =>
+                  "Simulated beat — this device's audio capture isn't "
+                      'reporting anything to follow.',
+                (true, false) =>
+                  'Simulated beat — these tiles follow a stand-in pattern, '
+                      'not this song.',
+              }, style: TextStyle(color: scheme.onTertiaryContainer)),
             ),
-            if (supported) ...[
+            if (supported && !attached) ...[
               const SizedBox(width: 8),
               TextButton(
                 onPressed: () => _enableRealAudio(context, ref),
@@ -204,10 +232,18 @@ class _SimulatedSourceBanner extends ConsumerWidget {
 /// [ValueNotifier]. A `setState` per frame here would rebuild the artwork and
 /// the transport row sixty times a second for nothing.
 class _TileField extends ConsumerStatefulWidget {
-  const _TileField({required this.song, required this.run});
+  const _TileField({
+    required this.song,
+    required this.run,
+    required this.simulated,
+  });
 
   final Song song;
   final ValueNotifier<RunScore> run;
+
+  /// Set to true whenever the board is running on the stand-in pattern, so
+  /// the banner above can say so.
+  final ValueNotifier<bool> simulated;
 
   @override
   ConsumerState<_TileField> createState() => _TileFieldState();
@@ -233,11 +269,23 @@ class _TileFieldState extends ConsumerState<_TileField>
   late SimulatedBeatSource _simulated;
   late GameScoreRepository _scores;
 
+  /// How long the board may sit empty before the stand-in pattern takes over.
+  ///
+  /// The capture can attach and then report nothing — a silent passage, an
+  /// OEM that returns zeroes, a session that moved out from under it. Without
+  /// this the game just shows an empty board and looks broken, which is
+  /// exactly what it did.
+  static const _silenceBeforeFallback = Duration(milliseconds: 2500);
+
   Duration _travel = TileGeometry.defaultTravel;
   Duration _simulatedCursor = Duration.zero;
   int _nextTileId = 0;
   String? _runSongId;
   bool _committed = false;
+
+  /// Game-clock time of the last beat the *real* detector produced, used to
+  /// decide when to fall back and when to hand control back.
+  double? _lastRealBeatMs;
 
   @override
   void initState() {
@@ -296,12 +344,16 @@ class _TileFieldState extends ConsumerState<_TileField>
     _flashes.clear();
     _recentOnsets.clear();
     _travel = TileGeometry.defaultTravel;
+    _lastRealBeatMs = null;
     _detector = BeatDetector(
       config: BeatDetectorConfig.from(ref.read(visualizerTuningProvider)),
     );
     _simulated = SimulatedBeatSource(seed: song.id.hashCode);
-    _simulatedCursor = _clock.audioPosition;
     _clock.reset();
+    // Seeded from where the track actually is, not from zero: the clock
+    // resyncs to the real position within a frame or two, and a cursor left
+    // at zero would then be asked for every beat since the start of the song.
+    _simulatedCursor = _clock.audioPosition;
     widget.run.value = const RunScore();
   }
 
@@ -322,17 +374,28 @@ class _TileFieldState extends ConsumerState<_TileField>
     final events = _detector.add(
       BandFrame(bands: bands, position: _clock.audioPosition),
     );
+    if (events.isEmpty) return;
+    _lastRealBeatMs = _clock.nowMs;
+    // A capture that has started producing again takes the board back.
+    widget.simulated.value = false;
     for (final event in events) {
       _spawn(event);
     }
   }
 
-  void _spawn(BeatEvent event) {
+  /// Adds a tile for [event].
+  ///
+  /// [hitAtMs] is for beats that are still in the *future* — the stand-in
+  /// pattern is generated a fall-time ahead, so each of its beats knows
+  /// exactly when it should land and a window of them spreads out down the
+  /// board. Real onsets have no such luxury: the capture only reports what has
+  /// already played, so they take the default of "one fall from now", with the
+  /// fall snapped to a whole number of beat periods so the tile still lands on
+  /// a beat. See the class doc.
+  void _spawn(BeatEvent event, {double? hitAtMs}) {
     _recentOnsets.add(event.position);
     if (_recentOnsets.length > 24) _recentOnsets.removeAt(0);
 
-    // Snapping the fall to the beat is what keeps tapping the tiles in time
-    // with the music despite the capture's lag; see the class doc.
     _travel = TileGeometry.quantiseTravel(
       TileGeometry.defaultTravel,
       estimateBeatPeriod(_recentOnsets),
@@ -345,7 +408,7 @@ class _TileFieldState extends ConsumerState<_TileField>
         id: _nextTileId++,
         lane: event.lane.clamp(0, _laneCount - 1),
         spawnMs: now,
-        hitMs: now + _travel.inMilliseconds,
+        hitMs: hitAtMs ?? now + _travel.inMilliseconds,
         sustain: event.sustain,
         level: event.level,
         strength: event.strength,
@@ -353,22 +416,49 @@ class _TileFieldState extends ConsumerState<_TileField>
     );
   }
 
+  /// Whether the stand-in pattern should be driving the board right now.
+  ///
+  /// True when there is no capture at all, and also when there *is* one that
+  /// has gone quiet for [_silenceBeforeFallback] — an attached capture that
+  /// reports nothing used to leave the board permanently empty.
+  bool get _needsSimulatedBeats {
+    if (ref.read(visualizerSourceControllerProvider) == null) return true;
+    final lastReal = _lastRealBeatMs;
+    if (lastReal == null) return true;
+    return _clock.nowMs - lastReal > _silenceBeforeFallback.inMilliseconds;
+  }
+
+  /// Lays down the stand-in pattern's beats for the stretch of song about to
+  /// play.
+  ///
+  /// Generated a fall-time *ahead* of the playhead, so each tile can be given
+  /// the exact moment its beat lands and a whole window of them arrives
+  /// spread down the board rather than stacked on one instant.
+  void _generateSimulatedBeats() {
+    if (!_needsSimulatedBeats) return;
+    widget.simulated.value = true;
+
+    final position = _clock.audioPosition;
+    final until = position + _travel;
+    // A seek — or the clock's first resync away from zero — leaves the cursor
+    // far behind or ahead. Neither is a stretch of song anyone is about to
+    // hear, so skip to the playhead instead of generating minutes of beats.
+    if (_simulatedCursor < position || _simulatedCursor > until) {
+      _simulatedCursor = position;
+    }
+    if (until <= _simulatedCursor) return;
+
+    for (final event in _simulated.eventsBetween(_simulatedCursor, until)) {
+      final aheadMs = (event.position - position).inMilliseconds.toDouble();
+      _spawn(event, hitAtMs: _clock.nowMs + (aheadMs < 0 ? 0 : aheadMs));
+    }
+    _simulatedCursor = until;
+  }
+
   void _onTick(Duration elapsed) {
     _clock.tick(elapsed);
 
-    // With no real feed the detector never sees a frame, so the fallback
-    // generator supplies the beats instead. Its events go down exactly the
-    // same path from here on.
-    if (ref.read(visualizerSourceControllerProvider) == null &&
-        _clock.isRunning) {
-      final until = _clock.audioPosition;
-      if (until > _simulatedCursor) {
-        for (final event in _simulated.eventsBetween(_simulatedCursor, until)) {
-          _spawn(event);
-        }
-        _simulatedCursor = until;
-      }
-    }
+    if (_clock.isRunning) _generateSimulatedBeats();
 
     final now = _clock.nowMs;
     const config = ScoringConfig();

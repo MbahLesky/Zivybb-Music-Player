@@ -5,6 +5,7 @@ import '../../../data/models/app_settings.dart';
 import '../../../shared/widgets/color_swatch_picker.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../../visualizer/application/visualizer_source_controller.dart';
 import '../../visualizer/presentation/wave_visualizer.dart';
 import '../application/settings_controller.dart';
@@ -23,6 +24,7 @@ class VisualizerSettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: const GradientAppBar(title: Text('Visualizer')),
       body: Container(
         decoration: BoxDecoration(
@@ -442,7 +444,18 @@ class _PlacementCard extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                     value: placement,
                     title: Text(placement.label),
-                    subtitle: Text(placement.description),
+                    subtitle: Text(
+                      _placementDescription(
+                        placement,
+                        settings.visualizerStyle,
+                      ),
+                    ),
+                    // Bloom is one closed blob with no direction to read
+                    // progress along, so it cannot be a track. Disabled and
+                    // explained rather than offered and ignored.
+                    enabled:
+                        placement != VisualizerPlacement.seekBar ||
+                        settings.visualizerStyle.supportsSeekBar,
                   ),
               ],
             ),
@@ -475,6 +488,25 @@ class _PlacementCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// What the seek-bar option turns into depends on the chosen style, so the
+  /// row says which of the three it will be rather than describing a
+  /// behaviour the current style doesn't have.
+  static String _placementDescription(
+    VisualizerPlacement placement,
+    VisualizerStyle style,
+  ) {
+    if (placement != VisualizerPlacement.seekBar) return placement.description;
+    return switch (style.seekBarShape) {
+      VisualizerSeekBarShape.horizontal =>
+        'The wave becomes the progress bar — played in colour, the rest grey',
+      VisualizerSeekBarShape.circular =>
+        'A ring around the artwork, filling the artwork slot, that scrubs',
+      VisualizerSeekBarShape.unsupported =>
+        'Not available for ${style.label} — it has no direction to read '
+            'progress along',
+    };
   }
 }
 

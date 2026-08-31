@@ -5,6 +5,7 @@ import '../../../data/models/equalizer_preset.dart';
 import '../../../data/repositories/equalizer_preset_repository.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 import '../application/equalizer_controller.dart';
 import '../application/settings_controller.dart';
 
@@ -77,6 +78,7 @@ class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
     final isOff = currentPresetId == null;
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: const GradientAppBar(title: Text('Equalizer')),
       body: presets.when(
         data: (items) {

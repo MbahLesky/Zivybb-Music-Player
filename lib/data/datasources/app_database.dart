@@ -329,6 +329,26 @@ class Settings extends Table {
   BoolColumn get realVisualizerEnabled =>
       boolean().withDefault(const Constant(false))();
 
+  /// Skip folders whose name says they hold voice notes, recordings, or
+  /// ringtones rather than music — see `LibrarySourceFilter`.
+  BoolColumn get autoExcludeNonMusicFolders =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Audio shorter than this is not a track. 0 keeps everything.
+  IntColumn get minimumTrackSeconds =>
+      integer().withDefault(const Constant(30))();
+
+  /// The user's per-folder include/exclude decisions, as the JSON object
+  /// `LibrarySourceFilter.overridesToJson` writes. One column rather than two
+  /// because the two sets are only ever read and written together.
+  TextColumn get libraryFolderOverridesJson =>
+      text().withDefault(const Constant('{}'))();
+
+  /// Show the stripped-back Now Playing layout — artwork, title, and the
+  /// three transport buttons.
+  BoolColumn get compactNowPlaying =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 
@@ -366,7 +386,7 @@ class AppDatabase extends _$AppDatabase {
   // those versions, so the steps below are all guarded by what the database
   // actually contains, and v12 converges the two histories.
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -583,6 +603,24 @@ class AppDatabase extends _$AppDatabase {
         // be threaded through the v9 rebuild's column transformer.
         if (!await _hasTable(m, 'game_scores')) {
           await m.createTable(gameScores);
+        }
+      }
+      if (from < 16) {
+        if (!await _hasColumn(
+          m,
+          'settings',
+          'auto_exclude_non_music_folders',
+        )) {
+          await m.addColumn(settings, settings.autoExcludeNonMusicFolders);
+        }
+        if (!await _hasColumn(m, 'settings', 'minimum_track_seconds')) {
+          await m.addColumn(settings, settings.minimumTrackSeconds);
+        }
+        if (!await _hasColumn(m, 'settings', 'library_folder_overrides_json')) {
+          await m.addColumn(settings, settings.libraryFolderOverridesJson);
+        }
+        if (!await _hasColumn(m, 'settings', 'compact_now_playing')) {
+          await m.addColumn(settings, settings.compactNowPlaying);
         }
       }
     },

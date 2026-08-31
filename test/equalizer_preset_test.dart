@@ -76,10 +76,12 @@ void main() {
       presets.firstWhere((p) => p.id == customEqualizerPresetId).bandGains,
       [1, 2, 3, 4, 5],
     );
-    expect(
-      presets.firstWhere((p) => p.id == 'bass_boost').bandGains,
-      [6, 4, 0, -2, -2],
-      reason: 'built-in presets stay as shipped',
-    );
+    expect(presets.firstWhere((p) => p.id == 'bass_boost').bandGains, [
+      6,
+      4,
+      0,
+      -2,
+      -2,
+    ], reason: 'built-in presets stay as shipped');
   });
 }

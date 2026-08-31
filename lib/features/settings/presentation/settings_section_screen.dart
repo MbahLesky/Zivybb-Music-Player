@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/gradient_app_bar.dart';
+import '../../../shared/widgets/mini_player.dart';
 
 /// A detail screen for a group of related settings options.
 class SettingsSectionScreen extends StatelessWidget {
@@ -21,6 +22,7 @@ class SettingsSectionScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayer(),
       appBar: GradientAppBar(title: Text(title)),
       body: Container(
         decoration: BoxDecoration(

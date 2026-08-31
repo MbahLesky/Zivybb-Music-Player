@@ -299,11 +299,9 @@ void main() {
       final tags = await repository.watchVibeTags().first;
       final chill = tags.firstWhere((tag) => tag.id == 'chill');
       expect(chill.categoryId, isNull, reason: 'the vibe survives, unfiled');
-      expect(
-        await repository.watchVibeIdsForSong('a').first,
-        {'chill'},
-        reason: 'deleting a folder must not untag any song',
-      );
+      expect(await repository.watchVibeIdsForSong('a').first, {
+        'chill',
+      }, reason: 'deleting a folder must not untag any song');
     });
 
     test('reorderVibeCategories rewrites the folder order', () async {
