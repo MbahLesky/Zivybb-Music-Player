@@ -14,7 +14,6 @@ class RhythmTilePainter extends CustomPainter {
   RhythmTilePainter({
     required this.tiles,
     required this.nowMs,
-    required this.travelMs,
     required this.laneCount,
     required this.color,
     required this.hitLineFraction,
@@ -24,7 +23,6 @@ class RhythmTilePainter extends CustomPainter {
 
   final List<GameTile> tiles;
   final double nowMs;
-  final double travelMs;
   final int laneCount;
   final Color color;
 
@@ -93,14 +91,14 @@ class RhythmTilePainter extends CustomPainter {
       final head = TileGeometry.headY(
         nowMs: nowMs,
         hitMs: tile.hitMs,
-        travelMs: travelMs,
+        travelMs: tile.travelMs,
         hitLineY: hitLineY,
       );
       if (!head.isFinite) continue;
 
       final length = TileGeometry.lengthPx(
         sustain: tile.sustain,
-        travelMs: travelMs,
+        travelMs: tile.travelMs,
         hitLineY: hitLineY,
       );
       // The tile hangs above its head: the head is the edge that meets the
@@ -156,7 +154,6 @@ class RhythmTilePainter extends CustomPainter {
     // rebuilt with new configuration.
     return oldDelegate.color != color ||
         oldDelegate.laneCount != laneCount ||
-        oldDelegate.travelMs != travelMs ||
         oldDelegate.hitLineFraction != hitLineFraction;
   }
 }

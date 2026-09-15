@@ -258,8 +258,16 @@ class _TileFieldState extends ConsumerState<_TileField>
   /// per-frame painting cost.
   static const _maxTiles = 32;
 
+  /// How long a tap's verdict stays on screen.
+  static const _judgementLinger = Duration(milliseconds: 550);
+
   late final Ticker _ticker = createTicker(_onTick);
   final ValueNotifier<int> _repaint = ValueNotifier(0);
+
+  /// The most recent tap's verdict and when it happened, so the overlay can
+  /// fade it out on the game clock rather than running a second animation.
+  final ValueNotifier<({HitJudgement judgement, double atMs})?> _judgement =
+      ValueNotifier(null);
   final GameClock _clock = GameClock();
   final List<GameTile> _tiles = [];
   final Map<int, double> _flashes = {};
@@ -277,8 +285,15 @@ class _TileFieldState extends ConsumerState<_TileField>
   /// exactly what it did.
   static const _silenceBeforeFallback = Duration(milliseconds: 2500);
 
+  /// A position change larger than this is a seek, not ordinary progress.
+  static const _seekTolerance = Duration(seconds: 1);
+
   Duration _travel = TileGeometry.defaultTravel;
   Duration _simulatedCursor = Duration.zero;
+
+  /// The playhead the last stand-in generation ran against, for spotting a
+  /// seek. Null until the first one.
+  Duration? _lastSimulatedPosition;
   int _nextTileId = 0;
   String? _runSongId;
   bool _committed = false;
@@ -314,7 +329,18 @@ class _TileFieldState extends ConsumerState<_TileField>
 
     ref.listenManual<bool>(
       playbackControllerProvider.select((state) => state.isPlaying),
-      (_, playing) => playing ? _clock.resume() : _clock.pause(),
+      (_, playing) {
+        playing ? _clock.resume() : _clock.pause();
+        // One last frame on pause so the board settles at its frozen state,
+        // then nothing: a stopped clock would otherwise have the ticker
+        // repainting an identical picture sixty times a second.
+        if (playing) {
+          if (!_ticker.isActive) _ticker.start();
+        } else {
+          _repaint.value++;
+          if (_ticker.isActive) _ticker.stop();
+        }
+      },
       fireImmediately: true,
     );
 
@@ -334,6 +360,7 @@ class _TileFieldState extends ConsumerState<_TileField>
     _ticker.dispose();
     _commitRun();
     _repaint.dispose();
+    _judgement.dispose();
     super.dispose();
   }
 
@@ -354,6 +381,7 @@ class _TileFieldState extends ConsumerState<_TileField>
     // resyncs to the real position within a frame or two, and a cursor left
     // at zero would then be asked for every beat since the start of the song.
     _simulatedCursor = _clock.audioPosition;
+    _lastSimulatedPosition = null;
     widget.run.value = const RunScore();
   }
 
@@ -403,12 +431,22 @@ class _TileFieldState extends ConsumerState<_TileField>
 
     if (_tiles.length >= _maxTiles) return;
     final now = _clock.nowMs;
+    final hitMs = hitAtMs ?? now + _travel.inMilliseconds;
     _tiles.add(
       GameTile(
         id: _nextTileId++,
         lane: event.lane.clamp(0, _laneCount - 1),
         spawnMs: now,
-        hitMs: hitAtMs ?? now + _travel.inMilliseconds,
+        hitMs: hitMs,
+        // The board's fall time as it stands *now*, captured per tile, so
+        // re-estimating the beat period later moves nothing already on screen.
+        //
+        // Not the gap between now and the arrival: a stand-in beat due sooner
+        // than a full fall is one that has notionally already fallen part of
+        // the way, and should enter partway down. Using its own short gap as
+        // the fall would instead start it at the very top and slam it to the
+        // line in a fraction of a second.
+        travelMs: _travel.inMilliseconds.toDouble(),
         sustain: event.sustain,
         level: event.level,
         strength: event.strength,
@@ -439,13 +477,19 @@ class _TileFieldState extends ConsumerState<_TileField>
     widget.simulated.value = true;
 
     final position = _clock.audioPosition;
+    final previous = _lastSimulatedPosition;
+    _lastSimulatedPosition = position;
+
+    // A seek — or the clock's first resync away from zero — lands the playhead
+    // somewhere unrelated to what the cursor has already covered. Anything
+    // else is ordinary progress, and the cursor must only ever move *forward*
+    // through it: winding it back would re-emit beats already on the board as
+    // duplicate tiles, which is what a shrinking fall time used to do.
+    final jumped =
+        previous == null || (position - previous).abs() > _seekTolerance;
+    if (jumped || _simulatedCursor < position) _simulatedCursor = position;
+
     final until = position + _travel;
-    // A seek — or the clock's first resync away from zero — leaves the cursor
-    // far behind or ahead. Neither is a stretch of song anyone is about to
-    // hear, so skip to the playhead instead of generating minutes of beats.
-    if (_simulatedCursor < position || _simulatedCursor > until) {
-      _simulatedCursor = position;
-    }
     if (until <= _simulatedCursor) return;
 
     for (final event in _simulated.eventsBetween(_simulatedCursor, until)) {
@@ -506,6 +550,7 @@ class _TileFieldState extends ConsumerState<_TileField>
       // A tap with nothing in reach. It costs the combo, which is what stops
       // mashing every lane from being the best strategy.
       widget.run.value = widget.run.value.applyStray();
+      _showJudgement(HitJudgement.miss);
       return;
     }
 
@@ -514,7 +559,17 @@ class _TileFieldState extends ConsumerState<_TileField>
       config: config,
     );
     widget.run.value = widget.run.value.applyHit(judgement, best.sustain);
+    _showJudgement(judgement);
     _tiles.remove(best);
+  }
+
+  /// Puts the verdict on screen for a moment.
+  ///
+  /// Without it the only feedback for a tap was a faint lane flash, which
+  /// happens whether or not anything was hit — so there was no way to tell a
+  /// perfect hit from a wild stab, and the game read as unresponsive.
+  void _showJudgement(HitJudgement judgement) {
+    _judgement.value = (judgement: judgement, atMs: _clock.nowMs);
   }
 
   @override
@@ -531,17 +586,86 @@ class _TileFieldState extends ConsumerState<_TileField>
             // those milliseconds.
             behavior: HitTestBehavior.opaque,
             onPointerDown: (event) => _onTap(event.localPosition, size),
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: RhythmTilePainter(
-                tiles: _tiles,
-                nowMs: _clock.nowMs,
-                travelMs: _travel.inMilliseconds.toDouble(),
-                laneCount: _laneCount,
-                color: color,
-                hitLineFraction: _hitLineFraction,
-                flashes: _flashes,
-                repaint: _repaint,
+            child: Stack(
+              children: [
+                CustomPaint(
+                  size: Size.infinite,
+                  painter: RhythmTilePainter(
+                    tiles: _tiles,
+                    nowMs: _clock.nowMs,
+                    laneCount: _laneCount,
+                    color: color,
+                    hitLineFraction: _hitLineFraction,
+                    flashes: _flashes,
+                    repaint: _repaint,
+                  ),
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: _JudgementOverlay(
+                      judgement: _judgement,
+                      repaint: _repaint,
+                      nowMs: () => _clock.nowMs,
+                      linger: _judgementLinger,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// The verdict on the last tap, floating over the board and fading out.
+///
+/// Repaints off the board's own [repaint] notifier and reads the game clock
+/// through [nowMs], so it fades on game time: a paused game holds its last
+/// verdict instead of quietly ageing it out behind a stopped board.
+class _JudgementOverlay extends StatelessWidget {
+  const _JudgementOverlay({
+    required this.judgement,
+    required this.repaint,
+    required this.nowMs,
+    required this.linger,
+  });
+
+  final ValueNotifier<({HitJudgement judgement, double atMs})?> judgement;
+  final Listenable repaint;
+  final double Function() nowMs;
+  final Duration linger;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([judgement, repaint]),
+      builder: (context, _) {
+        final latest = judgement.value;
+        if (latest == null) return const SizedBox.shrink();
+
+        final age = nowMs() - latest.atMs;
+        if (age < 0 || age > linger.inMilliseconds) {
+          return const SizedBox.shrink();
+        }
+        final fade = 1 - age / linger.inMilliseconds;
+        final scheme = Theme.of(context).colorScheme;
+
+        return Align(
+          alignment: const Alignment(0, 0.45),
+          child: Opacity(
+            opacity: fade.clamp(0.0, 1.0),
+            child: Text(
+              latest.judgement.label,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: switch (latest.judgement) {
+                  HitJudgement.perfect => scheme.primary,
+                  HitJudgement.great => scheme.tertiary,
+                  HitJudgement.good => scheme.secondary,
+                  HitJudgement.miss => scheme.error,
+                },
               ),
             ),
           ),
@@ -581,11 +705,28 @@ class _TransportAndScores extends ConsumerWidget {
           const SizedBox(height: 4),
           ValueListenableBuilder<RunScore>(
             valueListenable: run,
-            builder: (context, score, _) => Text(
-              'Score ${score.score}   ·   Best ${best?.highScore ?? 0}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            builder: (context, score, _) => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Score ${score.score}   ·   Best ${best?.highScore ?? 0}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                // Only once a streak is actually going: a permanent "Combo x0"
+                // is noise, and the number only means anything while it climbs.
+                if (score.combo > 1) ...[
+                  const SizedBox(width: 12),
+                  Text(
+                    'Combo ×${score.combo}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 8),

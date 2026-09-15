@@ -8,6 +8,7 @@ class GameTile {
     required this.lane,
     required this.spawnMs,
     required this.hitMs,
+    required this.travelMs,
     required this.sustain,
     required this.level,
     required this.strength,
@@ -20,6 +21,14 @@ class GameTile {
   /// line. Both on [GameClock.nowMs] — never audio position.
   final double spawnMs;
   final double hitMs;
+
+  /// How long this tile takes to fall, fixed when it spawned.
+  ///
+  /// Per tile rather than one value for the board: the fall is re-quantised to
+  /// the estimated beat period as onsets accumulate, and a board-wide value
+  /// made every tile already in flight jump to a new position the instant that
+  /// estimate changed.
+  final double travelMs;
 
   final Duration sustain;
   final double level;

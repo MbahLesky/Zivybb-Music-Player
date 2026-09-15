@@ -35,6 +35,29 @@ range of work rather than a single release.
 - Backups carry the library-source filter and the Now Playing layout choice
   (format version 5). Older backups restore as before and leave both alone.
 
+## 1.4.1 — 2026-08-31
+
+### Fixed
+- **Rhythm mode kept playing while the music was paused.** Game time was read
+  straight off the frame ticker, which keeps counting when playback stops, so
+  pausing a song left every tile in flight falling to the hit line, expiring,
+  and being scored as a miss against a track that wasn't moving. Pausing now
+  freezes the board, and resuming picks up exactly where it left off however
+  long the pause.
+- **Tiles jumped position mid-fall.** The fall time was one value for the whole
+  board and was re-estimated as the beat became clearer, so every tile already
+  on screen teleported the instant that estimate changed. Each tile now keeps
+  the fall it spawned with.
+- **The stand-in pattern could spawn the same beat twice**, stacking two tiles
+  in one lane at one instant — only one of which could ever be tapped.
+- Rhythm mode no longer repaints sixty times a second while paused.
+
+### Added
+- Each tap now says how it landed — Perfect, Great, Good or Miss — over the
+  board, and the running combo shows next to the score once a streak is going.
+  Before this the only feedback was a faint lane flash that looked the same
+  whether or not anything had been hit.
+
 ## 1.4.0 — 2026-08-31
 
 ### Added

@@ -33,11 +33,13 @@ GameTile _tile({
   double level = 0.6,
   double strength = 0.8,
   Duration sustain = const Duration(milliseconds: 200),
+  double travelMs = 900,
 }) => GameTile(
   id: 1,
   lane: lane,
   spawnMs: 0,
   hitMs: hitMs,
+  travelMs: travelMs,
   sustain: sustain,
   level: level,
   strength: strength,
@@ -114,7 +116,6 @@ void main() {
       return RhythmTilePainter(
         tiles: tiles,
         nowMs: nowMs,
-        travelMs: 900,
         laneCount: 4,
         color: const Color(0xFF673AB7),
         hitLineFraction: 0.82,
@@ -294,6 +295,79 @@ void main() {
         isNotEmpty,
         reason: 'the stand-in pattern must take over rather than show nothing',
       );
+      await _teardown(tester);
+    });
+
+    testWidgets('never spawns the same beat twice', (tester) async {
+      // Regression test: the stand-in generator tracked a time cursor that was
+      // wound back to the playhead whenever the fall time shrank, re-emitting
+      // beats already on the board as duplicate tiles stacked on each other.
+      final database = AppDatabase.connect(NativeDatabase.memory());
+      addTearDown(database.close);
+      final song = fakeSong();
+      await _seedSong(database, song);
+
+      await tester.pumpWidget(
+        wrap(database: database, playback: playingState(song), bands: null),
+      );
+
+      const frame = Duration(milliseconds: 50);
+      for (
+        var elapsed = Duration.zero;
+        elapsed < const Duration(seconds: 6);
+        elapsed += frame
+      ) {
+        await tester.pump(frame);
+        final live = _boardTiles(tester);
+        final arrivals = live.map((t) => '${t.lane}@${t.hitMs}').toList();
+        expect(
+          arrivals.length,
+          arrivals.toSet().length,
+          reason:
+              'two tiles in one lane arriving at one instant is a '
+              'duplicate, and unhittable — only one of them can be tapped',
+        );
+      }
+
+      await _teardown(tester);
+    });
+
+    testWidgets('a tile keeps the fall it spawned with', (tester) async {
+      // Regression test: the fall time was a single board-wide value that got
+      // re-quantised as onsets accumulated, so every tile already in flight
+      // jumped to a new height the instant the estimate changed.
+      final database = AppDatabase.connect(NativeDatabase.memory());
+      addTearDown(database.close);
+      final song = fakeSong();
+      await _seedSong(database, song);
+
+      await tester.pumpWidget(
+        wrap(database: database, playback: playingState(song), bands: null),
+      );
+
+      final travelById = <int, double>{};
+      const frame = Duration(milliseconds: 50);
+      for (
+        var elapsed = Duration.zero;
+        elapsed < const Duration(seconds: 6);
+        elapsed += frame
+      ) {
+        await tester.pump(frame);
+        for (final tile in _boardTiles(tester)) {
+          final seen = travelById[tile.id];
+          if (seen == null) {
+            travelById[tile.id] = tile.travelMs;
+          } else {
+            expect(
+              tile.travelMs,
+              seen,
+              reason: 'a tile that changes its fall mid-descent teleports',
+            );
+          }
+        }
+      }
+      expect(travelById, isNotEmpty);
+
       await _teardown(tester);
     });
 
